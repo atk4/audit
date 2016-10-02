@@ -1,42 +1,14 @@
 
 # Agile Audit Extension
 
-Audit Extension provides a system-wide controller that can be added into any of your or 3rd party models. Once Added audit will keep track of all record changes. Changes will be stored into a separate model and will be sufficient to answer the following questions at any later time.
-
-Here is a simple feature comparison between Agile Audit and some other audit implementations 
-
-<div class="atk-table" markdown="1">
-|                        | Agile Audit                            | Laravel              |      |
-| ---------------------- | -------------------------------------- | -------------------- | ---- |
-| Supports logs?         | Any table, any fields, any persistence | SQL, specific fields |      |
-| Clear old records      | no                                     | yes                  |      |
-| Exclude fields         | yes                                    | yes                  |      |
-| Cutsom actions         | yes                                    | yes                  |      |
-| Requested/Reactive     | yes                                    | no                   |      |
-| Multi-model logs       | yes                                    | no                   |      |
-| How do add into model  | add(), relies on hooks                 | trait                |      |
-| User message           | yes                                    | yes                  |      |
-| Whitelist              | yes                                    | no                   |      |
-| Undo event             | yes                                    | no                   |      |
-| Replay event           | yes                                    | no                   |      |
-| Admin UI               | yes                                    | no                   |      |
-| Apply action to others | yes                                    | no                   |      |
-| Convent to PHPUnit     | yes                                    | no                   |      |
-</div>
-
------
-
-_Notice: please report to us if you notice any inaccuracy. The table above depicts anly basic functionality._
-
-## When to use?
-
-Majority of enerprise application will require some sort of audit logging. This extensions covers a wide range of logging requirements.
-
-When compared to traditional audit-log implementations, Agile Audit Extension offers a significant number of advantages that goes beyond logging.
+Audit Extension provides a system-wide controller that can be added into any of your or 3rd
+party models. Once Added audit will keep track of all record changes. Changes will be stored
+into a separate model and will be sufficient to answer the following questions at any later time.
 
 ## Enable Audit for your Models
 
-Any model in your system regardless of your database choice can be audited. You can enlist specific models by adding controller manually or perform a system-wide audit.
+Any model in your system regardless of your database choice can be audited. You can enlist
+specific models by adding controller manually or perform a system-wide audit.
 
 ``` php
 use \atk4\audit;

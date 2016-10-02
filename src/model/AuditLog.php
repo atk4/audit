@@ -1,12 +1,14 @@
 <?php
 
-namespace atk4\data\audit\model;
+namespace atk4\audit\model;
 
 class AuditLog extends \atk4\data\Model {
     public $table = 'audit_log';
     public $title_field = 'descr';
 
     public $model = null;
+
+    public $start_mt;
 
     function init()
     {
@@ -20,12 +22,13 @@ class AuditLog extends \atk4\data\Model {
         $this->addField('model_id');
 
         $this->addField('action');
+        $this->addField('time_taken', ['type' => 'float']);
 
         $this->addField('descr');
 
-        $this->addField('user_info'); // JSON containing keys for browser etc
-        $this->addField('request_diff'); // requested changes
-        $this->addField('reactive_diff'); // reactive diff
+        $this->addField('user_info', ['type' => 'struct']); // JSON containing keys for browser etc
+        $this->addField('request_diff', ['type' => 'struct']); // requested changes
+        $this->addField('reactive_diff', ['type' => 'struct']); // reactive diff
 
         $this->addField('is_reverted', ['type' => 'boolean']);
         $this->hasOne('revert_audit_log_id', new AuditLog());
@@ -41,12 +44,4 @@ class AuditLog extends \atk4\data\Model {
     /**
      * For a specified model record diffs
      */
-    function getDiffs(\atk4\data\Model $m)
-    {
-        $diff = [];
-        foreach ($m->dirty as $key => $original) {
-            $diff[$key] = [$original, $m[$key]];
-        }
-        return $diff;
-    }
 }
