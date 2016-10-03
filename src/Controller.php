@@ -19,9 +19,9 @@ class Controller {
     public $custom_action = null;
     public $custom_fields = [];
 
-    function __construct($audit_model = null, $options = [])
+    function __construct($a = null, $options = [])
     {
-        $this->audit_model = $audit_model ?: $audit_model = new model\AuditLog();
+        $this->audit_model = $a ?: $a = new model\AuditLog();
 
         foreach ($options as $key => $value) {
             $this->$key = $value;
