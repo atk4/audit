@@ -19,11 +19,11 @@ class Controller {
     public $custom_action = null;
     public $custom_fields = [];
 
-    function __construct($m = null, $options = [])
+    function __construct($a = null, $options = [])
     {
-        $this->audit_model = $m ?: $m = new model\AuditLog();
+        $this->audit_model = $a ?: $a = new model\AuditLog();
 
-        foreach($options as $key => $value) {
+        foreach ($options as $key => $value) {
             $this->$key = $value;
         }
     }
@@ -33,7 +33,7 @@ class Controller {
      */
     function setUp(\atk4\data\Model $m)
     {
-        $m->addHook('beforeUpdate,afterUpdate', $this);
+        $m->addHook('beforeSave,afterSave,beforeDelete,afterDelete', $this);
         $m->addRef('AuditLog', function($m) {
             $a = clone $this->audit_model;
             $m->persistence->add($a);
@@ -70,12 +70,10 @@ class Controller {
             $this->custom_action = null;
         }
 
-        $a['request_diff'] = $this->getDiffs($m);
         $a['ts'] = new \DateTime();
         $a['model'] = get_class($m);
         $a['model_id'] = $m->id;
         $a['action'] = $action;
-        $a['descr'] = $action.' '.$this->getDescr($a['request_diff']);
 
         if ($this->custom_fields) {
             $a->set($this->custom_fields);
@@ -96,26 +94,17 @@ class Controller {
         $a->start_mt = microtime();
 
         array_unshift($this->audit_log_stack, $a);
+        return $a;
     }
 
     function pull(\atk4\data\Model $m)
     {
         $a = array_shift($this->audit_log_stack);
-        $a['reactive_diff'] = $this->getDiffs($m);
-        if($a['reactive_diff'] === $a['request_diff']) {
-            // Don't store reactive diff if it's identical to requested diff
-            unset($a['reactive_diff']);
-        } else {
-            $x = $a['reactive_diff'];
-
-            $a['descr'].= ' (resulted in '.$this->getDescr($a['reactive_diff']).')';
-        }
 
         if ($this->record_time_taken) {
             $a['time_taken'] = microtime() - $a->start_mt;
         }
-
-        $a->save();
+        return $a;
     }
 
     function getDiffs(\atk4\data\Model $m)
@@ -127,15 +116,57 @@ class Controller {
         return $diff;
     }
 
-    function beforeUpdate(\atk4\data\Model $m)
+    function beforeSave(\atk4\data\Model $m)
     {
-        $this->push($m, 'update');
+        if(!$m->loaded()) {
+            $a = $this->push($m, $action = 'create');
+        } else {
+            $a = $this->push($m, $action = 'update');
+        }
+        $a['request_diff'] = $this->getDiffs($m);
+        $a['descr'] = $action.' '.$this->getDescr($a['request_diff']);
     }
 
-
-    function afterUpdate(\atk4\data\Model $m)
+    function afterSave(\atk4\data\Model $m)
     {
-        $this->pull($m);
+        $a = $this->pull($m);
+
+        if ($a['model_id'] === null) {
+            // new record
+            $a['reactive_diff'] = $m->get();
+            $a['model_id'] = $m->id;
+        } else {
+            $a['reactive_diff'] = $this->getDiffs($m);
+            if ($a['reactive_diff'] === $a['request_diff']) {
+                // Don't store reactive diff if it's identical to requested diff
+                unset($a['reactive_diff']);
+            } else {
+                $x = $a['reactive_diff'];
+
+                $a['descr'].= ' (resulted in '.$this->getDescr($a['reactive_diff']).')';
+            }
+        }
+        
+        $a->save();
+    }
+
+    function beforeDelete(\atk4\data\Model $m)
+    {
+        $a = $this->push($m, 'delete');
+        if ($m->only_fields) {
+            $id = $m->id;
+            $m = $m->newInstance()->load($id); // we need all fields
+        }
+        $a['request_diff'] = $m->get();
+        $a['descr'] = 'delete id='.$m->id;
+        if ($m->title_field && $m->hasElement($m->title_field)) {
+            $a['descr'] .= ' ('.$m[$m->title_field].')';
+        }
+    }
+
+    function afterDelete(\atk4\data\Model $m)
+    {
+        $this->pull($m)->save();
     }
 
     function getDescr($diff)
@@ -146,4 +177,5 @@ class Controller {
         }
         return join(', ', $t);
     }
+
 }

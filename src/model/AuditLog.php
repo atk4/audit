@@ -12,6 +12,8 @@ class AuditLog extends \atk4\data\Model {
 
     public $controller = null;
 
+    public $order_field = 'id';
+
     function init()
     {
         parent::init();
@@ -34,6 +36,8 @@ class AuditLog extends \atk4\data\Model {
 
         $this->addField('is_reverted', ['type' => 'boolean']);
         $this->hasOne('revert_audit_log_id', new AuditLog());
+
+        $this->setOrder($this->order_field.' desc');
     }
 
     function loadLast()
@@ -62,26 +66,44 @@ class AuditLog extends \atk4\data\Model {
 
         $this->atomic(function() {
             $m = new $this['model']($this->persistence);
-            $m->load($this['model_id']);
 
-            foreach ($this['request_diff'] as $field => list($old, $new)) {
-                if ($m[$field] !== $new) {
-                    throw new \atk4\core\Exception([
-                        'New value does not match current. Risky to undo',
-                        'new' => $new, 'current' => $m[$field]
-                    ]);
-                }
-
-                $m[$field] = $old;
-            }
+            $f = 'undo_'.$this['action'];
 
             $m->audit_log_controller->custom_action = 'undo '.$this['action'];
             $m->audit_log_controller->custom_fields['revert_audit_log_id'] = $this->id;
 
-            $m->save();
+            $this->$f($m);
 
             $this['is_reverted'] = true;
             $this->save();
         });
+    }
+
+    function undo_update($m)
+    {
+        $m->load($this['model_id']);
+
+        foreach ($this['request_diff'] as $field => list($old, $new)) {
+            if ($m[$field] !== $new) {
+                throw new \atk4\core\Exception([
+                    'New value does not match current. Risky to undo',
+                    'new' => $new, 'current' => $m[$field]
+                ]);
+            }
+
+            $m[$field] = $old;
+        }
+
+        $m->save();
+    }
+    function undo_delete($m)
+    {
+        $m->set($this['request_diff']);
+        $m->save();
+    }
+    function undo_create($m)
+    {
+        $m->load($this['model_id']);
+        $m->delete();
     }
 }
