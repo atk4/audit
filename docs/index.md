@@ -70,7 +70,7 @@ echo $m->load(1)->ref('AuditLog')->action('count')->getOne();  // 1
 You can also use it to access records individually or just access last record:
 
 ``` php
-$m->load(1)->ref('AuditLog')->loadAny()->undo(); // revert last action
+$m->load(1)->ref('AuditLog')->loadLast()->undo(); // revert last action
 ```
 
 If you wish to undo all the actions for specific record, run:

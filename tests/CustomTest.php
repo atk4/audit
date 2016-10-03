@@ -1,6 +1,6 @@
 <?php
 
-namespace atk4\ui\tests;
+namespace atk4\audit\tests;
 
 use atk4\data\Model;
 
@@ -22,6 +22,12 @@ class AuditableGenderUser extends \atk4\data\Model {
                 $m->audit_log['action'] = 'genderbending';
             }
         });
+    }
+}
+
+class CustomLog extends \atk4\audit\model\AuditLog {
+    function getDescr(){
+        return count($this['request_diff']).' fields magically change';
     }
 }
 
@@ -119,4 +125,31 @@ class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $this->assertEquals('load', $l['action']);
         $this->assertEquals(['foo'=>'bar'], $l['request_diff']);
     }
+
+    public function testCustomDescr()
+    {
+
+        $q = [
+            'user' => [
+                ['name' => 'Vinny', 'surname' => 'Shira', 'gender' => 'M'],
+                ['name' => 'Zoe', 'surname' => 'Shatwell', 'gender' => 'F'],
+            ],
+            'audit_log' => $this->audit_db,
+        ];
+        $this->setDB($q);
+
+        $m = new AuditableGenderUser($this->db, ['audit_model' => new CustomLog()]);
+
+        $m->load(2);
+        $m['name'] = 'Joe';
+        $m['surname'] = 'XX';
+        $m->save();
+
+        $l = $m->ref('AuditLog');
+        $l->loadLast();
+
+        $this->assertEquals('2 fields magically change', $l['descr']);
+    }
+
+
 }

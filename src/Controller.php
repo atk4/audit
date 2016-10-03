@@ -36,8 +36,10 @@ class Controller {
         $m->addHook('beforeSave,beforeDelete', $this, null, -100);
         $m->addHook('afterSave,afterDelete', $this, null, 100);
         $m->addRef('AuditLog', function($m) {
-            $a = clone $this->audit_model;
-            $m->persistence->add($a);
+            $a = isset($m->audit_model) ? clone $m->audit_model : clone $this->audit_model;
+            if (!$a->persistence) {
+                $m->persistence->add($a);
+            }
 
             $a->addCondition('model', get_class($m));
             if ($m->loaded()) {
@@ -139,7 +141,8 @@ class Controller {
             $a = $this->push($m, $action = 'update');
         }
         $a['request_diff'] = $this->getDiffs($m);
-        $a['descr'] = $action.' '.$this->getDescr($a['request_diff']);
+        $a['descr'] = $a->hasMethod('getDescr') ?
+            $a->getDescr() : $action.' '.$this->getDescr($a['request_diff']);
     }
 
     function afterSave(\atk4\data\Model $m)

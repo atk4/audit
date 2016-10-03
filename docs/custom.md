@@ -46,3 +46,33 @@ $m->unload();
 ```
 
 In this case the nothing has happened with the model, but we are still recording information about it with a custom action `inspection`. Additionally we are populating `requested_diff` field with second argument array passed into log() method.
+
+## Custom AuditLog Model
+
+Sometimes you would want to have your own model. Although you could create `AuditLog` model from scratch, you would be using some of the useful features, so I recommend you to extend the existing class:
+
+``` php
+class CustomLog extends \atk4\audit\model\AuditLog {
+    function init(){
+        parent::init();
+        $this->addField('custom_data', ['type' => 'struct']);
+    }
+}
+```
+
+This will extend AuditLog by adding additional field definition which you can use for storing your own information in. Type `struct` allow you to store arrays too.
+
+## Using custom descriptions
+
+Field `descr` inside a model stores a human-readable value. If you have a different criteria for "human readable", then you can re-define description in your audit model. To do so, define method `getDescr` inside your AuditLog model:
+
+``` php
+class CustomLog extends \atk4\audit\model\AuditLog {
+    function getDescr(){
+        return count($this['request_diff']).' fields magically change';
+    }
+}
+```
+
+This will populate `descr` with text like *"2 fields magically change".*
+
