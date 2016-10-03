@@ -3,6 +3,9 @@
 namespace atk4\audit\model;
 
 class AuditLog extends \atk4\data\Model {
+
+    public $no_audit = true;
+
     public $table = 'audit_log';
     public $title_field = 'descr';
 
