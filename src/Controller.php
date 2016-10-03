@@ -33,7 +33,8 @@ class Controller {
      */
     function setUp(\atk4\data\Model $m)
     {
-        $m->addHook('beforeSave,afterSave,beforeDelete,afterDelete', $this);
+        $m->addHook('beforeSave,beforeDelete', $this, null, -100);
+        $m->addHook('afterSave,afterDelete', $this, null, 100);
         $m->addRef('AuditLog', function($m) {
             $a = clone $this->audit_model;
             $m->persistence->add($a);
@@ -45,6 +46,10 @@ class Controller {
 
             return $a;
         });
+
+        if (!$m->hasMethod('log')) {
+            $m->addMethod('log', [$this, 'customLog']);
+        }
 
         $m->audit_log_controller = $this;
     }
@@ -92,6 +97,7 @@ class Controller {
         $a->save();
 
         $a->start_mt = microtime();
+        $m->audit_log = $a;
 
         array_unshift($this->audit_log_stack, $a);
         return $a;
@@ -100,6 +106,8 @@ class Controller {
     function pull(\atk4\data\Model $m)
     {
         $a = array_shift($this->audit_log_stack);
+
+        unset($m->audit_log);
 
         if ($this->record_time_taken) {
             $a['time_taken'] = microtime() - $a->start_mt;
@@ -114,6 +122,13 @@ class Controller {
             $diff[$key] = [$original, $m[$key]];
         }
         return $diff;
+    }
+
+    function customLog(\atk4\data\Model $m, $action, $data = [])
+    {
+        $a = $this->push($m, $action);
+        $a['request_diff'] = $data;
+        $this->pull($m)->save();
     }
 
     function beforeSave(\atk4\data\Model $m)
