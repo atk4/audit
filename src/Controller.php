@@ -16,6 +16,9 @@ class Controller {
 
     public $audit_model;
 
+    public $custom_action = null;
+    public $custom_fields = [];
+
     function __construct($m = null, $options = [])
     {
         $this->audit_model = $m ?: $m = new model\AuditLog();
@@ -31,6 +34,19 @@ class Controller {
     function setUp(\atk4\data\Model $m)
     {
         $m->addHook('beforeUpdate,afterUpdate', $this);
+        $m->addRef('AuditLog', function($m) {
+            $a = clone $this->audit_model;
+            $m->persistence->add($a);
+
+            $a->addCondition('model', get_class($m));
+            if ($m->loaded()) {
+                $a->addCondition('model_id', $m->id);
+            }
+
+            return $a;
+        });
+
+        $m->audit_log_controller = $this;
     }
 
     function init()
@@ -49,12 +65,22 @@ class Controller {
         }
         $m->persistence->add($a);
 
+        if ($this->custom_action) {
+            $action = $this->custom_action;
+            $this->custom_action = null;
+        }
+
         $a['request_diff'] = $this->getDiffs($m);
         $a['ts'] = new \DateTime();
         $a['model'] = get_class($m);
         $a['model_id'] = $m->id;
         $a['action'] = $action;
         $a['descr'] = $action.' '.$this->getDescr($a['request_diff']);
+
+        if ($this->custom_fields) {
+            $a->set($this->custom_fields);
+            $this->custom_fields = [];
+        }
 
         if (!$this->first_audit_log) {
             $this->first_audit_log = $a;

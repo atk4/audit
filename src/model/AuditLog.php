@@ -10,6 +10,8 @@ class AuditLog extends \atk4\data\Model {
 
     public $start_mt;
 
+    public $controller = null;
+
     function init()
     {
         parent::init();
@@ -34,6 +36,11 @@ class AuditLog extends \atk4\data\Model {
         $this->hasOne('revert_audit_log_id', new AuditLog());
     }
 
+    function loadLast()
+    {
+        return $this->setOrder('id desc')->tryLoadAny();
+    }
+
     function getUserInfo()
     {
         return [
@@ -41,7 +48,40 @@ class AuditLog extends \atk4\data\Model {
         ];
     }
 
+
+
     /**
      * For a specified model record diffs
      */
+
+    function undo()
+    {
+        if (!$this->loaded()) {
+            throw new \atk4\core\Exception('Load specific AuditLog entry before executing undo()');
+        }
+
+        $this->atomic(function() {
+            $m = new $this['model']($this->persistence);
+            $m->load($this['model_id']);
+
+            foreach ($this['request_diff'] as $field => list($old, $new)) {
+                if ($m[$field] !== $new) {
+                    throw new \atk4\core\Exception([
+                        'New value does not match current. Risky to undo',
+                        'new' => $new, 'current' => $m[$field]
+                    ]);
+                }
+
+                $m[$field] = $old;
+            }
+
+            $m->audit_log_controller->custom_action = 'undo '.$this['action'];
+            $m->audit_log_controller->custom_fields['revert_audit_log_id'] = $this->id;
+
+            $m->save();
+
+            $this['is_reverted'] = true;
+            $this->save();
+        });
+    }
 }
