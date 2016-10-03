@@ -1,88 +1,105 @@
 
 # Agile Audit Extension
 
-Audit Extension provides a system-wide controller that can be added into any of your or 3rd
-party models. Once Added audit will keep track of all record changes. Changes will be stored
-into a separate model and will be sufficient to answer the following questions at any later time.
+Audit Extension provides a mechanism to store all changes that happen during persistance of your model. This extension is designed to be extensive and flexible. Use Audit if you need to track changes performed by your users in great detail.
 
-## Enable Audit for your Models
+Audit supports a wide varietty of additional features such as ability to **undo** actions, record actions that have **failed** to execute (due to validation) along with the error, **retry** failed actions, retrieve **historical** records without modifying database, log **custom** actions and even **replay** all actions. Audit also records which **field values** were changed inside a model before executing `save()` and which fields were changed **reactively** (through other hooks) and will track and link reactive modifications to **multiple models**.
 
-Any model in your system regardless of your database choice can be audited. You can enlist
-specific models by adding controller manually or perform a system-wide audit.
+Huge focus on extensibility allow you to **customise** name of log table, change field names, database **engine** (e.g. store in CSV file, API or Cloud Database), **switch off** certain features, customise **human-readable** log entries and add additional information about **user**, **session** or **environment**.
+
+## Enabling Audit Log
+
+To enable extension for your model, add the following line into Model's method `init`:
 
 ``` php
-use \atk4\audit;
+$this->add(new \atk4\audit\Controller());
+```
 
-class User extends \atk4\data\Model {
-    public $table = 'user';
-  
-    function init() {
-        parent::init();
-      
-        $this->addField('name');
-        $this->addField('email');
-        $this->addField('password');
-      
-        // The following lines enable full audit:
-        $this->add(new audit\Controller(
-            new audit\model\AuditLog()
-        )); 
-    }
+For a basic usage you will also need to create `audit_log` table by importing `audit_log.sql` file. The audit-log is automatically populated when you perform an operation with the model next time:
+
+``` php
+$m->load(1);
+$m['name'] = 'Ken'; // was Vinny before
+$m->save();
+```
+
+The following new record will be stored inside `audit_log` table:
+
+``` json
+{  
+   "id":1,
+   "initiator_audit_log_id":null,
+   "ts":{  
+      "date":"2016-10-03 21:44:14.000000",
+      "timezone_type":3,
+      "timezone":"UTC"
+   },
+   "model":"atk4\\ui\\tests\\AuditableUser",
+   "model_id":"1",
+   "action":"update",
+   "time_taken":0.00174,
+   "descr":"update name=Ken",
+   "user_info":null,
+   "request_diff":{  
+      "name":[  
+         "Vinny",
+         "Ken"
+      ]
+   },
+   "reactive_diff":null,
+   "is_reverted":null,
+   "revert_audit_log_id":null
 }
 ```
 
-You have a choice. You may use `model\AuditLog` that will automatically store information about the enviroment. Alternatively you can supply your own model, which you can extend from `model\AuditLog`.
+Here are some more advanced topics:
 
-## System-wide Audit
+-   [Enable AuditLog for all your Models](system-wide.md)
+-   [Configure which fields are logged](field-config.md)
+-   [Custom event logging and customizing](custom.md)
+-   [Various storage options](storage.md)
 
-More often you would want all of your models to be automatically audited. The next snippet demonstrates how to implement numerous things:
+## Working With the Log Entries
 
--   I will be automatically auditing all my models
--   If possible, I'll record currently logged user
--   I do not want to store certain fields and certain types
+Your model contains reference to AuditLog model. Let's see how many times the above record have been modified in the past:
 
-Here is the relevant usage code. I start by defining my own Audit model:
+``` php
+echo $m->load(1)->ref('AuditLog')->action('count')->getOne();  // 1
+```
+
+You can also use it to access records individually or just access last record:
+
+``` php
+$m->load(1)->ref('AuditLog')->loadAny()->undo(); // revert last action
+```
+
+If you wish to undo all the actions for specific record, run:
 
 ```php
-class Audit extends \atk4\audit\model\Audit
-{
-    public $no_audit = true;
-  
-    public $exclude_field_values = ['password'];
-    public $exclude_field_types = ['encrypted'];
-  
-    function getExtraData()
-    {
-        $extra = [];
-      
-        // If we have App context, record currently logged user
-        if (isset($this->app->user)) {
-            $extra['user'] = $this->app->user;
-        }
+$yesterday = new DateTime();
+$yesterday->sub(new DateInterval('P1D'));
 
-        return $extra;
-    }
-}
+$m->load(1)->ref('AuditLog')
+    ->addCondition('date', '>=', $yesterday)
+    ->addCondition('is_reverted')
+    ->each('undo');
+    // revert all actions, that have happened today
+    // but exclude those that have been reverted already
 ```
 
-To continue I need to add a handler into persistence which will automatically attach itself to all initialized models:
 
-``` php
-$audit = new \atk4\audit\Controller(new Audit());
 
-$db->addHook('afterAdd', function($owner, $element) {
-    if ($element instanceof \atk4\data\Model) {
-        if (isset($element->no_audit) && $element->no_audit) {
-            // Whitelisting this model, won't audit
-            break;
-        }
-      
-        $element->add($audit); // re-using same object to save resources
-    }
-});
-```
+More in depth:
 
-You can refer to full class documentation if you want to further extend Audit behaviours.
+-   [How does undo() and redo() work](undo.md)
+-   [Recording sequences for your unit-tests](unit-tests.md)
+-   [Fetching historical records](historical.md)
+
+## Requested and Reactive field changes
+
+AuditLog extension records fields that were `dirty` before execution of save() operation. Sometimes you would have a logic inside your model hooks that can change more records or even change other models. For example if you change `InvoiceLine` amount it might want to update amount of `Inovice` too.
+
+
 
 ## Requested vs Reactive actions
 
