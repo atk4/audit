@@ -26,7 +26,6 @@ $db->addHook('afterAdd', function($owner, $element) use($audit) {
             // Whitelisting this model, won't audit
             break;
         }
-      
         $audit->setUp($element);
     }
 });

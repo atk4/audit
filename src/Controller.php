@@ -126,10 +126,15 @@ class Controller {
         return $diff;
     }
 
-    function customLog(\atk4\data\Model $m, $action, $data = [])
+    function customLog(\atk4\data\Model $m, $action, $descr = null, $fields = [])
     {
         $a = $this->push($m, $action);
-        $a['request_diff'] = $data;
+        $a['descr'] = $descr ?: $action;
+
+        if ($fields) {
+            $a->set($fields);
+        }
+
         $this->pull($m)->save();
     }
 
@@ -141,8 +146,11 @@ class Controller {
             $a = $this->push($m, $action = 'update');
         }
         $a['request_diff'] = $this->getDiffs($m);
-        $a['descr'] = $a->hasMethod('getDescr') ?
-            $a->getDescr() : $action.' '.$this->getDescr($a['request_diff']);
+
+        if(!$a['descr']) {
+            $a['descr'] = $a->hasMethod('getDescr') ?
+                $a->getDescr() : $action.' '.$this->getDescr($a['request_diff']);
+        }
     }
 
     function afterSave(\atk4\data\Model $m)

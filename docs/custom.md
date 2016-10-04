@@ -20,6 +20,8 @@ Property `audit_log` is only available while model is being saved and will point
 
 During the save, however, we can use this to change values. Another important point is that when `audit_log` is initially being set-up it was already saved, so that model will have a real `id` set. If no additional changes are done to the `$m` model or it's `audit_log` model, then there won't be any need to perform secondary save. 
 
+(note: value of `descr` is computed later, but if you set your own value there, then the model will keep it instead)
+
 ## Setting action before action starts
 
 The method described above will only work during the modifications hook of the model. What about situations when you want to perform custom action from outside the model? In this case you should set a property for controller:
@@ -34,6 +36,15 @@ $m->save();
 In this example a person is being married, so the surname have to be changed. But instead of using default action, we can set it to `married` through `custom_action` property.
 
 After the next audit_log operation is completed, the custom_action will be emptied and the next operation will have default action set.
+
+Additionally you can also set other fields through use of `controller->custom_fields` property:
+
+```php
+$m->load(2);
+$m->audit_log_controller->custom_fields['descr'] = 'User got older';
+$m['age']++;
+$m->save();
+```
 
 ## Pushing custom actions
 
@@ -75,4 +86,3 @@ class CustomLog extends \atk4\audit\model\AuditLog {
 ```
 
 This will populate `descr` with text like *"2 fields magically change".*
-

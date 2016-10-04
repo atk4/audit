@@ -117,7 +117,7 @@ class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $m = new AuditableGenderUser($this->db);
 
         $m->load(2);
-        $m->log('load', ['foo'=>'bar']);
+        $m->log('load', 'Testing', ['request_diff' => ['foo'=>'bar']]);
 
         $l = $m->ref('AuditLog');
         $l->loadLast();
