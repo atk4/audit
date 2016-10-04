@@ -3,6 +3,13 @@
 This extension for Agile Data implements advanced logging capabilities as well as some elements of
 Event Sourcing.
 
+## Documentation
+
+https://github.com/atk4/audit/blob/develop/docs/index.md
+
+## Real Usage Example
+
+https://github.com/atk4/audit/blob/develop/docs/full-example.md
 
 ## Installation
 
