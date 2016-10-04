@@ -7,6 +7,8 @@ Audit supports a wide varietty of additional features such as ability to **undo*
 
 Huge focus on extensibility allow you to **customise** name of log table, change field names, database **engine** (e.g. store in CSV file, API or Cloud Database), **switch off** certain features, customise **human-readable** log entries and add additional information about **user**, **session** or **environment**.
 
+(See also - [Full Example](full-example.md))
+
 ## Enabling Audit Log
 
 To enable extension for your model, add the following line into Model's method `init`:

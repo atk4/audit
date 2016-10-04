@@ -7,6 +7,10 @@ Event Sourcing.
 
 https://github.com/atk4/audit/blob/develop/docs/index.md
 
+## Real Usage Example
+
+https://github.com/atk4/audit/blob/develop/docs/full-example.md
+
 ## Installation
 
 Add the following inside your `composer.json` file:
