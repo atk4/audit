@@ -21,11 +21,20 @@ Add the following inside your `composer.json` file:
         "atk4/audit": "dev-develop"
     },
     "repositories": [
-        {
-            "type": "vcs",
-            "url":  "git@github.com:atk4/audit.git"
-        }
-    ]
+      {
+          "type": "package",
+          "package": {
+              "name": "atk4/audit",
+              "version": "dev-develop",
+              "type": "package",
+              "source": {
+                  "url": "git@github.com:atk4/audit.git",
+                  "type": "git",
+                  "reference": "develop"
+              }
+          }
+      }
+    ],
 }
 ```
 
