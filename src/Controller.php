@@ -121,6 +121,12 @@ class Controller {
     {
         $diff = [];
         foreach ($m->dirty as $key => $original) {
+
+            $f = $m->hasElement($key);
+            if($f && isset($f->no_audit) && $f->no_audit) {
+                continue;
+            }
+
             $diff[$key] = [$original, $m[$key]];
         }
         return $diff;
@@ -149,7 +155,7 @@ class Controller {
 
         if(!$a['descr']) {
             $a['descr'] = $a->hasMethod('getDescr') ?
-                $a->getDescr() : $action.' '.$this->getDescr($a['request_diff']);
+                $a->getDescr() : $action.' '.$this->getDescr($a['request_diff'], $m);
         }
     }
 
@@ -169,7 +175,7 @@ class Controller {
             } else {
                 $x = $a['reactive_diff'];
 
-                $a['descr'].= ' (resulted in '.$this->getDescr($a['reactive_diff']).')';
+                $a['descr'].= ' (resulted in '.$this->getDescr($a['reactive_diff'], $m).')';
             }
         }
         
@@ -195,10 +201,15 @@ class Controller {
         $this->pull($m)->save();
     }
 
-    function getDescr($diff)
+    function getDescr($diff, \atk4\data\Model $m)
     {
+        if (!$diff) return 'no changes';
         $t = [];
         foreach ($diff as $key=>list($from, $to)) {
+            $from = $m->persistence->typecastSaveField($m->getElement($key), $from);
+            $to = $m->persistence->typecastSaveField($m->getElement($key), $to);
+
+
             $t[] = $key.'='.$to;
         }
         return join(', ', $t);
