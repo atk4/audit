@@ -168,11 +168,17 @@ class Controller {
             $a['reactive_diff'] = $m->get();
             $a['model_id'] = $m->id;
         } else {
-            $a['reactive_diff'] = $this->getDiffs($m);
-            if ($a['reactive_diff'] === $a['request_diff']) {
-                // Don't store reactive diff if it's identical to requested diff
-                unset($a['reactive_diff']);
-            } else {
+            $d = $this->getDiffs($m);
+            foreach($d as $f=>list($f0,$f1)) {
+                if(isset($d[$f]) &&
+                    isset($a['request_diff'][$f][1]) &&
+                    $a['request_diff'][$f][1] === $f1) {
+                    unset($d[$f]);
+                }
+            }
+            $a['reactive_diff'] = $d;
+
+            if ($a['reactive_diff']) {
                 $x = $a['reactive_diff'];
 
                 $a['descr'].= ' (resulted in '.$this->getDescr($a['reactive_diff'], $m).')';
