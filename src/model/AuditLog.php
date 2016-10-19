@@ -21,7 +21,9 @@ class AuditLog extends \atk4\data\Model {
     {
         parent::init();
 
-        $this->hasOne('initiator_audit_log_id', new AuditLog());
+        $c = get_class($this);
+
+        $this->hasOne('initiator_audit_log_id', new $c());
 
         $this->addField('ts', ['type' => 'datetime']);
 
@@ -38,7 +40,7 @@ class AuditLog extends \atk4\data\Model {
         $this->addField('reactive_diff', ['type' => 'struct']); // reactive diff
 
         $this->addField('is_reverted', ['type' => 'boolean']);
-        $this->hasOne('revert_audit_log_id', new AuditLog());
+        $this->hasOne('revert_audit_log_id', new $c());
 
         $this->setOrder($this->order_field.' desc');
     }

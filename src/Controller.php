@@ -135,7 +135,15 @@ class Controller {
     function customLog(\atk4\data\Model $m, $action, $descr = null, $fields = [])
     {
         $a = $this->push($m, $action);
-        $a['descr'] = $descr ?: $action;
+        if (!$descr){
+            if ($m->hasElement($m->title_field)) {
+                $descr = $action.' '.$m[$m->title_field].': ';
+            } else {
+                $descr = $action;
+            }
+        }
+
+        $a['descr'] = $descr;
 
         if ($fields) {
             $a->set($fields);
@@ -154,8 +162,15 @@ class Controller {
         $a['request_diff'] = $this->getDiffs($m);
 
         if(!$a['descr']) {
+
+            if ($m->hasElement($m->title_field)) {
+                $descr = $action.' '.$m[$m->title_field].':';
+            } else {
+                $descr = $action;
+            }
+
             $a['descr'] = $a->hasMethod('getDescr') ?
-                $a->getDescr() : $action.' '.$this->getDescr($a['request_diff'], $m);
+                $a->getDescr() : $descr.' '.$this->getDescr($a['request_diff'], $m);
         }
     }
 
