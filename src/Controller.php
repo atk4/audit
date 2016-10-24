@@ -161,7 +161,7 @@ class Controller {
         }
         $a['request_diff'] = $this->getDiffs($m);
 
-        if(!$a['descr']) {
+        if(!$a['descr'] && $m->loaded()) {
 
             if ($m->hasElement($m->title_field)) {
                 $descr = $action.' '.$m[$m->title_field].':';
@@ -182,6 +182,21 @@ class Controller {
             // new record
             $a['reactive_diff'] = $m->get();
             $a['model_id'] = $m->id;
+
+            // fill missing description for new record
+            if(!$a['descr'] && $m->loaded()) {
+
+                if ($m->hasElement($m->title_field)) {
+                    $descr = $action.' '.$m[$m->title_field].':';
+                } else {
+                    $descr = $action;
+                }
+
+                $a['descr'] = $a->hasMethod('getDescr') ?
+                    $a->getDescr() : $descr.' '.$this->getDescr($a['request_diff'], $m);
+            }
+
+
         } else {
             $d = $this->getDiffs($m);
             foreach($d as $f=>list($f0,$f1)) {
