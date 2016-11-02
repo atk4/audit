@@ -35,9 +35,9 @@ class AuditLog extends \atk4\data\Model {
 
         $this->addField('descr');
 
-        $this->addField('user_info', ['type' => 'struct']); // JSON containing keys for browser etc
-        $this->addField('request_diff', ['type' => 'struct']); // requested changes
-        $this->addField('reactive_diff', ['type' => 'struct']); // reactive diff
+        $this->addField('user_info', ['type' => 'array', 'serialize'=>'json']); // JSON containing keys for browser etc
+        $this->addField('request_diff', ['type' => 'array', 'serialize'=>'json']); // requested changes
+        $this->addField('reactive_diff', ['type' => 'array', 'serialize'=>'json']); // reactive diff
 
         $this->addField('is_reverted', ['type' => 'boolean']);
         $this->hasOne('revert_audit_log_id', new $c());
