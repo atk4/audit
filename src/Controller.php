@@ -177,6 +177,7 @@ class Controller {
     function afterSave(\atk4\data\Model $m)
     {
         $a = $this->pull($m);
+        $action = 'save';
 
         if ($a['model_id'] === null) {
             // new record
@@ -237,6 +238,13 @@ class Controller {
         $this->pull($m)->save();
     }
 
+    /** 
+     * Credit to mpen: http://stackoverflow.com/a/27368848/204819
+     */
+    protected function canBeString($var) {
+        return $var === null || is_scalar($var) || is_callable([$var, '__toString']);
+    }
+
     function getDescr($diff, \atk4\data\Model $m)
     {
         if (!$diff) return 'no changes';
@@ -245,6 +253,14 @@ class Controller {
             $from = $m->persistence->typecastSaveField($m->getElement($key), $from);
             $to = $m->persistence->typecastSaveField($m->getElement($key), $to);
 
+            if(!$this->canBeString($from) || ! $this->canBeString($to)) {
+                throw new \atk4\core\Exception([
+                    'Unable to typecast value for storing',
+                    'field'=>$key,
+                    'from'=>$from,
+                    'to'=>$to,
+                ]);
+            }
 
             $t[] = $key.'='.$to;
         }
