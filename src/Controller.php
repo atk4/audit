@@ -98,7 +98,7 @@ class Controller {
         // save the initial action
         $a->save();
 
-        $a->start_mt = microtime();
+        $a->start_mt = (float)microtime();
         $m->audit_log = $a;
 
         array_unshift($this->audit_log_stack, $a);
@@ -112,7 +112,7 @@ class Controller {
         unset($m->audit_log);
 
         if ($this->record_time_taken) {
-            $a['time_taken'] = microtime() - $a->start_mt;
+            $a['time_taken'] = (float)microtime() - $a->start_mt;
         }
         return $a;
     }
