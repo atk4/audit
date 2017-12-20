@@ -1,6 +1,6 @@
 # Agile Data - Audit Add-on
 
-This extension for Agile Data implements advanced logging capabilities as well as some elements of
+This extension for [Agile Data](https://github.com/atk4/data) implements advanced logging capabilities as well as some elements of
 Event Sourcing.
 
 ## Installation and Usage
