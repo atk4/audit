@@ -1,0 +1,27 @@
+CREATE TABLE IF NOT EXISTS `audit_log` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `initiator_audit_log_id` INT(11) NULL DEFAULT NULL,
+  `action` VARCHAR(45) NULL DEFAULT NULL,
+  `model` VARCHAR(90) NULL DEFAULT NULL,
+  `ts` DATETIME NULL DEFAULT NULL,
+  `time_taken` FLOAT(11) NULL DEFAULT NULL,
+  `user_info` JSON NULL,
+  `request_diff` JSON NULL,
+  `reactive_diff` JSON NULL,
+  `descr` TEXT NULL DEFAULT NULL,
+  `is_reverted` TINYINT(1) NULL DEFAULT NULL,
+  `revert_audit_log_id` INT(11) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_audit_log_audit_log1_idx` (`initiator_audit_log_id` ASC),
+  INDEX `fk_audit_log_audit_log2_idx` (`revert_audit_log_id` ASC),
+  CONSTRAINT `fk_audit_log_audit_log1`
+    FOREIGN KEY (`initiator_audit_log_id`)
+    REFERENCES `tour_management`.`audit_log` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_audit_log_audit_log2`
+    FOREIGN KEY (`revert_audit_log_id`)
+    REFERENCES `tour_management`.`audit_log` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
