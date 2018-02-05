@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `tour_management`.`audit_log` (
+CREATE TABLE IF NOT EXISTS `audit_log` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `initiator_audit_log_id` INT NULL,
   `action` VARCHAR(45) NULL,
@@ -17,12 +17,12 @@ CREATE TABLE IF NOT EXISTS `tour_management`.`audit_log` (
   INDEX `fk_audit_log_audit_log2_idx` (`revert_audit_log_id` ASC),
   CONSTRAINT `fk_audit_log_audit_log1`
     FOREIGN KEY (`initiator_audit_log_id`)
-    REFERENCES `tour_management`.`audit_log` (`id`)
+    REFERENCES `audit_log` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_audit_log_audit_log2`
     FOREIGN KEY (`revert_audit_log_id`)
-    REFERENCES `tour_management`.`audit_log` (`id`)
+    REFERENCES `audit_log` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
