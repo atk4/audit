@@ -4,7 +4,7 @@
     "description": "Agile Data - Audit Extension",
     "keywords": ["agile", "data", "framework", "audit", "event sourcing", "crud", "acl"],
     "homepage": "http://agiletoolkit.org/data/extension/audit",
-    "license": "Commercial",
+    "license": "MIT",
     "minimum-stability": "dev",
     "prefer-stable": true,
     "authors": [
