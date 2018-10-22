@@ -19,7 +19,7 @@ class Controller {
     public $custom_action = null;
     public $custom_fields = [];
 
-    function __construct($a = null, $options = [])
+    public function __construct($a = null, $options = [])
     {
         $this->audit_model = $a ?: $a = new model\AuditLog();
 
@@ -31,7 +31,7 @@ class Controller {
     /**
      * Will set up specified model to be logged
      */
-    function setUp(\atk4\data\Model $m)
+    public function setUp(\atk4\data\Model $m)
     {
         $m->addHook('beforeSave,beforeDelete', $this, null, -100);
         $m->addHook('afterSave,afterDelete', $this, null, 100);
@@ -56,14 +56,14 @@ class Controller {
         $m->audit_log_controller = $this;
     }
 
-    function init()
+    public function init()
     {
         $this->_init();
 
         $this->setUp($this->owner);
     }
 
-    function push(\atk4\data\Model $m, $action)
+    public function push(\atk4\data\Model $m, $action)
     {
         if (isset($m->audit_model)) {
             $a = clone $m->audit_model;
@@ -102,10 +102,11 @@ class Controller {
         $m->audit_log = $a;
 
         array_unshift($this->audit_log_stack, $a);
+
         return $a;
     }
 
-    function pull(\atk4\data\Model $m)
+    public function pull(\atk4\data\Model $m)
     {
         $a = array_shift($this->audit_log_stack);
 
@@ -114,25 +115,34 @@ class Controller {
         if ($this->record_time_taken) {
             $a['time_taken'] = (float)microtime() - $a->start_mt;
         }
+
         return $a;
     }
 
-    function getDiffs(\atk4\data\Model $m)
+    public function getDiffs(\atk4\data\Model $m)
     {
         $diff = [];
         foreach ($m->dirty as $key => $original) {
 
             $f = $m->hasElement($key);
+            
+            // don't log fields if no_audit=true is set
             if($f && isset($f->no_audit) && $f->no_audit) {
+                continue;
+            }
+
+            // don't log DSQL expressions because they can be recursive and we can't store them
+            if ($original instanceof \atk4\dsql\Expression || $m[$key] instanceof \atk4\dsql\Expression) {
                 continue;
             }
 
             $diff[$key] = [$original, $m[$key]];
         }
+
         return $diff;
     }
 
-    function customLog(\atk4\data\Model $m, $action, $descr = null, $fields = [])
+    public function customLog(\atk4\data\Model $m, $action, $descr = null, $fields = [])
     {
         $a = $this->push($m, $action);
         if (!$descr){
@@ -152,7 +162,7 @@ class Controller {
         $this->pull($m)->save();
     }
 
-    function beforeSave(\atk4\data\Model $m)
+    public function beforeSave(\atk4\data\Model $m)
     {
         if(!$m->loaded()) {
             $a = $this->push($m, $action = 'create');
@@ -174,7 +184,7 @@ class Controller {
         }
     }
 
-    function afterSave(\atk4\data\Model $m)
+    public function afterSave(\atk4\data\Model $m)
     {
         $a = $this->pull($m);
         $action = 'save';
@@ -219,7 +229,7 @@ class Controller {
         $a->save();
     }
 
-    function beforeDelete(\atk4\data\Model $m)
+    public function beforeDelete(\atk4\data\Model $m)
     {
         $a = $this->push($m, 'delete');
         if ($m->only_fields) {
@@ -233,7 +243,7 @@ class Controller {
         }
     }
 
-    function afterDelete(\atk4\data\Model $m)
+    public function afterDelete(\atk4\data\Model $m)
     {
         $this->pull($m)->save();
     }
@@ -245,7 +255,7 @@ class Controller {
         return $var === null || is_scalar($var) || is_callable([$var, '__toString']);
     }
 
-    function getDescr($diff, \atk4\data\Model $m)
+    public function getDescr($diff, \atk4\data\Model $m)
     {
         if (!$diff) return 'no changes';
         $t = [];
@@ -264,7 +274,7 @@ class Controller {
 
             $t[] = $key.'='.$to;
         }
+
         return join(', ', $t);
     }
-
 }
