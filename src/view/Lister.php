@@ -12,13 +12,18 @@ namespace atk4\audit\view;
  */
 class Lister extends \atk4\ui\Lister
 {
-    public $defaultTemplate = 'audit-lister.html';
+    public $defaultTemplate = null;
 
     /**
      * Initialization.
      */
     public function init()
     {
+        // set up default template
+        if (!$this->defaultTemplate) {
+            $this->defaultTemplate = __DIR__ . '/../../template/audit-lister.html';
+        }
+
         parent::init();
     }
 
@@ -35,6 +40,6 @@ class Lister extends \atk4\ui\Lister
             throw new \atk4\core\Exception(['Audit is not enabled for this model', 'model' => $m]);
         }
 
-        return $m->audit_log_controller->getAuditModel();
+        return parent::setModel($m->audit_log_controller->getAuditModel());
     }
 }

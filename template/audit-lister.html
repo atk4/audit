@@ -2,9 +2,15 @@
 {rows}
     <div class="ui list">
     {row}
-        <div class="item"><i class="{$icon} icon"></i>
+        <div class="item" style="border:1px solid purple;"><i class="{$icon} icon"></i>
             <div class="content"><a class="header" href="{$_href}">{$_title}</a>
-                <div class="description">{$descr}</div>
+                <div class="description">
+                    <div>model: {$model}</div>
+                    <div>model_id: {$model_id}</div>
+                    <div>time: {$ts}</div>
+                    <div>action: {$action}</div>
+                    <div>changes: {$request_diff}</div>
+                </div>
             </div>
         </div>
     {/row}
