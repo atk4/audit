@@ -79,14 +79,18 @@ class Controller
     }
 
     /**
-     * Returns audit model to use.
+     * Returns jailed audit model to use.
      *
-     * @param \atk4\data\Model $m
+     * @param \atk4\data\Model|null $m
      *
      * @return \atk4\data\Model
      */
-    public function getAuditModel(\atk4\data\Model $m)
+    public function getAuditModel(\atk4\data\Model $m = null)
     {
+        if ($m === null) {
+            $m = $this->owner;
+        }
+
         // clone model
         $a = isset($m->audit_model) ? clone $m->audit_model : clone $this->audit_model;
         if (!$a->persistence) {
