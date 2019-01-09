@@ -4,12 +4,13 @@ namespace atk4\audit\tests;
 
 use atk4\data\Model;
 
-class Line extends \atk4\data\Model {
+class Line extends \atk4\data\Model
+{
     public $table = 'line';
 
     public $no_adjust = false;
 
-    function init()
+    public function init()
     {
         parent::init();
 
@@ -43,7 +44,8 @@ class Line extends \atk4\data\Model {
 class Invoice extends \atk4\data\Model
 {
     public $table = 'invoice';
-    function init()
+
+    public function init()
     {
         parent::init();
 
@@ -56,7 +58,7 @@ class Invoice extends \atk4\data\Model
         });
     }
 
-    function adjustTotal($change)
+    public function adjustTotal($change)
     {
         if ($this->audit_log_controller) {
             $this->audit_log_controller->custom_fields = [
@@ -76,9 +78,9 @@ class Invoice extends \atk4\data\Model
 class MultiModelTest extends \atk4\schema\PHPUnit_SchemaTestCase
 {
 
-    private $audit_db = ['_' => [
+    protected $audit_db = ['_' => [
                     'initiator_audit_log_id' => 1,
-                    'ts' => '', 
+                    'ts' => '',
                     'model' => '',
                     'model_id' => 1,
                     'action' => '',
@@ -94,7 +96,6 @@ class MultiModelTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     public function testTotals()
     {
-
         $q = [
             'invoice' => ['_'=>['ref'=>'', 'total'=>0.1]],
             'line' => ['_'=>['invoice_id'=>0, 'item'=>'', 'price'=>0.01, 'qty'=>0, 'total'=>0.1]],

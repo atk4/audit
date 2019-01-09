@@ -1,13 +1,13 @@
 <?php
 
-namespace atk4\ui\tests;
+namespace atk4\audit\tests;
 
 use atk4\data\Model;
 
 class AuditableUser extends \atk4\data\Model {
     public $table = 'user';
 
-    function init()
+    public function init()
     {
         parent::init();
 
@@ -19,14 +19,13 @@ class AuditableUser extends \atk4\data\Model {
 }
 
 /**
- * Tests basic create, update and delete operatiotns
+ * Tests basic create, update and delete operations
  */
 class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
 {
-
-    private $audit_db = ['_' => [
+    protected $audit_db = ['_' => [
                     'initiator_audit_log_id' => 1,
-                    'ts' => '', 
+                    'ts' => '',
                     'model' => '',
                     'model_id' => 1,
                     'action' => '',
@@ -42,7 +41,6 @@ class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     public function testUpdate()
     {
-
         $q = [
             'user' => [
                 ['name' => 'Vinny', 'surname' => 'Shira'],
@@ -54,27 +52,25 @@ class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         $m = new AuditableUser($this->db);
 
-        $m->tryLoadAny();
+        $m->load(1); // load Vinny
         $m['name'] = 'Ken';
         $m->save();
 
-        $l = $m->ref('AuditLog');
-        $l->loadLast();
+        $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('update name=Ken', $l['descr']);
+        $this->assertEquals('update Ken: name=Ken', $l['descr']);
         $this->assertEquals(['name' => ['Vinny', 'Ken']], $l['request_diff']);
 
-        $m->load(2);
+        $m->load(2); // Zoe
         $m['name'] = 'Brett';
         $m->save();
         $m['name'] = 'Doug';
         $m->save();
-        $this->assertEquals(2, $m->ref('AuditLog')->action('count')->getOne());
+        $this->assertEquals(3, $m->ref('AuditLog')->action('count')->getOne());
     }
 
     public function testUndo()
     {
-
         $q = [
             'user' => [
                 ['name' => 'Jawshua', 'surname' => 'Lo'],
@@ -91,8 +87,8 @@ class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $m['name'] = 'Donald';
         $m->save();
 
-        $l = $m->ref('AuditLog');
-        $l->loadLast()->undo();
+        $l = $m->ref('AuditLog')->loadLast();
+        $l->undo();
 
 
         $m->reload();
@@ -110,7 +106,6 @@ class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     public function testAddDelete()
     {
-
         $q = [
             'user' => [
                 ['name' => 'Jason', 'surname' => 'Dyck'],

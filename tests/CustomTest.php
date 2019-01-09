@@ -4,10 +4,13 @@ namespace atk4\audit\tests;
 
 use atk4\data\Model;
 
-class AuditableGenderUser extends \atk4\data\Model {
+class AuditableGenderUser extends \atk4\data\Model
+{
     public $table = 'user';
 
-    function init()
+    public $audit_model;
+
+    public function init()
     {
         parent::init();
 
@@ -19,14 +22,19 @@ class AuditableGenderUser extends \atk4\data\Model {
 
         $this->addHook('beforeSave', function($m) {
             if ($m->isDirty('gender')) {
-                $m->audit_log['action'] = 'genderbending';
+                //$m->audit_log['action'] = 'genderbending'; // deprecated usage
+                //$m->audit_log_controller->audit_log_stack[0]['action'] = 'genderbending';
+                $m->audit_log_controller->custom_action = 'genderbending';
+
             }
         });
     }
 }
 
-class CustomLog extends \atk4\audit\model\AuditLog {
-    function getDescr(){
+class CustomLog extends \atk4\audit\model\AuditLog
+{
+    public function getDescr()
+    {
         return count($this['request_diff']).' fields magically change';
     }
 }
@@ -36,10 +44,9 @@ class CustomLog extends \atk4\audit\model\AuditLog {
  */
 class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
 {
-
-    private $audit_db = ['_' => [
+    protected $audit_db = ['_' => [
                     'initiator_audit_log_id' => 1,
-                    'ts' => '', 
+                    'ts' => '',
                     'model' => '',
                     'model_id' => 1,
                     'action' => '',
@@ -55,7 +62,6 @@ class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     public function testBending()
     {
-
         $q = [
             'user' => [
                 ['name' => 'Vinny', 'surname' => 'Shira', 'gender' => 'M'],
@@ -67,19 +73,17 @@ class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         $m = new AuditableGenderUser($this->db);
 
-        $m->tryLoadAny();
+        $m->load(1); // load Vinny
         $m['gender'] = 'F';
         $m->save();
 
-        $l = $m->ref('AuditLog');
-        $l->loadLast();
+        $l = $m->ref('AuditLog')->loadLast();
 
         $this->assertEquals('genderbending', $l['action']);
     }
 
-    public function testLogCustom()
+    public function testCustomAction()
     {
-
         $q = [
             'user' => [
                 ['name' => 'Vinny', 'surname' => 'Shira', 'gender' => 'M'],
@@ -91,20 +95,18 @@ class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         $m = new AuditableGenderUser($this->db);
 
-        $m->load(2);
+        $m->load(2); // load Zoe
         $m->audit_log_controller->custom_action = 'married';
         $m['surname'] = 'Shira';
         $m->save();
 
-        $l = $m->ref('AuditLog');
-        $l->loadLast();
+        $l = $m->ref('AuditLog')->loadLast();
 
         $this->assertEquals('married', $l['action']);
     }
 
     public function testManualLog()
     {
-
         $q = [
             'user' => [
                 ['name' => 'Vinny', 'surname' => 'Shira', 'gender' => 'M'],
@@ -116,11 +118,10 @@ class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         $m = new AuditableGenderUser($this->db);
 
-        $m->load(2);
+        $m->load(2); // load Zoe
         $m->log('load', 'Testing', ['request_diff' => ['foo'=>'bar']]);
 
-        $l = $m->ref('AuditLog');
-        $l->loadLast();
+        $l = $m->ref('AuditLog')->loadLast();
 
         $this->assertEquals('load', $l['action']);
         $this->assertEquals(['foo'=>'bar'], $l['request_diff']);
@@ -128,7 +129,6 @@ class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     public function testCustomDescr()
     {
-
         $q = [
             'user' => [
                 ['name' => 'Vinny', 'surname' => 'Shira', 'gender' => 'M'],
@@ -140,16 +140,13 @@ class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         $m = new AuditableGenderUser($this->db, ['audit_model' => new CustomLog()]);
 
-        $m->load(2);
+        $m->load(2); // load Zoe
         $m['name'] = 'Joe';
         $m['surname'] = 'XX';
         $m->save();
 
-        $l = $m->ref('AuditLog');
-        $l->loadLast();
+        $l = $m->ref('AuditLog')->loadLast();
 
         $this->assertEquals('2 fields magically change', $l['descr']);
     }
-
-
 }
