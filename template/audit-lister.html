@@ -8,8 +8,11 @@
         <div class="content">
             <div class="summary">
                 <div class="user">{$user}</div>
-                {$_title}
+                {$action}
                 <div class="date">{$ts}</div>
+            </div>
+            <div class="meta">
+                {$descr}, <span style="color:orange"><br />model={$model}, model_id={$model_id}</span>
             </div>
             <div class="extra text">
                 {changes}
@@ -56,7 +59,9 @@
                 {/}
             </div>
 
+            <!-- Here we can add Undo button for example
             {Buttons}<div class="meta">{button}<a class="ui mini button">Undo</a>{/}</div>{/}
+            -->
         </div>
     </div>
     {/row}
@@ -68,17 +73,6 @@
         </div>
     </div>
     {/empty}
+
 {/rows}
 </div>
-
-<!-- Here we can add comment form EXAMPLE !!! -->
-<form class="ui reply form small">
-    <div class="ui action input">
-        <input type="text" placeholder="Add comment" />
-        <button class="ui icon button">
-            <i class="comment icon"></i>
-        </button>
-    </div>
-</form>
-
-{$Content}

@@ -10,7 +10,7 @@ namespace atk4\audit\view;
  *  $m->add(new \atk4\audit\Controller());
  *
  *  $l = $view->add(new \atk4\audit\view\Lister());
- *  $l->setModel($m); // IMPORTANT - here you set your model not audit model. It will be used automatically.
+ *  $l->setModel($m->ref('AuditLog'));
  */
 class Lister extends \atk4\ui\Lister
 {
@@ -49,37 +49,16 @@ class Lister extends \atk4\ui\Lister
     }
 
     /**
-     * Set audit model for Lister view.
-     *
-     * @param \atk4\data\Model $m
-     *
-     * @return \atk4\data\Model Returns jailed audit model
-     */
-    public function setModel(\atk4\data\Model $m)
-    {
-        if (!isset($m->audit_log_controller)) {
-            throw new \atk4\core\Exception(['Audit is not enabled for this model', 'model' => $m]);
-        }
-
-        $m = $m->audit_log_controller->getAuditModel();
-
-        // change title field - code smells :(
-        $m->title_field = 'action';
-
-        return parent::setModel($m);
-    }
-
-    /**
      * Render individual row.
      *
      * Adds rendering of field value changes section.
      */
     public function renderRow()
     {
-        if ($this->t_row->hasTag('changes')) {
+        if ($this->t_row->hasTag('changes') && $diff = $this->model['request_diff']) {
             $t_change = clone $this->t_row_change;
             $html = '';
-            foreach ($this->model['request_diff'] as $field => list($old_value, $new_value)) {
+            foreach ($diff as $field => list($old_value, $new_value)) {
                 $t_change->trySet('field', $field);
                 $t_change->trySet('old_value', $old_value);
                 $t_change->trySet('new_value', $new_value);

@@ -33,7 +33,7 @@ class AuditLog extends \atk4\data\Model
         $this->addField('ts', ['type' => 'datetime']);
 
         $this->addField('model', ['type' => 'string']); // model class name
-        $this->addField('model_id'); // id of related model record
+        $this->hasOne('model_id', new \atk4\data\Model()); // id of related model record
 
         $this->addField('action');
         $this->addField('time_taken', ['type' => 'float']);

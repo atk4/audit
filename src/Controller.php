@@ -16,7 +16,7 @@ class Controller
     /** @var bool should we record time taken to make this change? */
     public $record_time_taken = true;
 
-    /** @var \atk4\data\Model audit log data model */
+    /** @var model\AuditLog audit log data model */
     public $audit_model;
 
     /** @var float start time of audit log */
@@ -92,7 +92,7 @@ class Controller
         }
 
         // clone model
-        $a = isset($m->audit_model) ? clone $m->audit_model : clone $this->audit_model;
+        $a = isset($m->audit_model) ? $m->audit_model : $this->audit_model;
         if (!$a->persistence) {
             $m->persistence->add($a);
         }
@@ -117,7 +117,7 @@ class Controller
     public function push(\atk4\data\Model $m, $action)
     {
         // add audit model
-        $a = $this->getAuditModel($m);
+        $a = $m->ref('AuditLog');
 
         // set audit record values
         $a['ts'] = new \DateTime();
