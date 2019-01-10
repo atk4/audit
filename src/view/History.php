@@ -61,16 +61,16 @@ class History extends \atk4\ui\View
      */
     public function setModel(\atk4\data\Model $m)
     {
-        if (!isset($m->audit_log_controller)) {
-            throw new \atk4\core\Exception(['Audit is not enabled for this model', 'model' => $m]);
-        }
-
-        $m_audit = $m->ref('AuditLog');
+        parent::setModel($m);
 
         if ($this->lister) {
-            $this->lister->setModel($m_audit);
+            $this->lister->setModel($m->ref('AuditLog'));
         }
 
-        return parent::setModel($m);
+        if ($this->form) {
+            $this->form->setModel($m->ref('AuditLog'));
+        }
+
+        return $m;
     }
 }

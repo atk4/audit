@@ -16,11 +16,11 @@ class CommentForm extends \atk4\ui\Form
     public $buttonSave = false;
 
     /**
-     * Initialization.
+     * Init layout
      */
-    public function init()
+    public function initLayout()
     {
-        parent::init();
+        parent::initLayout();
 
         // form should be inline
         $this->layout->inline = true;
@@ -31,18 +31,31 @@ class CommentForm extends \atk4\ui\Form
         $this->buttonSave = null;
 
         // add field
-        $field = $this->addField('new_comment', new \atk4\ui\FormField\Line(['caption'=>'Add Comment']));
+        $field = $this->addField('__new_comment', new \atk4\ui\FormField\Line(['caption'=>'Add Comment']));
 
         // submit button
         $button = $field->addAction(['icon'=>'comment']);
-        $button->on('click', $this->js()->submit());
+        $button->on('click', $this->js()->form('submit'));
 
         $this->onSubmit(function($f) {
-            $m = $f->owner->model;
-            $c = $m->audit_log_controller;
-            $c->customLog($m, 'comment', $f->model->get('new_comment'));
+
+
+            // WHY OWNER MODEL IS NOT LOADED HERE  ?!??!?!?!
+            // IT'S LOADED WHEN WE CALL SETMODEL(), BUT AT THIS POINT IT'S NO MORE LOADED.
+            // WHY ???
+            // IT SHOULD BE LOADED BECAUSE ONLY THEN AUDIT CONTROLLER WILL CORRECTLY LINK
+            // NEW AUDIT RECORD WITH THIS MODEL AND MODEL_ID.
+            $f->owner->model->auditLog('comment', $f->model->get('__new_comment'));
 
             return $f->owner->jsReload();
         });
+    }
+
+    /**
+     * Just store data model in forms properties for using it in submit.
+     */
+    public function setModel($m_audit)
+    {
+        return $m_audit;
     }
 }

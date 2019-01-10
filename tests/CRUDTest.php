@@ -56,8 +56,9 @@ class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $m['name'] = 'Ken';
         $m->save();
 
+        // more audit record for Vinny
         $l = $m->ref('AuditLog')->loadLast();
-
+        $this->assertEquals(1, $m->ref('AuditLog')->action('count')->getOne());
         $this->assertEquals('update Ken: name=Ken', $l['descr']);
         $this->assertEquals(['name' => ['Vinny', 'Ken']], $l['request_diff']);
 
@@ -66,6 +67,12 @@ class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $m->save();
         $m['name'] = 'Doug';
         $m->save();
+
+        // two audit records for Zoe
+        $this->assertEquals(2, $m->ref('AuditLog')->action('count')->getOne());
+        
+        // three audit records in total (ref when model is not loaded)
+        $m->unload();
         $this->assertEquals(3, $m->ref('AuditLog')->action('count')->getOne());
     }
 

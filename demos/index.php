@@ -7,14 +7,9 @@ require_once 'database.php';
 $m = new Country($db);
 $c = $m->add(new \atk4\audit\Controller());
 
-// jail in particular record
-if (isset($_GET['model_id'])) {
-    $m->ref('AuditLog')->addCondition('model_id', $_GET['model_id']);
-}
-
 // do schema migration
-(new \atk4\schema\Migration\MySQL($m))->migrate();
-(new \atk4\schema\Migration\MySQL($m->ref('AuditLog')))->migrate();
+//(new \atk4\schema\Migration\MySQL($m))->migrate();
+//(new \atk4\schema\Migration\MySQL($m->refModel('AuditLog')))->migrate();
 
 
 
@@ -39,16 +34,21 @@ $crud->menu
         return $c2->jsReload();
     });
 
-
-
-// right side Audit Lister
-$c2->add('Header')->set($m->loaded() ? 'History of '.$m->getTitle() : 'All History');
-$h = $c2->add(new \atk4\audit\view\History());
-$h->setModel($m);
-
-
-
 // add CRUD action to load jailed audit records in lister
 $crud->addAction('Audit ->', function($js, $id)use($c2){
     return $c2->jsReload(['model_id'=>$id]);
 });
+
+
+
+// right side Audit History
+
+// jail in particular record
+if (isset($_GET['model_id'])) {
+    $app->stickyGet('model_id');
+    $m->load($_GET['model_id']);
+}
+
+$c2->add('Header')->set($m->loaded() ? 'History of '.$m->getTitle() : 'All History');
+$h = $c2->add(new \atk4\audit\view\History());
+$h->setModel($m);

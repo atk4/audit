@@ -9,15 +9,21 @@ class Controller
     }
     use \atk4\core\TrackableTrait;
     use \atk4\core\DIContainerTrait;
+    use \atk4\core\FactoryTrait;
+
+    /**
+     * Audit data model.
+     * Pass this property in constructor seed to change it.
+     *
+     * @var string|model\AuditLog
+     */
+    public $audit_model = model\AuditLog::class;
 
     /** @var array audit log stack - most recent record is first */
     public $audit_log_stack = [];
 
     /** @var bool should we record time taken to make this change? */
     public $record_time_taken = true;
-
-    /** @var model\AuditLog audit log data model */
-    public $audit_model;
 
     /** @var float start time of audit log */
     public $start_mt;
@@ -29,16 +35,15 @@ class Controller
     public $custom_fields = [];
 
     /**
-     * Constructor.
+     * Constructor - set up properties and audit model.
      *
-     * @param \atk4\data\Model $a        Audit data model
-     * @param array            $defaults Seed options
+     * @param array $defaults Seed options
      */
-    public function __construct($a = null, $defaults = [])
+    public function __construct($defaults = [])
     {
-        $this->audit_model = $a ?: $a = new model\AuditLog();
-
         $this->setDefaults($defaults);
+
+        $this->audit_model = $this->factory($this->audit_model);
     }
 
     /**
@@ -48,7 +53,9 @@ class Controller
     {
         $this->_init();
 
-        $this->setUp($this->owner);
+        if (isset($this->owner) && $this->owner instanceof \atk4\data\Model) {
+            $this->setUp($this->owner);
+        }
     }
 
     /**
@@ -63,9 +70,23 @@ class Controller
         $m->addHook('afterSave,afterDelete', $this, null, 100);
 
         // adds hasMany reference to audit records
-        $m->addRef('AuditLog', [$this, 'getAuditModel']);
+        $m->addRef('AuditLog', function($m) {
+            // get audit model but cloning - don't clone conditions!
+            $a = isset($m->audit_model) ? clone $m->audit_model : clone $this->audit_model;
+            if (!$a->persistence) {
+                $m->persistence->add($a);
+            }
 
-        // adds custom log methods in owner model
+            // jail
+            $a->addCondition('model', get_class($m));
+            if ($m->loaded()) {
+                $a->addCondition('model_id', $m->id);
+            }
+
+            return $a;
+        });
+
+        // adds custom log methods in model
         // log() method can clash with some debug logger, so we use two methods just in case
         if (!$m->hasMethod('log')) {
             $m->addMethod('log', [$this, 'customLog']);
@@ -74,36 +95,8 @@ class Controller
             $m->addMethod('auditLog', [$this, 'customLog']);
         }
 
-        // adds audit controller in owner model property
+        // adds link to audit controller in model properties
         $m->audit_log_controller = $this;
-    }
-
-    /**
-     * Returns jailed audit model to use.
-     *
-     * @param \atk4\data\Model|null $m
-     *
-     * @return \atk4\data\Model
-     */
-    public function getAuditModel(\atk4\data\Model $m = null)
-    {
-        if ($m === null) {
-            $m = $this->owner;
-        }
-
-        // clone model
-        $a = isset($m->audit_model) ? $m->audit_model : $this->audit_model;
-        if (!$a->persistence) {
-            $m->persistence->add($a);
-        }
-
-        // jail
-        $a->addCondition('model', get_class($m));
-        if ($m->loaded()) {
-            $a->addCondition('model_id', $m->id);
-        }
-
-        return $a;
     }
 
     /**
@@ -112,7 +105,7 @@ class Controller
      * @param \atk4\data\Model $m
      * @param string           $action
      *
-     * @return \atk4\data\Model
+     * @return model\AuditLog
      */
     public function push(\atk4\data\Model $m, $action)
     {
@@ -121,6 +114,11 @@ class Controller
 
         // set audit record values
         $a['ts'] = new \DateTime();
+
+        // sometimes we already have conditions set on model, but there are strange cases,
+        // when they are not. That's why we need following 2 lines :(
+        //$a['model'] = get_class($m);
+        //$a['model_id'] = $m->id;
 
         if ($this->custom_action) {
             $action = $this->custom_action;
@@ -159,7 +157,7 @@ class Controller
      *
      * @param \atk4\data\Model $m
      *
-     * @return \atk4\data\Model
+     * @return model\AuditLog
      */
     public function pull(\atk4\data\Model $m)
     {
@@ -239,7 +237,6 @@ class Controller
     public function afterSave(\atk4\data\Model $m)
     {
         // pull from audit stack
-        $action = 'save';
         $a = $this->pull($m);
 
         if ($a['model_id'] === null) {
@@ -248,6 +245,7 @@ class Controller
             $a['model_id'] = $m->id;
 
             // fill missing description for new record
+            $action = 'save';
             if (!$a['descr'] && $m->loaded()) {
                 $this->setDescr($a, $m, $action);
             }
@@ -279,7 +277,7 @@ class Controller
     /**
      * Set description.
      *
-     * @param \atk4\data\Model $a      Audit model
+     * @param model\AuditLog   $a      Audit model
      * @param \atk4\data\Model $m      Data model
      * @param string           $action Action taken
      */

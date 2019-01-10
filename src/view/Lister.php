@@ -65,6 +65,8 @@ class Lister extends \atk4\ui\Lister
                 $html .= $t_change->render();
             }
             $this->t_row->setHTML('changes', $html);
+        } else {
+            $this->t_row->del('changes');
         }
 
         return parent::renderRow();
