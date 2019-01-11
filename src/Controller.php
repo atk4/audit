@@ -332,7 +332,7 @@ class Controller
             $id = $m->id;
             $m = $m->newInstance()->load($id); // we need all fields
         }
-        $a['request_diff'] = $m->get();
+        $a['request_diff'] = array_map(function($v){return [$v, null];}, $m->get());
         $a['descr'] = 'delete id='.$m->id;
         if ($m->title_field && $m->hasElement($m->title_field)) {
             $a['descr'] .= ' ('.$m[$m->title_field].')';
