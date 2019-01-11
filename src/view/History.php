@@ -16,17 +16,17 @@ class History extends \atk4\ui\View
     /** @see init() */
     public $defaultTemplate = null;
 
-    /** @var Lister */
-    public $lister;
-
     /** @var string Lister class */
     public $lister_class = Lister::class;
 
-    /** @var CommentForm */
-    public $form;
+    /** @var Lister */
+    public $lister;
 
     /** @var string Form class */
     public $form_class = CommentForm::class;
+
+    /** @var CommentForm */
+    public $form;
 
     /** @var bool Enable comment form? */
     public $enable_comments = true;
@@ -65,10 +65,6 @@ class History extends \atk4\ui\View
 
         if ($this->lister) {
             $this->lister->setModel($m->ref('AuditLog'));
-        }
-
-        if ($this->form) {
-            $this->form->setModel($m->ref('AuditLog'));
         }
 
         return $m;

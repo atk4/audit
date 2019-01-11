@@ -1,15 +1,16 @@
 <?php
 
-require_once 'init.php';
-require_once 'database.php';
+require_once 'include/init.php';
+require_once 'include/database.php';
 
 // set up data model with audit add-on enabled
 $m = new Country($db);
 $c = $m->add(new \atk4\audit\Controller());
 
-// do schema migration
-//(new \atk4\schema\Migration\MySQL($m))->migrate();
-//(new \atk4\schema\Migration\MySQL($m->refModel('AuditLog')))->migrate();
+// do schema migration - don't do like this in production !
+// it's here only for demo purposes to ease DB table creation
+(new \atk4\schema\Migration\MySQL($m))->migrate();
+(new \atk4\schema\Migration\MySQL($m->refModel('AuditLog')))->migrate();
 
 
 
@@ -43,12 +44,13 @@ $crud->addAction('Audit ->', function($js, $id)use($c2){
 
 // right side Audit History
 
-// jail in particular record
+// create model for form
+$m2 = clone $m;
 if (isset($_GET['model_id'])) {
     $app->stickyGet('model_id');
-    $m->load($_GET['model_id']);
+    $m2->load($_GET['model_id']);
 }
 
-$c2->add('Header')->set($m->loaded() ? 'History of '.$m->getTitle() : 'All History');
+$c2->add('Header')->set($m2->loaded() ? 'History of '.$m2->getTitle() : 'All History');
 $h = $c2->add(new \atk4\audit\view\History());
-$h->setModel($m);
+$h->setModel($m2);

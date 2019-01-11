@@ -2,14 +2,14 @@
 
 // A very basic file that sets up Agile Data to be used in some demonstrations
 try {
-    if (file_exists('db.php')) {
-        include 'db.php';
+    if (file_exists('include/db.php')) {
+        include 'include/db.php';
     } else {
         $db = new \atk4\data\Persistence_SQL('mysql:dbname=atk4;host=localhost', 'root', 'root');
     }
 } catch (PDOException $e) {
     throw new \atk4\ui\Exception([
-        'This demo requires access to the database. See "demos/database.php"',
+        'This demo requires access to the database. See "demos/include/database.php"',
     ], null, $e);
 }
 

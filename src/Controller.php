@@ -43,6 +43,7 @@ class Controller
     {
         $this->setDefaults($defaults);
 
+        // create audit model object if it's not already there
         $this->audit_model = $this->factory($this->audit_model);
     }
 
@@ -71,7 +72,7 @@ class Controller
 
         // adds hasMany reference to audit records
         $m->addRef('AuditLog', function($m) {
-            // get audit model but cloning - don't clone conditions!
+            // get audit model
             $a = isset($m->audit_model) ? clone $m->audit_model : clone $this->audit_model;
             if (!$a->persistence) {
                 $m->persistence->add($a);
@@ -116,7 +117,8 @@ class Controller
         $a['ts'] = new \DateTime();
 
         // sometimes we already have conditions set on model, but there are strange cases,
-        // when they are not. That's why we need following 2 lines :(
+        // when they are not. That's why we needed following 2 lines :(
+        // BUT hopefully don't need them anymore - let's see.
         //$a['model'] = get_class($m);
         //$a['model_id'] = $m->id;
 
