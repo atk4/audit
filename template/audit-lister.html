@@ -14,10 +14,8 @@
             <div class="meta">
                 {$descr}
             </div>
+            {changes}
             <div class="extra text">
-                {changes}
-                    {change}
-
                     <!-- option 1 - show as segment with field name in header and labels inside -->
                     <!--
                     <div class="ui segment">
@@ -26,14 +24,6 @@
                         <a class="ui green basic label">{$new_value}</a>
                     </div>
                     -->
-                    <!-- option 2 - show as simple labels, no block -->
-
-                    <div>
-                        <a class="ui black basic label">{$field}</a>
-                        <a class="ui right pointing red basic label">{$old_value}</a>
-                        <a class="ui green basic label">{$new_value}</a>
-                    </div>
-
                     <!-- option 3 - show as steps -->
                     <!--
                     <div class="ui small steps" style="margin:0;">
@@ -54,14 +44,19 @@
                       </div>
                     </div>
                     -->
-
-                    {/}
-                {/}
+                    {change}
+                    <div>
+                        <a class="ui black basic label">{$field}</a>
+                        <a class="ui right pointing red basic label">{$old_value}</a>
+                        <a class="ui green basic label">{$new_value}</a>
+                    </div>
+                    {/change}
             </div>
 
             <!-- Here we can add Undo button for example
             {Buttons}<div class="meta">{button}<a class="ui mini button">Undo</a>{/}</div>{/}
             -->
+            {/changes}
         </div>
     </div>
     {/row}

@@ -70,7 +70,7 @@ class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         // two audit records for Zoe
         $this->assertEquals(2, $m->ref('AuditLog')->action('count')->getOne());
-        
+
         // three audit records in total (ref when model is not loaded)
         $m->unload();
         $this->assertEquals(3, $m->ref('AuditLog')->action('count')->getOne());
@@ -137,5 +137,26 @@ class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
         // table is back to how it was
         $this->assertEquals($zz, $this->getDB('user'));
+    }
+
+    public function testEmptyUpdate()
+    {
+        $q = [
+            'user' => [
+                ['name' => 'Vinny', 'surname' => 'Shira'],
+                ['name' => 'Zoe', 'surname' => 'Shatwell'],
+            ],
+            'audit_log' => $this->audit_db,
+        ];
+        $this->setDB($q);
+
+        $m = new AuditableUser($this->db);
+
+        $m->load(1); // load Vinny
+        $m['name'] = 'Vinny'; // false change
+        $m->save();
+
+        // no audit records for Vinny because there were no actual changes
+        $this->assertEquals(0, $m->ref('AuditLog')->action('count')->getOne());
     }
 }

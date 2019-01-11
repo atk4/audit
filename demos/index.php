@@ -46,9 +46,8 @@ $crud->addAction('Audit ->', function($js, $id)use($c2){
 
 // create model for form
 $m2 = clone $m;
-if (isset($_GET['model_id'])) {
-    $app->stickyGet('model_id');
-    $m2->load($_GET['model_id']);
+if ($id = $app->stickyGet('model_id')) {
+    $m2->load($id);
 }
 
 $c2->add('Header')->set($m2->loaded() ? 'History of '.$m2->getTitle() : 'All History');

@@ -23,8 +23,8 @@ class AuditableGenderUser extends \atk4\data\Model
         $this->addHook('beforeSave', function($m) {
             if ($m->isDirty('gender')) {
                 //$m->audit_log['action'] = 'genderbending'; // deprecated usage
-                //$m->audit_log_controller->audit_log_stack[0]['action'] = 'genderbending';
-                $m->audit_log_controller->custom_action = 'genderbending';
+                //$m->auditController->audit_log_stack[0]['action'] = 'genderbending';
+                $m->auditController->custom_action = 'genderbending';
 
             }
         });
@@ -96,7 +96,7 @@ class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $m = new AuditableGenderUser($this->db);
 
         $m->load(2); // load Zoe
-        $m->audit_log_controller->custom_action = 'married';
+        $m->auditController->custom_action = 'married';
         $m['surname'] = 'Shira';
         $m->save();
 

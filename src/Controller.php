@@ -97,7 +97,7 @@ class Controller
         }
 
         // adds link to audit controller in model properties
-        $m->audit_log_controller = $this;
+        $m->auditController = $this;
     }
 
     /**
@@ -144,8 +144,8 @@ class Controller
         // memorize start time
         $a->start_mt = (float)microtime();
 
-        //Imants: deprecated - use $m->audit_log_controller->audit_log_stack[0] instead
-        // or $m->audit_log_controller->custom_action and custom_fields properties in your beforeSave hook
+        //Imants: deprecated - use $m->auditController->audit_log_stack[0] instead
+        // or $m->auditController->custom_action and custom_fields properties in your beforeSave hook
         //$m->audit_log = $a;
 
         // save audit record in beginning of stack

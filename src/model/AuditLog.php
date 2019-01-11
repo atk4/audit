@@ -14,7 +14,7 @@ class AuditLog extends \atk4\data\Model
     public $no_audit = true;
 
     /** @var \atk4\audit\Controller */
-    public $audit_log_controller = null;
+    public $auditController = null;
 
     /** @var string Order records by this field by default */
     public $order_field = 'id';
@@ -88,8 +88,8 @@ class AuditLog extends \atk4\data\Model
 
             $f = 'undo_'.$this['action'];
 
-            $m->audit_log_controller->custom_action = 'undo '.$this['action'];
-            $m->audit_log_controller->custom_fields['revert_audit_log_id'] = $this->id;
+            $m->auditController->custom_action = 'undo '.$this['action'];
+            $m->auditController->custom_fields['revert_audit_log_id'] = $this->id;
 
             $this->$f($m);
 
