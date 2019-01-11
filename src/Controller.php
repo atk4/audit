@@ -67,8 +67,8 @@ class Controller
     public function setUp(\atk4\data\Model $m)
     {
         // adds hooks
-        $m->addHook('beforeSave,beforeDelete', $this, null, -100);
-        $m->addHook('afterSave,afterDelete', $this, null, 100);
+        $m->addHook('beforeSave,beforeDelete', $this, null, -100); // called as soon as possible
+        $m->addHook('afterSave,afterDelete', $this, null, 100);    // called as late as possible
 
         // adds hasMany reference to audit records
         $m->addRef('AuditLog', function($m) {
@@ -77,6 +77,23 @@ class Controller
             if (!$a->persistence) {
                 $m->persistence->add($a);
             }
+
+            // ignore records which have empty request_diff, reactive_diff and descr
+            // such records are generated because they are pushed in beforeSave hook,
+            // but if there was no actual changes in data model, then afterSave hook
+            // is never called, so we can't delete them automatically :(
+            // AND worst thing about this is that we can't add this condition (below)
+            // because then in audit push() save() we can't reload record and all audit
+            // system goes down :(
+            // SO currently we will have these empty audit records and no way to get rid of them.
+            // Related: https://github.com/atk4/audit/issues/17
+            /*
+            $a->addCondition([
+                ['descr', 'not', null],
+                ['request_diff', 'not', null],
+                ['reactive_diff', 'not', null],
+            ]);
+            */
 
             // jail
             $a->addCondition('model', get_class($m));
@@ -142,7 +159,9 @@ class Controller
         $a->save();
 
         // memorize start time
-        $a->start_mt = (float)microtime();
+        if ($this->record_time_taken) {
+            $a->start_mt = (float)microtime();
+        }
 
         //Imants: deprecated - use $m->auditController->audit_log_stack[0] instead
         // or $m->auditController->custom_action and custom_fields properties in your beforeSave hook
@@ -258,7 +277,7 @@ class Controller
             $d = $this->getDiffs($m);
             foreach ($d as $f => list($f0, $f1)) {
                 if (
-                    isset($d[$f], $a['request_diff'][$f][1])
+                    isset($a['request_diff'][$f][1])
                     && $a['request_diff'][$f][1] === $f1
                 ) {
                     unset($d[$f]);
@@ -267,13 +286,17 @@ class Controller
             $a['reactive_diff'] = $d;
 
             if ($a['reactive_diff']) {
-                $x = $a['reactive_diff'];
-
                 $a['descr'] .= ' (resulted in '.$this->getDescr($a['reactive_diff'], $m).')';
             }
         }
 
-        $a->save();
+        if ($a['request_diff'] || $a['reactive_diff']) {
+            // there was changes - let's update audit record
+            $a->save();
+        } else {
+            // no changes at all - let's delete pushed record, we actually didn't need it
+            $a->delete();
+        }
     }
 
     /**
