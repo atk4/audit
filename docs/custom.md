@@ -28,7 +28,7 @@ The method described above will only work during the modifications hook of the m
 
 ``` php
 $m->load(2); // surname=Shatwell
-$m->audit_log_controller->custom_action = 'married';
+$m->auditController->custom_action = 'married';
 $m['surname'] = 'Shira';
 $m->save();
 ```
@@ -41,7 +41,7 @@ Additionally you can also set other fields through use of `controller->custom_fi
 
 ```php
 $m->load(2);
-$m->audit_log_controller->custom_fields['descr'] = 'User got older';
+$m->auditController->custom_fields['descr'] = 'User got older';
 $m['age']++;
 $m->save();
 ```
