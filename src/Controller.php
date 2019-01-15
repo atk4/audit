@@ -37,11 +37,15 @@ class Controller
     /**
      * Constructor - set up properties and audit model.
      *
-     * @param array $defaults Seed options
+     * @param array|string|\atk4\data\Model $defaults Seed options or just audit model
      */
     public function __construct($defaults = [])
     {
-        $this->setDefaults($defaults);
+        if (is_array($defaults)) {
+            $this->setDefaults($defaults);
+        } else {
+            $this->audit_model = $defaults;
+        }
 
         // create audit model object if it's not already there
         $this->audit_model = $this->factory($this->audit_model);
