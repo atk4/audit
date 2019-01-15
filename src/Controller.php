@@ -70,6 +70,11 @@ class Controller
      */
     public function setUp(\atk4\data\Model $m)
     {
+        // don't set up audit if model has $no_audit=true
+        if (isset($m->no_audit) && $m->no_audit) {
+            return;
+        }
+
         // adds hooks
         $m->addHook('beforeSave,beforeDelete', $this, null, -100); // called as soon as possible
         $m->addHook('afterSave,afterDelete', $this, null, 100);    // called as late as possible
