@@ -387,8 +387,9 @@ class Controller
 
         $t = [];
         foreach ($diff as $key=>list($from, $to)) {
-            $from = $m->persistence->typecastSaveField($m->getElement($key), $from);
-            $to = $m->persistence->typecastSaveField($m->getElement($key), $to);
+            // should use typecastSaveRow not typecastSaveField because we can have fields with serialize property set too
+            $from = $m->persistence->typecastSaveRow($m, [$key=>$from])[$key];
+            $to = $m->persistence->typecastSaveRow($m, [$key=>$to])[$key];
 
             if (!$this->canBeString($from) || ! $this->canBeString($to)) {
                 throw new \atk4\core\Exception([
