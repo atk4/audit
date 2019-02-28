@@ -11,7 +11,7 @@ This package have been re-released under MIT license, so you are welcome to use 
 composer require atk4/audit
 ```
 
-You may ned to adjust your `minimum-stability` setting.
+You may need to adjust your `minimum-stability` setting.
 
 ## Documentation
 

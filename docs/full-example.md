@@ -41,8 +41,8 @@ class Invoice extends \atk4\data\Model
 
     function adjustTotal($change)
     {
-        if ($this->audit_log_controller) {
-            $this->audit_log_controller->custom_fields = [
+        if ($this->auditController) {
+            $this->auditController->custom_fields = [
                 'action'=>'total_adjusted',
                 'descr'=>'Changing total by '.$change
             ];

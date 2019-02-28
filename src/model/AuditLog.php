@@ -2,22 +2,27 @@
 
 namespace atk4\audit\model;
 
-class AuditLog extends \atk4\data\Model {
-
-    public $no_audit = true;
-
+class AuditLog extends \atk4\data\Model
+{
+    /** @var string Table name */
     public $table = 'audit_log';
+
+    /** @var string Title field */
     public $title_field = 'descr';
 
-    public $model = null;
+    /** @var bool Don't audit audit model itself */
+    public $no_audit = true;
 
-    public $start_mt;
+    /** @var \atk4\audit\Controller */
+    public $auditController = null;
 
-    public $controller = null;
-
+    /** @var string Order records by this field by default */
     public $order_field = 'id';
 
-    function init()
+    /**
+     * Initialization.
+     */
+    public function init()
     {
         parent::init();
 
@@ -27,43 +32,52 @@ class AuditLog extends \atk4\data\Model {
 
         $this->addField('ts', ['type' => 'datetime']);
 
-        $this->addField('model', ['type' => 'string']);
-        $this->addField('model_id');
+        $this->addField('model', ['type' => 'string']); // model class name
+        $this->addField('model_id'); // id of related model record
 
         $this->addField('action');
         $this->addField('time_taken', ['type' => 'float']);
 
-        $this->addField('descr');
+        $this->addField('descr', ['caption'=>'Description']);
 
         $this->addField('user_info', ['type' => 'array', 'serialize'=>'json']); // JSON containing keys for browser etc
         $this->addField('request_diff', ['type' => 'array', 'serialize'=>'json']); // requested changes
         $this->addField('reactive_diff', ['type' => 'array', 'serialize'=>'json']); // reactive diff
 
-        $this->addField('is_reverted', ['type' => 'boolean']);
+        $this->addField('is_reverted', ['type' => 'boolean', 'default' => false]);
         $this->hasOne('revert_audit_log_id', new $c());
 
         $this->setOrder($this->order_field.' desc');
     }
 
-    function loadLast()
+    /**
+     * Loads most recent audit record.
+     *
+     * @return $this
+     */
+    public function loadLast()
     {
         return $this->setOrder('id desc')->tryLoadAny();
     }
 
-    function getUserInfo()
+    /**
+     * Returns user remote address.
+     *
+     * @return array
+     */
+    public function getUserInfo()
     {
         return [
             'ip' => $_SERVER['REMOTE_ADDR']
         ];
     }
 
-
-
     /**
-     * For a specified model record diffs
+     * For a specified model record differences.
+     *
+     * @throws Exception
      */
-
-    function undo()
+    public function undo()
     {
         if (!$this->loaded()) {
             throw new \atk4\core\Exception('Load specific AuditLog entry before executing undo()');
@@ -74,8 +88,8 @@ class AuditLog extends \atk4\data\Model {
 
             $f = 'undo_'.$this['action'];
 
-            $m->audit_log_controller->custom_action = 'undo '.$this['action'];
-            $m->audit_log_controller->custom_fields['revert_audit_log_id'] = $this->id;
+            $m->auditController->custom_action = 'undo '.$this['action'];
+            $m->auditController->custom_fields['revert_audit_log_id'] = $this->id;
 
             $this->$f($m);
 
@@ -84,7 +98,14 @@ class AuditLog extends \atk4\data\Model {
         });
     }
 
-    function undo_update($m)
+    /**
+     * Rollback change in model data.
+     *
+     * @param \atk4\data\Model $m
+     *
+     * @throws Exception
+     */
+    public function undo_update($m)
     {
         $m->load($this['model_id']);
 
@@ -101,12 +122,22 @@ class AuditLog extends \atk4\data\Model {
 
         $m->save();
     }
-    function undo_delete($m)
+
+    /**
+     * @todo Imants: I think this will not work. Not sure what should be here. Maybe reactive_diff?
+     */
+    public function undo_delete($m)
     {
         $m->set($this['request_diff']);
         $m->save();
     }
-    function undo_create($m)
+
+    /**
+     * Deletes model record.
+     *
+     * @param \atk4\data\Model $m
+     */
+    public function undo_create($m)
     {
         $m->load($this['model_id']);
         $m->delete();
