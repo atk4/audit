@@ -37,6 +37,7 @@ prev_version=$(git log --tags --simplify-by-decoration --pretty="format:%d" | gr
 
 echo "Releasing $prev_version -> $version"
 
+gcg
 vimr CHANGELOG.md
 
 # Compute diffs
@@ -47,20 +48,15 @@ vimr CHANGELOG.md
     #ghi --color show $i | head -50
 #done
 
-open "https://github.com/atk4/$product/compare/$prev_version...develop"
+#open "https://github.com/atk4/$product/compare/$prev_version...develop"
 
 # Update dependency versions
 sed -i "" -e '/atk4.*dev-develop/d' composer.json
 composer update
-composer require atk4/core atk4/data
+composer require atk4/schema atk4/data
 
 composer update
 ./vendor/phpunit/phpunit/phpunit  --no-coverage
-
-sed -i "" "s|'https://cdn.rawgit.com/atk4/ui/.*|'https://cdn.rawgit.com/atk4/ui/$version/public',|" src/App.php
-sed -i "" "s|public \$version.*|public \$version = '$version';|" src/App.php
-git commit -m "Updated CDN and \$version in App.php to $version" src/App.php || echo "but its ok"
-
 
 echo "Press enter to publish the release"
 read junk
@@ -71,21 +67,6 @@ merge_tag=$(git rev-parse HEAD)
 # use stable verisons
 git commit -m "Set up stable dependencies for $version" composer.json
 
-# Build jsLib and bundle
-(cd js; npm install; npm run build)
-
-# Build CSS
-lessc public/agileui.less public/agileui.css  --clean-css="--s1 --advanced --compatibility=ie8" --source-map
-uglifyjs --compress -- public/agileui.js > public/agileui.min.js
-
-echo '!agileui.css' >> public/.gitignore
-echo '!agileui.css.map' >> public/.gitignore
-echo '!agileui.min.js' >> public/.gitignore
-echo '!atkjs-ui.js' >> public/.gitignore
-echo '!atkjs-ui.min.js' >> public/.gitignore
-#sed  -i "" '/^lib/d' js/.gitignore
-git add public
-git commit -m "Build release $version" public
 
 git tag $version
 git push origin release/$version
