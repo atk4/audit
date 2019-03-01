@@ -24,6 +24,7 @@
         "atk4/mastercrud": "Intergates with MasterCRUD showingh change history of your records"
     },
     "require-dev": {
+        "atk4/ui": "dev-develop",
         "phpunit/phpunit": "<6",
         "codeclimate/php-test-reporter": "*"
     },

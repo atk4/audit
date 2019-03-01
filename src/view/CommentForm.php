@@ -25,11 +25,6 @@ class CommentForm extends \atk4\ui\Form
         // form should be inline
         $this->layout->inline = true;
 
-        // destroy save button
-        // @todo remove these lines after https://github.com/atk4/ui/pull/631 merge
-        $this->buttonSave->destroy();
-        $this->buttonSave = null;
-
         // add field
         $field = $this->addField('__new_comment', new \atk4\ui\FormField\Line(['caption'=>'Add Comment']));
 
