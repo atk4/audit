@@ -2,7 +2,7 @@
 
 set -e
 
-product='ui'
+product=$(basename $PWD)
 
 
 check=$(git symbolic-ref HEAD | cut -d / -f3)
@@ -37,7 +37,7 @@ prev_version=$(git log --tags --simplify-by-decoration --pretty="format:%d" | gr
 
 echo "Releasing $prev_version -> $version"
 
-gcg --future-release $version
+gcg --future-release $version --unreleased=false
 vimr CHANGELOG.md
 
 # Compute diffs
