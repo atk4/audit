@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.1](https://github.com/atk4/audit/tree/1.1.1) (2019-03-01)
+
+[Full Changelog](https://github.com/atk4/audit/compare/1.1.0...1.1.1)
+
 ## [1.1.0](https://github.com/atk4/audit/tree/1.1.0) (2019-03-01)
 
 [Full Changelog](https://github.com/atk4/audit/compare/1.0...1.1.0)
