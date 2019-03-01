@@ -1,2 +1,2 @@
 usernames-as-github-logins=true
-base=CHANGELOG.md
+output=CHANGELOG.md
