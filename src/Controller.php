@@ -388,8 +388,9 @@ class Controller
         $t = [];
         foreach ($diff as $key=>list($from, $to)) {
             // should use typecastSaveRow not typecastSaveField because we can have fields with serialize property set too
-            $from = @$m->persistence->typecastSaveRow($m, [$key=>$from])[$key];
-            $to = @$m->persistence->typecastSaveRow($m, [$key=>$to])[$key];
+            // don't typecast value if it's empty anyway: https://github.com/atk4/data/issues/439
+            $from = ($from ? @$m->persistence->typecastSaveRow($m, [$key=>$from])[$key] : $from);
+            $to = ($to ? @$m->persistence->typecastSaveRow($m, [$key=>$to])[$key] : $to);
 
             if (!$this->canBeString($from) || ! $this->canBeString($to)) {
                 throw new \atk4\core\Exception([
