@@ -67,9 +67,7 @@ class AuditLog extends \atk4\data\Model
      */
     public function getUserInfo()
     {
-        return [
-            'ip' => $_SERVER['REMOTE_ADDR']
-        ];
+        return isset($_SERVER['REMOTE_ADDR']) ? ['ip' => $_SERVER['REMOTE_ADDR']] : [];
     }
 
     /**
