@@ -1,7 +1,17 @@
 # Agile Data - Audit Add-on
 
-This extension for Agile Data implements advanced logging capabilities as well as some elements of
+This extension for [Agile Data](https://github.com/atk4/data) implements advanced logging capabilities as well as some elements of
 Event Sourcing.
+
+## Installation and Usage
+
+This package have been re-released under MIT license, so you are welcome to use it!
+
+``` bash
+composer require atk4/audit
+```
+
+You may need to adjust your `minimum-stability` setting.
 
 ## Documentation
 
@@ -11,30 +21,6 @@ https://github.com/atk4/audit/blob/develop/docs/index.md
 
 https://github.com/atk4/audit/blob/develop/docs/full-example.md
 
-## Installation
-
-Add the following inside your `composer.json` file:
-
-``` json
-{
-    "require": {
-        "atk4/audit": "dev-develop"
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url":  "git@github.com:atk4/audit.git"
-        }
-    ]
-}
-```
-
-
-``` console
-composer require atk4/audit
-```
-
 ## Current Status
 
-Audit extension is currently under development.
-
+Audit add-on is implemented and used in some projects. Some clean-ups may be needed.

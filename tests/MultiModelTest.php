@@ -4,12 +4,13 @@ namespace atk4\audit\tests;
 
 use atk4\data\Model;
 
-class Line extends \atk4\data\Model {
+class Line extends \atk4\data\Model
+{
     public $table = 'line';
 
     public $no_adjust = false;
 
-    function init()
+    public function init()
     {
         parent::init();
 
@@ -43,7 +44,8 @@ class Line extends \atk4\data\Model {
 class Invoice extends \atk4\data\Model
 {
     public $table = 'invoice';
-    function init()
+
+    public function init()
     {
         parent::init();
 
@@ -56,10 +58,10 @@ class Invoice extends \atk4\data\Model
         });
     }
 
-    function adjustTotal($change)
+    public function adjustTotal($change)
     {
-        if ($this->audit_log_controller) {
-            $this->audit_log_controller->custom_fields = [
+        if ($this->auditController) {
+            $this->auditController->custom_fields = [
                 'action'=>'total_adjusted',
                 'descr'=>'Changing total by '.$change
             ];
@@ -76,9 +78,9 @@ class Invoice extends \atk4\data\Model
 class MultiModelTest extends \atk4\schema\PHPUnit_SchemaTestCase
 {
 
-    private $audit_db = ['_' => [
+    protected $audit_db = ['_' => [
                     'initiator_audit_log_id' => 1,
-                    'ts' => '', 
+                    'ts' => '',
                     'model' => '',
                     'model_id' => 1,
                     'action' => '',
@@ -94,7 +96,6 @@ class MultiModelTest extends \atk4\schema\PHPUnit_SchemaTestCase
 
     public function testTotals()
     {
-
         $q = [
             'invoice' => ['_'=>['ref'=>'', 'total'=>0.1]],
             'line' => ['_'=>['invoice_id'=>0, 'item'=>'', 'price'=>0.01, 'qty'=>0, 'total'=>0.1]],
@@ -123,14 +124,31 @@ class MultiModelTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $m->ref('Lines')->insert(['item'=>'Chair', 'price'=>2.50, 'qty'=>3]);
         $m->ref('Lines')->insert(['item'=>'Desk', 'price'=>10.20, 'qty'=>1]);
 
+        $this->assertEquals(5, count($this->getDB()['audit_log'])); // invoice + line + adjust + line + adjust
+        $this->assertEquals(2, count($this->getDB()['line']));
+        $this->assertEquals(1, count($this->getDB()['invoice']));
+
         //$m->ref('Lines')->ref('AuditLog')->loadLast()->undo();
 
         $a = $this->db->add(clone $audit->audit_model);
         $a->load(1);
-        $a->undo();
+        $a->undo(); // undo invoice creation - should undo all other nested changes too
 
         $this->assertEquals(8, count($this->getDB()['audit_log']));
         $this->assertEquals(0, count($this->getDB()['line']));
         $this->assertEquals(0, count($this->getDB()['invoice']));
+
+        // test audit log relations
+        $this->assertEquals(null, $a->load(1)['initiator_audit_log_id']); // create invoice
+        $this->assertEquals(null, $a->load(2)['initiator_audit_log_id']); // create line
+        $this->assertEquals(2,    $a->load(3)['initiator_audit_log_id']); // adjust invoice
+        $this->assertEquals(null, $a->load(4)['initiator_audit_log_id']); // create line
+        $this->assertEquals(4,    $a->load(5)['initiator_audit_log_id']); // adjust invoice
+        $this->assertEquals(null, $a->load(6)['initiator_audit_log_id']); // delete invoice
+        $this->assertEquals(6,    $a->load(7)['initiator_audit_log_id']); // delete line
+        $this->assertEquals(6,    $a->load(8)['initiator_audit_log_id']); // delete line
+
+        // test revert audit log id
+        $this->assertEquals(1,    $a->load(6)['revert_audit_log_id']); // undo invoice creation
     }
 }
