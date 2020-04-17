@@ -22,7 +22,7 @@ class AuditLog extends \atk4\data\Model
     /**
      * Initialization.
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
 
