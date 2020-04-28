@@ -47,7 +47,7 @@ class AuditLog extends \atk4\data\Model
         $this->addField('is_reverted', ['type' => 'boolean', 'default' => false]);
         $this->hasOne('revert_audit_log_id', new $c());
 
-        $this->setOrder($this->order_field.' desc');
+        $this->setOrder($this->order_field . ' desc');
     }
 
     /**
@@ -81,12 +81,12 @@ class AuditLog extends \atk4\data\Model
             throw new \atk4\core\Exception('Load specific AuditLog entry before executing undo()');
         }
 
-        $this->atomic(function() {
+        $this->atomic(function () {
             $m = new $this['model']($this->persistence);
 
-            $f = 'undo_'.$this['action'];
+            $f = 'undo_' . $this['action'];
 
-            $m->auditController->custom_action = 'undo '.$this['action'];
+            $m->auditController->custom_action = 'undo ' . $this['action'];
             $m->auditController->custom_fields['revert_audit_log_id'] = $this->id;
 
             $this->$f($m);

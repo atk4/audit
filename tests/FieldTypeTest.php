@@ -13,22 +13,22 @@ class TestModel extends \atk4\data\Model
         parent::init();
 
         // all field types
-        $this->addField('f_string',     ['type' => 'string']);
-        $this->addField('f_text',       ['type' => 'text']);
-        $this->addField('f_boolean',    ['type' => 'boolean']);
-        $this->addField('f_integer',    ['type' => 'integer']);
-        $this->addField('f_money',      ['type' => 'money']);
-        $this->addField('f_float',      ['type' => 'float']);
-        $this->addField('f_date',       ['type' => 'date']);
-        $this->addField('f_datetime',   ['type' => 'datetime']);
-        $this->addField('f_time',       ['type' => 'time']);
-        $this->addField('f_array',      ['type' => 'array']);
-        $this->addField('f_object',     ['type' => 'object']);
-        $this->addField('f_enum',       ['enum' => ['M','F']]);
+        $this->addField('f_string', ['type' => 'string']);
+        $this->addField('f_text', ['type' => 'text']);
+        $this->addField('f_boolean', ['type' => 'boolean']);
+        $this->addField('f_integer', ['type' => 'integer']);
+        $this->addField('f_money', ['type' => 'money']);
+        $this->addField('f_float', ['type' => 'float']);
+        $this->addField('f_date', ['type' => 'date']);
+        $this->addField('f_datetime', ['type' => 'datetime']);
+        $this->addField('f_time', ['type' => 'time']);
+        $this->addField('f_array', ['type' => 'array']);
+        $this->addField('f_object', ['type' => 'object']);
+        $this->addField('f_enum', ['enum' => ['M','F']]);
 
         // custom serialization
-        $this->addField('f_ser_json',   ['type' => 'array', 'serialize' => 'json']);
-        $this->addField('f_ser_ser',    ['type' => 'array', 'serialize' => 'serialize']);
+        $this->addField('f_ser_json', ['type' => 'array', 'serialize' => 'json']);
+        $this->addField('f_ser_ser', ['type' => 'array', 'serialize' => 'serialize']);
 
         $this->add(new \atk4\audit\Controller());
     }
@@ -37,7 +37,10 @@ class TestModel extends \atk4\data\Model
 class MyObject
 {
     public $foo;
-    public function __construct($foo = null) {$this->foo = $foo;}
+    public function __construct($foo = null)
+    {
+        $this->foo = $foo;
+    }
 }
 
 /**
@@ -75,11 +78,11 @@ class FieldTypeTest extends \atk4\schema\PHPUnit_SchemaTestCase
                     'f_date'        => (new \DateTime())->format('Y-m-d'),
                     'f_datetime'    => (new \DateTime())->format('Y-m-d H:i:s'),
                     'f_time'        => (new \DateTime())->format('H:i:s'),
-                    'f_array'       => json_encode( [123,'foo'=>'bar'] ),
-                    'f_object'      => json_encode( new MyObject() ),
+                    'f_array'       => json_encode([123,'foo'=>'bar']),
+                    'f_object'      => json_encode(new MyObject()),
                     'f_enum'        => 'M',
-                    'f_ser_json'    => json_encode( [789,'qwe'=>'asd'] ),
-                    'f_ser_ser'     => serialize( [789,'qwe'=>'asd'] ),
+                    'f_ser_json'    => json_encode([789,'qwe'=>'asd']),
+                    'f_ser_ser'     => serialize([789,'qwe'=>'asd']),
                 ],
             ],
             'audit_log' => $this->audit_db,

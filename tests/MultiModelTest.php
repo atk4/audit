@@ -21,13 +21,15 @@ class Line extends \atk4\data\Model
         $this->addField('qty', ['type' => 'integer', 'default' => 0]);
         $this->addField('total', ['type' => 'money', 'default' => 0.00]);
 
-        if ($this->no_adjust) return;
+        if ($this->no_adjust) {
+            return;
+        }
 
-        $this->addHook('beforeSave', function($m) {
+        $this->addHook('beforeSave', function ($m) {
             $m['total'] = $m['price'] * $m['qty'];
         });
 
-        $this->addHook('afterSave', function($m) {
+        $this->addHook('afterSave', function ($m) {
             if ($m->isDirty('total')) {
                 $change = $m['total'] - $m->dirty['total'];
 
@@ -35,7 +37,7 @@ class Line extends \atk4\data\Model
             }
         });
 
-        $this->addHook('afterDelete', function($m) {
+        $this->addHook('afterDelete', function ($m) {
             $this->ref('invoice_id')->adjustTotal(-$m['total']);
         });
     }
@@ -53,7 +55,7 @@ class Invoice extends \atk4\data\Model
         $this->addField('ref', ['type' => 'string']);
         $this->addField('total', ['type' => 'money', 'default' => 0.00]);
 
-        $this->addHook('beforeDelete', function($m) {
+        $this->addHook('beforeDelete', function ($m) {
             $m->ref('Lines', ['no_adjust'=>true])->each('delete');
         });
     }
@@ -63,7 +65,7 @@ class Invoice extends \atk4\data\Model
         if ($this->auditController) {
             $this->auditController->custom_fields = [
                 'action'=>'total_adjusted',
-                'descr'=>'Changing total by '.$change
+                'descr'=>'Changing total by ' . $change
             ];
         }
         $this['total'] += $change;
@@ -77,7 +79,6 @@ class Invoice extends \atk4\data\Model
  */
 class MultiModelTest extends \atk4\schema\PHPUnit_SchemaTestCase
 {
-
     protected $audit_db = ['_' => [
                     'initiator_audit_log_id' => 1,
                     'ts' => '',
@@ -104,9 +105,9 @@ class MultiModelTest extends \atk4\schema\PHPUnit_SchemaTestCase
         $this->setDB($q);
 
         $audit = new \atk4\audit\Controller();
-        $audit->audit_model->addMethod('undo_total_adjusted', function() {} );
+        $audit->audit_model->addMethod('undo_total_adjusted', function () {});
 
-        $this->db->addHook('afterAdd', function($owner, $element) use($audit) {
+        $this->db->addHook('afterAdd', function ($owner, $element) use ($audit) {
             if ($element instanceof \atk4\data\Model) {
                 if (isset($element->no_audit) && $element->no_audit) {
                     // Whitelisting this model, won't audit
@@ -141,14 +142,14 @@ class MultiModelTest extends \atk4\schema\PHPUnit_SchemaTestCase
         // test audit log relations
         $this->assertEquals(null, $a->load(1)['initiator_audit_log_id']); // create invoice
         $this->assertEquals(null, $a->load(2)['initiator_audit_log_id']); // create line
-        $this->assertEquals(2,    $a->load(3)['initiator_audit_log_id']); // adjust invoice
+        $this->assertEquals(2, $a->load(3)['initiator_audit_log_id']); // adjust invoice
         $this->assertEquals(null, $a->load(4)['initiator_audit_log_id']); // create line
-        $this->assertEquals(4,    $a->load(5)['initiator_audit_log_id']); // adjust invoice
+        $this->assertEquals(4, $a->load(5)['initiator_audit_log_id']); // adjust invoice
         $this->assertEquals(null, $a->load(6)['initiator_audit_log_id']); // delete invoice
-        $this->assertEquals(6,    $a->load(7)['initiator_audit_log_id']); // delete line
-        $this->assertEquals(6,    $a->load(8)['initiator_audit_log_id']); // delete line
+        $this->assertEquals(6, $a->load(7)['initiator_audit_log_id']); // delete line
+        $this->assertEquals(6, $a->load(8)['initiator_audit_log_id']); // delete line
 
         // test revert audit log id
-        $this->assertEquals(1,    $a->load(6)['revert_audit_log_id']); // undo invoice creation
+        $this->assertEquals(1, $a->load(6)['revert_audit_log_id']); // undo invoice creation
     }
 }

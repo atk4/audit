@@ -25,13 +25,13 @@ $crud->setIpp(5);
 // Delete audit data button
 $crud->menu
     ->addItem(['Delete ALL audit data', 'icon' => 'trash'])
-    ->on('click', function()use($m, $c2){
+    ->on('click', function () use ($m, $c2) {
         $m->ref('AuditLog')->action('delete')->execute();
         return $c2->jsReload();
     });
 
 // add CRUD action to load jailed audit records in lister
-$crud->addAction('Audit ->', function($js, $id)use($c2){
+$crud->addAction('Audit ->', function ($js, $id) use ($c2) {
     return $c2->jsReload(['model_id'=>$id]);
 });
 
@@ -45,6 +45,6 @@ if ($id = $app->stickyGet('model_id')) {
     $m2->load($id);
 }
 
-$c2->add('Header')->set($m2->loaded() ? 'History of '.$m2->getTitle() : 'All History');
+$c2->add('Header')->set($m2->loaded() ? 'History of ' . $m2->getTitle() : 'All History');
 $h = $c2->add(new \atk4\audit\view\History());
 $h->setModel($m2);

@@ -80,7 +80,7 @@ class Controller
         $m->addHook('afterSave,afterDelete', $this, null, 100);    // called as late as possible
 
         // adds hasMany reference to audit records
-        $m->addRef('AuditLog', function($m) {
+        $m->addRef('AuditLog', function ($m) {
             // get audit model
             $a = isset($m->audit_model) ? clone $m->audit_model : clone $this->audit_model;
             if (!$a->persistence) {
@@ -222,7 +222,6 @@ class Controller
     {
         $diff = [];
         foreach ($m->dirty as $key => $original) {
-
             $f = $m->hasElement($key);
 
             // don't log fields if no_audit=true is set
@@ -279,7 +278,6 @@ class Controller
             if (!$a['descr'] && $m->loaded()) {
                 $this->setDescr($a, $m, $action);
             }
-
         } else {
 
             // updated record
@@ -295,7 +293,7 @@ class Controller
             $a['reactive_diff'] = $d;
 
             if ($a['reactive_diff']) {
-                $a['descr'] .= ' (resulted in '.$this->getDescr($a['reactive_diff'], $m).')';
+                $a['descr'] .= ' (resulted in ' . $this->getDescr($a['reactive_diff'], $m) . ')';
             }
         }
 
@@ -322,9 +320,9 @@ class Controller
         } else {
             // could use $m->getTitle() here, but we don't want to see IDs in log descriptions
             if ($m->hasElement($m->title_field)) {
-                $a['descr'] = $action.' '.$m[$m->title_field].': '.$this->getDescr($a['request_diff'], $m);
+                $a['descr'] = $action . ' ' . $m[$m->title_field] . ': ' . $this->getDescr($a['request_diff'], $m);
             } else {
-                $a['descr'] = $action.': '.$this->getDescr($a['request_diff'], $m);
+                $a['descr'] = $action . ': ' . $this->getDescr($a['request_diff'], $m);
             }
         }
     }
@@ -341,10 +339,10 @@ class Controller
             $id = $m->id;
             $m = $m->newInstance()->load($id); // we need all fields
         }
-        $a['request_diff'] = array_map(function($v){return [$v, null];}, $m->get());
-        $a['descr'] = 'delete id='.$m->id;
+        $a['request_diff'] = array_map(function ($v) {return [$v, null];}, $m->get());
+        $a['descr'] = 'delete id=' . $m->id;
         if ($m->title_field && $m->hasElement($m->title_field)) {
-            $a['descr'] .= ' ('.$m[$m->title_field].')';
+            $a['descr'] .= ' (' . $m[$m->title_field] . ')';
         }
     }
 
@@ -365,7 +363,8 @@ class Controller
      *
      * @return bool
      */
-    protected function canBeString($var) {
+    protected function canBeString($var)
+    {
         return $var === null || is_scalar($var) || is_callable([$var, '__toString']);
     }
 
@@ -401,7 +400,7 @@ class Controller
                 ]);
             }
 
-            $t[] = $key.'='.$to;
+            $t[] = $key . '=' . $to;
         }
 
         return join(', ', $t);
@@ -421,7 +420,7 @@ class Controller
 
         if ($descr === null) {
             if ($m->hasElement($m->title_field)) {
-                $descr = $action.' '.$m[$m->title_field].': ';
+                $descr = $action . ' ' . $m[$m->title_field] . ': ';
             } else {
                 $descr = $action;
             }

@@ -32,7 +32,7 @@ class CommentForm extends \atk4\ui\Form
         $button = $field->addAction(['icon'=>'comment']);
         $button->on('click', $this->js()->form('submit'));
 
-        $this->onSubmit(function($f) {
+        $this->onSubmit(function ($f) {
             // History->model = real data model
             $f->owner->model->auditLog('comment', $f->model->get('__new_comment'));
 

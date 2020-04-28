@@ -20,12 +20,11 @@ class AuditableGenderUser extends \atk4\data\Model
 
         $this->add(new \atk4\audit\Controller());
 
-        $this->addHook('beforeSave', function($m) {
+        $this->addHook('beforeSave', function ($m) {
             if ($m->isDirty('gender')) {
                 //$m->audit_log['action'] = 'genderbending'; // deprecated usage
                 //$m->auditController->audit_log_stack[0]['action'] = 'genderbending';
                 $m->auditController->custom_action = 'genderbending';
-
             }
         });
     }
@@ -35,7 +34,7 @@ class CustomLog extends \atk4\audit\model\AuditLog
 {
     public function getDescr()
     {
-        return count($this['request_diff']).' fields magically change';
+        return count($this['request_diff']) . ' fields magically change';
     }
 }
 

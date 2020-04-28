@@ -4,7 +4,8 @@ namespace atk4\audit\tests;
 
 use atk4\data\Model;
 
-class AuditableUser extends \atk4\data\Model {
+class AuditableUser extends \atk4\data\Model
+{
     public $table = 'user';
 
     public function init()

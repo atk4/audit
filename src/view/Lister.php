@@ -59,7 +59,7 @@ class Lister extends \atk4\ui\Lister
      */
     public function renderRow()
     {
-        if($this->model->hasRef('updated_by_user_id')) {
+        if ($this->model->hasRef('updated_by_user_id')) {
             $this->t_row->trySet('user', $this->model->ref('updated_by_user_id')->getTitle());
         }
 
@@ -69,7 +69,6 @@ class Lister extends \atk4\ui\Lister
             $t_change = clone $this->t_row_change;
             $html     = '';
             foreach ($diff as $field => list($old_value, $new_value)) {
-
                 if ($field === 'id') {
                     continue;
                 }
