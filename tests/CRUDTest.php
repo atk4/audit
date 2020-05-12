@@ -8,7 +8,7 @@ class AuditableUser extends \atk4\data\Model
 {
     public $table = 'user';
 
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -22,7 +22,7 @@ class AuditableUser extends \atk4\data\Model
 /**
  * Tests basic create, update and delete operations
  */
-class CRUDTest extends \atk4\schema\PHPUnit_SchemaTestCase
+class CRUDTest extends \atk4\schema\PhpunitTestCase
 {
     protected $audit_db = ['_' => [
                     'initiator_audit_log_id' => 1,

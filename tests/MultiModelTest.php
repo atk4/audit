@@ -10,7 +10,7 @@ class Line extends \atk4\data\Model
 
     public $no_adjust = false;
 
-    public function init()
+    public function init():void
     {
         parent::init();
 
@@ -47,7 +47,7 @@ class Invoice extends \atk4\data\Model
 {
     public $table = 'invoice';
 
-    public function init()
+    public function init():void
     {
         parent::init();
 
@@ -77,7 +77,7 @@ class Invoice extends \atk4\data\Model
 /**
  * Tests basic create, update and delete operatiotns
  */
-class MultiModelTest extends \atk4\schema\PHPUnit_SchemaTestCase
+class MultiModelTest extends \atk4\schema\PhpunitTestCase
 {
     protected $audit_db = ['_' => [
                     'initiator_audit_log_id' => 1,

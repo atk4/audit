@@ -10,7 +10,7 @@ class AuditableGenderUser extends \atk4\data\Model
 
     public $audit_model;
 
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -41,7 +41,7 @@ class CustomLog extends \atk4\audit\model\AuditLog
 /**
  * Tests basic create, update and delete operatiotns
  */
-class CustomTest extends \atk4\schema\PHPUnit_SchemaTestCase
+class CustomTest extends \atk4\schema\PhpunitTestCase
 {
     protected $audit_db = ['_' => [
                     'initiator_audit_log_id' => 1,
