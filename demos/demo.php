@@ -18,7 +18,7 @@ $c2 = $cols->addColumn();
 
 // left side country CRUD
 $c1->add('Header')->set('Countries');
-$crud = $c1->add('CRUD', []);
+$crud = \atk4\ui\CRUD::addTo($c1);
 $crud->setModel($m, ['id', 'name', 'iso', 'iso3']);
 $crud->setIpp(5);
 
@@ -31,7 +31,7 @@ $crud->menu
     });
 
 // add CRUD action to load jailed audit records in lister
-$crud->addAction('Audit ->', function ($js, $id) use ($c2) {
+$crud->addActionButton('Audit ->', function ($js, $id) use ($c2) {
     return $c2->jsReload(['model_id'=>$id]);
 });
 

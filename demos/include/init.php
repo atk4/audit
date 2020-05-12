@@ -2,10 +2,10 @@
 
 date_default_timezone_set('UTC');
 
-require'../vendor/autoload.php';
+require __DIR__.'/../../vendor/autoload.php';
 
 $app = new \atk4\ui\App('Audit Demo');
-$app->initLayout('Admin');
+$app->initLayout(\atk4\ui\Layout\Admin::class);
 
-$app->layout->leftMenu->addItem(['Migration', 'icon'=>'gift'], ['wizard']);
-$app->layout->leftMenu->addItem(['Audit Demo', 'icon'=>'list'], ['demo']);
+$app->layout->menuLeft->addItem(['Migration', 'icon'=>'gift'], ['wizard']);
+$app->layout->menuLeft->addItem(['Audit Demo', 'icon'=>'list'], ['demo']);
