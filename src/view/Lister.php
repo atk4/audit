@@ -73,6 +73,11 @@ class Lister extends \atk4\ui\Lister
                     continue;
                 }
 
+                // if field is no more in the model schema
+                if (!$this->linkedModel->hasField($field)) {
+                    continue;
+                }
+
                 if ($this->isEmptyOrNull($old_value) && $this->isEmptyOrNull($new_value)) {
                     continue;
                 }
