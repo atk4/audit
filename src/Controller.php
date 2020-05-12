@@ -90,23 +90,27 @@ class Controller
         }
 
         // adds hooks
-        $m->onHook('beforeSave',
+        $m->onHook(
+            'beforeSave',
             \Closure::fromCallable([$this,'beforeSave']),
             [],
             -100
         );
-        $m->onHook('beforeDelete',
+        $m->onHook(
+            'beforeDelete',
             \Closure::fromCallable([$this,'beforeDelete']),
             [],
             -100
         );// called as soon as possible
 
-        $m->onHook('afterSave',
+        $m->onHook(
+            'afterSave',
             \Closure::fromCallable([$this,'afterSave']),
             [],
             100
         );
-        $m->onHook('afterDelete',
+        $m->onHook(
+            'afterDelete',
             \Closure::fromCallable([$this,'afterDelete']),
             [],
             100
@@ -261,7 +265,6 @@ class Controller
     {
         $diff = [];
         foreach ($m->dirty as $key => $original) {
-
             $f = $m->hasField($key);
 
             // don't log fields if no_audit=true is set
@@ -449,10 +452,14 @@ class Controller
         foreach ($diff as $key => list($from, $to)) {
             // should use typecastSaveRow not typecastSaveField because we can have fields with serialize property set too
             // don't typecast value if it's empty anyway: https://github.com/atk4/data/issues/439
-            $from = ($from ? @$m->persistence->typecastSaveRow($m,
-                [$key => $from])[$key] : $from);
-            $to = ($to ? @$m->persistence->typecastSaveRow($m,
-                [$key => $to])[$key] : $to);
+            $from = ($from ? @$m->persistence->typecastSaveRow(
+                $m,
+                [$key => $from]
+            )[$key] : $from);
+            $to = ($to ? @$m->persistence->typecastSaveRow(
+                $m,
+                [$key => $to]
+            )[$key] : $to);
 
             if (!$this->canBeString($from) || !$this->canBeString($to)) {
                 throw new Exception([

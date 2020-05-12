@@ -27,7 +27,7 @@ class Lister extends \atk4\ui\Lister
     public $defaultTemplate = null;
 
     /** @var Template Template chunk for one changed field */
-    public  $t_row_change;
+    public $t_row_change;
 
     /** @var Model */
     private $linkedModel;
@@ -79,7 +79,6 @@ class Lister extends \atk4\ui\Lister
             $t_change = clone $this->t_row_change;
             $html     = '';
             foreach ($diff as $field => list($old_value, $new_value)) {
-
                 if ($field === 'id') {
                     continue;
                 }
