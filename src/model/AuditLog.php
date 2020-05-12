@@ -38,7 +38,7 @@ class AuditLog extends \atk4\data\Model
         $this->addField('action');
         $this->addField('time_taken', ['type' => 'float']);
 
-        $this->addField('descr', ['caption'=>'Description']);
+        $this->addField('descr', ['caption'=>'Description','type' => 'text']);
 
         $this->addField('user_info', ['type' => 'array', 'serialize'=>'json']); // JSON containing keys for browser etc
         $this->addField('request_diff', ['type' => 'array', 'serialize'=>'json']); // requested changes
