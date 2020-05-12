@@ -8,7 +8,7 @@ class TestModel extends \atk4\data\Model
 {
     public $table = 'test';
 
-    public function init():void
+    public function init(): void
     {
         parent::init();
 
