@@ -2,22 +2,32 @@
 
 namespace atk4\audit;
 
+use atk4\audit\model\AuditLog;
+use atk4\core\DIContainerTrait;
+use atk4\core\Exception;
+use atk4\core\FactoryTrait;
+use atk4\core\InitializerTrait;
+use atk4\core\TrackableTrait;
+use atk4\dsql\Expression;
+use DateTime;
+use atk4\data\Model;
+
 class Controller
 {
-    use \atk4\core\InitializerTrait {
+    use InitializerTrait {
         init as _init;
     }
-    use \atk4\core\TrackableTrait;
-    use \atk4\core\DIContainerTrait;
-    use \atk4\core\FactoryTrait;
+    use TrackableTrait;
+    use DIContainerTrait;
+    use FactoryTrait;
 
     /**
      * Audit data model.
      * Pass this property in constructor seed to change it.
      *
-     * @var string|model\AuditLog
+     * @var string|AuditLog
      */
-    public $audit_model = model\AuditLog::class;
+    public $audit_model = AuditLog::class;
 
     /** @var array audit log stack - most recent record is first */
     public $audit_log_stack = [];
@@ -37,15 +47,16 @@ class Controller
     /**
      * Constructor - set up properties and audit model.
      *
-     * @param array|string|\atk4\data\Model $defaults Seed options or just audit model
+     * @param array|string|Model $defaults            Seed options or just
+     *                                                audit model
+     *
+     * @throws Exception
      */
     public function __construct($defaults = [])
     {
-        if (is_array($defaults)) {
-            $this->setDefaults($defaults);
-        } else {
-            $this->audit_model = $defaults;
-        }
+        $defaults = is_array($defaults) ? $defaults : ['audit_model' => $defaults];
+
+        $this->setDefaults($defaults);
 
         // create audit model object if it's not already there
         $this->audit_model = $this->factory($this->audit_model);
@@ -54,11 +65,11 @@ class Controller
     /**
      * Initialize - set up all necessary hooks etc.
      */
-    public function init()
+    public function init(): void
     {
         $this->_init();
 
-        if (isset($this->owner) && $this->owner instanceof \atk4\data\Model) {
+        if (isset($this->owner) && $this->owner instanceof Model) {
             $this->setUp($this->owner);
         }
     }
@@ -66,9 +77,12 @@ class Controller
     /**
      * Will set up specified model to be logged.
      *
-     * @param \atk4\data\Model $m
+     * @param Model $m
+     *
+     * @throws Exception
+     * @throws \atk4\data\Exception
      */
-    public function setUp(\atk4\data\Model $m)
+    public function setUp(Model $m)
     {
         // don't set up audit if model has $no_audit=true
         if (isset($m->no_audit) && $m->no_audit) {
@@ -76,13 +90,37 @@ class Controller
         }
 
         // adds hooks
-        $m->addHook('beforeSave,beforeDelete', $this, null, -100); // called as soon as possible
-        $m->addHook('afterSave,afterDelete', $this, null, 100);    // called as late as possible
+        $m->onHook(
+            'beforeSave',
+            \Closure::fromCallable([$this,'beforeSave']),
+            [],
+            -100
+        );
+        $m->onHook(
+            'beforeDelete',
+            \Closure::fromCallable([$this,'beforeDelete']),
+            [],
+            -100
+        );// called as soon as possible
+
+        $m->onHook(
+            'afterSave',
+            \Closure::fromCallable([$this,'afterSave']),
+            [],
+            100
+        );
+        $m->onHook(
+            'afterDelete',
+            \Closure::fromCallable([$this,'afterDelete']),
+            [],
+            100
+        );// called as late as possible
 
         // adds hasMany reference to audit records
         $m->addRef('AuditLog', function ($m) {
             // get audit model
             $a = isset($m->audit_model) ? clone $m->audit_model : clone $this->audit_model;
+
             if (!$a->persistence) {
                 $m->persistence->add($a);
             }
@@ -118,6 +156,7 @@ class Controller
         if (!$m->hasMethod('log')) {
             $m->addMethod('log', [$this, 'customLog']);
         }
+
         if (!$m->hasMethod('auditLog')) {
             $m->addMethod('auditLog', [$this, 'customLog']);
         }
@@ -129,18 +168,21 @@ class Controller
     /**
      * Push change into audit log (and audit log stack).
      *
-     * @param \atk4\data\Model $m
-     * @param string           $action
+     * @param Model  $m
+     * @param string $action
      *
-     * @return model\AuditLog
+     * @throws Exception
+     * @throws \atk4\data\Exception
+     *
+     * @return AuditLog
      */
-    public function push(\atk4\data\Model $m, $action)
+    public function push(Model $m, $action)
     {
         // add audit model
         $a = $m->ref('AuditLog');
 
         // set audit record values
-        $a['ts'] = new \DateTime();
+        $a['ts'] = new DateTime();
 
         // sometimes we already have conditions set on model, but there are strange cases,
         // when they are not. That's why we needed following 2 lines :(
@@ -152,6 +194,7 @@ class Controller
             $action = $this->custom_action;
             $this->custom_action = null;
         }
+
         $a['action'] = $action;
 
         if ($this->custom_fields) {
@@ -185,11 +228,11 @@ class Controller
     /**
      * Pull most recent change from audit log stack.
      *
-     * @param \atk4\data\Model $m
+     * @param Model $m
      *
-     * @return model\AuditLog
+     * @return AuditLog
      */
-    public function pull(\atk4\data\Model $m)
+    public function pull(Model $m)
     {
         $a = array_shift($this->audit_log_stack);
 
@@ -214,15 +257,15 @@ class Controller
     /**
      * Calculates and returns array of all changed fields and their values.
      *
-     * @param \atk4\data\Model $m
+     * @param Model $m
      *
      * @return array
      */
-    public function getDiffs(\atk4\data\Model $m)
+    public function getDiffs(Model $m)
     {
         $diff = [];
         foreach ($m->dirty as $key => $original) {
-            $f = $m->hasElement($key);
+            $f = $m->hasField($key);
 
             // don't log fields if no_audit=true is set
             if ($f && isset($f->no_audit) && $f->no_audit) {
@@ -230,7 +273,7 @@ class Controller
             }
 
             // don't log DSQL expressions because they can be recursive and we can't store them
-            if ($original instanceof \atk4\dsql\Expression || $m[$key] instanceof \atk4\dsql\Expression) {
+            if ($original instanceof Expression || $m[$key] instanceof Expression) {
                 continue;
             }
 
@@ -244,16 +287,20 @@ class Controller
     /**
      * Executes before model record is saved.
      *
-     * @param \atk4\data\Model $m
+     * @param Model $m
+     * @param bool  $is_update
+     *
+     * @throws Exception
+     * @throws \atk4\data\Exception
      */
-    public function beforeSave(\atk4\data\Model $m)
+    public function beforeSave(Model $m, $is_update)
     {
-        $action = $m->loaded() ? 'update' : 'create';
+        $action = $is_update ? 'update' : 'create';
         $a = $this->push($m, $action);
 
         $a['request_diff'] = $this->getDiffs($m);
 
-        if (!$a['descr'] && $m->loaded()) {
+        if (!$a['descr'] && $is_update) {
             $this->setDescr($a, $m, $action);
         }
     }
@@ -261,9 +308,14 @@ class Controller
     /**
      * Executes after model record is saved.
      *
-     * @param \atk4\data\Model $m
+     * @param Model $m
+     *
+     * @param bool  $is_update
+     *
+     * @throws Exception
+     * @throws \atk4\data\Exception
      */
-    public function afterSave(\atk4\data\Model $m)
+    public function afterSave(Model $m, $is_update)
     {
         // pull from audit stack
         $a = $this->pull($m);
@@ -275,7 +327,7 @@ class Controller
 
             // fill missing description for new record
             $action = 'save';
-            if (!$a['descr'] && $m->loaded()) {
+            if (!$a['descr'] && $is_update) {
                 $this->setDescr($a, $m, $action);
             }
         } else {
@@ -309,11 +361,13 @@ class Controller
     /**
      * Set description.
      *
-     * @param model\AuditLog   $a      Audit model
-     * @param \atk4\data\Model $m      Data model
-     * @param string           $action Action taken
+     * @param AuditLog $a      Audit model
+     * @param Model    $m      Data model
+     * @param string   $action Action taken
+     *
+     * @throws Exception
      */
-    public function setDescr(\atk4\data\Model $a, \atk4\data\Model $m, string $action)
+    public function setDescr(AuditLog $a, Model $m, string $action)
     {
         if ($a->hasMethod('getDescr')) {
             $a['descr'] = $a->getDescr();
@@ -330,18 +384,25 @@ class Controller
     /**
      * Executes before model record is deleted.
      *
-     * @param \atk4\data\Model $m
+     * @param Model $m
+     * @param       $model_id
+     *
+     * @throws Exception
+     * @throws \atk4\data\Exception
      */
-    public function beforeDelete(\atk4\data\Model $m)
+    public function beforeDelete(Model $m, $model_id)
     {
         $a = $this->push($m, 'delete');
         if ($m->only_fields) {
-            $id = $m->id;
-            $m = $m->newInstance()->load($id); // we need all fields
+            $m = $m->newInstance()->load($model_id); // we need all fields
         }
-        $a['request_diff'] = array_map(function ($v) {return [$v, null];}, $m->get());
-        $a['descr'] = 'delete id=' . $m->id;
-        if ($m->title_field && $m->hasElement($m->title_field)) {
+        $a['request_diff'] = array_map(function ($v) {
+            return [$v, null];
+        }, $m->get());
+
+        $a['descr'] = 'delete id=' . $model_id;
+
+        if ($m->title_field && $m->hasField($m->title_field)) {
             $a['descr'] .= ' (' . $m[$m->title_field] . ')';
         }
     }
@@ -349,9 +410,12 @@ class Controller
     /**
      * Executes after model record is deleted.
      *
-     * @param \atk4\data\Model $m
+     * @param Model $m
+     * @param       $model_id
+     *
+     * @throws \atk4\data\Exception
      */
-    public function afterDelete(\atk4\data\Model $m)
+    public function afterDelete(Model $m, $model_id)
     {
         $this->pull($m)->save();
     }
@@ -365,38 +429,44 @@ class Controller
      */
     protected function canBeString($var)
     {
-        return $var === null || is_scalar($var) || is_callable([$var, '__toString']);
+        return $var === null || is_scalar($var) || is_callable([$var,'__toString',]);
     }
 
     /**
      * Return string with key=value info.
      *
-     * @param array            $diff
-     * @param \atk4\data\Model $m
-     *
-     * @return string
+     * @param array $diff
+     * @param Model $m
      *
      * @throws Exception
+     *
+     * @return string
      */
-    public function getDescr($diff, \atk4\data\Model $m)
+    public function getDescr($diff, Model $m)
     {
         if (!$diff) {
             return 'no changes';
         }
 
         $t = [];
-        foreach ($diff as $key=>list($from, $to)) {
+        foreach ($diff as $key => list($from, $to)) {
             // should use typecastSaveRow not typecastSaveField because we can have fields with serialize property set too
             // don't typecast value if it's empty anyway: https://github.com/atk4/data/issues/439
-            $from = ($from ? @$m->persistence->typecastSaveRow($m, [$key=>$from])[$key] : $from);
-            $to = ($to ? @$m->persistence->typecastSaveRow($m, [$key=>$to])[$key] : $to);
+            $from = ($from ? @$m->persistence->typecastSaveRow(
+                $m,
+                [$key => $from]
+            )[$key] : $from);
+            $to = ($to ? @$m->persistence->typecastSaveRow(
+                $m,
+                [$key => $to]
+            )[$key] : $to);
 
-            if (!$this->canBeString($from) || ! $this->canBeString($to)) {
-                throw new \atk4\core\Exception([
+            if (!$this->canBeString($from) || !$this->canBeString($to)) {
+                throw new Exception([
                     'Unable to typecast value for storing',
                     'field' => $key,
-                    'from' => $from,
-                    'to' => $to,
+                    'from'  => $from,
+                    'to'    => $to,
                 ]);
             }
 
@@ -409,12 +479,15 @@ class Controller
     /**
      * Create custom log record.
      *
-     * @param \atk4\data\Model $m
-     * @param string           $action
-     * @param string           $descr
-     * @param array            $fields
+     * @param Model  $m
+     * @param string $action
+     * @param string $descr
+     * @param array  $fields
+     *
+     * @throws Exception
+     * @throws \atk4\data\Exception
      */
-    public function customLog(\atk4\data\Model $m, $action, $descr = null, $fields = [])
+    public function customLog(Model $m, string $action, ?string $descr = null, array $fields = [])
     {
         $a = $this->push($m, $action);
 
@@ -425,6 +498,7 @@ class Controller
                 $descr = $action;
             }
         }
+
         $a['descr'] = $descr;
 
         if ($fields) {

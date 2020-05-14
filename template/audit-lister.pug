@@ -1,4 +1,4 @@
-.(id='{$_id}', class='{_ui}ui{/} {$class} {_class}feed{/}', style='{$style}', {$attributes}='')
+div(id='{$_id}', class='{_ui}ui{/} {$class} {_class}feed{/}', style='{$style}', {$attributes}='')
   | {rows}
   | {row}
   .event
@@ -7,11 +7,11 @@
     .content
       .summary
         .user {$user}
-        |                 {$action}
+        | {$action}
         .date {$ts}
       .meta
         | {$descr}
-      |             {changes}
+      | {changes}
       .extra.text
         // option 1 - show as segment with field name in header and labels inside
         //
@@ -44,15 +44,15 @@
           a.ui.black.basic.label {$field}
           a.ui.right.pointing.red.basic.label {$old_value}
           a.ui.green.basic.label {$new_value}
-        |                     {/change}
+        | {/change}
       //
         Here we can add Undo button for example
         {Buttons}<div class="meta">{button}<a class="ui mini button">Undo</a>{/}</div>{/}
       | {/changes}
-  |     {/row}
-  |     {empty}
+  | {/row}
+  | {empty}
   .item
     .content
       .description No records
-  |     {/empty}
+  | {/empty}
   | {/rows}

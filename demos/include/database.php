@@ -5,9 +5,9 @@ try {
     if (file_exists('include/db.php')) {
         include 'include/db.php';
     } else {
-        $db = new \atk4\data\Persistence_SQL('mysql:dbname=atk4;host=localhost', 'root', 'root');
+        $db = new \atk4\data\Persistence\SQL('mysql:dbname=atk4;host=localhost', 'root', 'root');
     }
-} catch (PDOException $e) {
+} catch (\PDOException $e) {
     throw new \atk4\ui\Exception([
         'This demo requires access to the database. See "demos/include/database.php"',
     ], null, $e);
@@ -22,7 +22,7 @@ if (!class_exists('Country')) {
     {
         public $table = 'country';
 
-        public function init()
+        public function init(): void
         {
             parent::init();
             $this->addField('name', ['actual' => 'nicename', 'required' => true, 'type' => 'string']);
@@ -33,7 +33,7 @@ if (!class_exists('Country')) {
             $this->addField('numcode', ['caption' => 'ISO Numeric Code', 'type' => 'number', 'required' => true]);
             $this->addField('phonecode', ['caption' => 'Phone Prefix', 'type' => 'number', 'required' => true]);
 
-            $this->addHook('beforeSave', function ($m) {
+            $this->onHook('beforeSave', function ($m) {
                 if (!$m['sys_name']) {
                     $m['sys_name'] = strtoupper($m['name']);
                 }

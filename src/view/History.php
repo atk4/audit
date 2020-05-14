@@ -2,6 +2,10 @@
 
 namespace atk4\audit\view;
 
+use atk4\core\Exception;
+use atk4\data\Model;
+use atk4\ui\View;
+
 /**
  * History view for audit log records.
  *
@@ -12,7 +16,7 @@ namespace atk4\audit\view;
  *  $v = $view->add(new \atk4\audit\view\History(['enable_comments'=>true]));
  *  $v->setModel($m);
  */
-class History extends \atk4\ui\View
+class History extends View
 {
     /** @see init() */
     public $defaultTemplate = null;
@@ -34,8 +38,10 @@ class History extends \atk4\ui\View
 
     /**
      * Initialization.
+     *
+     * @throws Exception
      */
-    public function init()
+    public function init(): void
     {
         // set up default template
         if (!$this->defaultTemplate) {
@@ -56,11 +62,13 @@ class History extends \atk4\ui\View
     /**
      * Set audit model.
      *
-     * @param \atk4\data\Model $m Data model (not audit data model)
+     * @param Model $m Data model (not audit data model)
      *
-     * @return \atk4\data\Model Data model
+     * @throws Exception
+     *
+     * @return Model Data model
      */
-    public function setModel(\atk4\data\Model $m)
+    public function setModel(Model $m)
     {
         parent::setModel($m);
 

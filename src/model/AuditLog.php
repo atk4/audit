@@ -2,7 +2,11 @@
 
 namespace atk4\audit\model;
 
-class AuditLog extends \atk4\data\Model
+use atk4\audit\Controller;
+use atk4\data\Exception;
+use atk4\data\Model;
+
+class AuditLog extends Model
 {
     /** @var string Table name */
     public $table = 'audit_log';
@@ -13,7 +17,7 @@ class AuditLog extends \atk4\data\Model
     /** @var bool Don't audit audit model itself */
     public $no_audit = true;
 
-    /** @var \atk4\audit\Controller */
+    /** @var Controller */
     public $auditController = null;
 
     /** @var string Order records by this field by default */
@@ -38,7 +42,7 @@ class AuditLog extends \atk4\data\Model
         $this->addField('action');
         $this->addField('time_taken', ['type' => 'float']);
 
-        $this->addField('descr', ['caption'=>'Description']);
+        $this->addField('descr', ['caption'=>'Description','type' => 'text']);
 
         $this->addField('user_info', ['type' => 'array', 'serialize'=>'json']); // JSON containing keys for browser etc
         $this->addField('request_diff', ['type' => 'array', 'serialize'=>'json']); // requested changes
@@ -52,6 +56,8 @@ class AuditLog extends \atk4\data\Model
 
     /**
      * Loads most recent audit record.
+     *
+     * @throws Exception
      *
      * @return $this
      */
@@ -72,8 +78,6 @@ class AuditLog extends \atk4\data\Model
 
     /**
      * For a specified model record differences.
-     *
-     * @throws Exception
      */
     public function undo()
     {
@@ -99,9 +103,9 @@ class AuditLog extends \atk4\data\Model
     /**
      * Rollback change in model data.
      *
-     * @param \atk4\data\Model $m
+     * @param Model $m
      *
-     * @throws Exception
+     * @throws Exception|\atk4\core\Exception
      */
     public function undo_update($m)
     {
@@ -122,7 +126,12 @@ class AuditLog extends \atk4\data\Model
     }
 
     /**
-     * @todo Imants: I think this will not work. Not sure what should be here. Maybe reactive_diff?
+     * @todo Imants: I think this will not work. Not sure what should be here.
+     *       Maybe reactive_diff?
+     *
+     * @param Model $m
+     *
+     * @throws Exception
      */
     public function undo_delete($m)
     {
@@ -133,7 +142,9 @@ class AuditLog extends \atk4\data\Model
     /**
      * Deletes model record.
      *
-     * @param \atk4\data\Model $m
+     * @param Model $m
+     *
+     * @throws Exception
      */
     public function undo_create($m)
     {

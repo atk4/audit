@@ -8,7 +8,7 @@ class TestModel extends \atk4\data\Model
 {
     public $table = 'test';
 
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -46,7 +46,7 @@ class MyObject
 /**
  * Tests audit compatibility with all possible field types.
  */
-class FieldTypeTest extends \atk4\schema\PHPUnit_SchemaTestCase
+class FieldTypeTest extends \atk4\schema\PhpunitTestCase
 {
     protected $audit_db = ['_' => [
                     'initiator_audit_log_id' => 1,
