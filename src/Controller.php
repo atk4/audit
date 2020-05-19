@@ -271,6 +271,11 @@ class Controller
             if ($f && isset($f->no_audit) && $f->no_audit) {
                 continue;
             }
+            
+            // if field is never persistent
+            if ($f->never_persist) {
+                continue;
+            }
 
             // don't log DSQL expressions because they can be recursive and we can't store them
             if ($original instanceof Expression || $m[$key] instanceof Expression) {
