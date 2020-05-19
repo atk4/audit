@@ -271,7 +271,7 @@ class Controller
             if ($f && isset($f->no_audit) && $f->no_audit) {
                 continue;
             }
-            
+
             // if field is never persistent
             if ($f->never_persist) {
                 continue;
