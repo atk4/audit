@@ -272,8 +272,8 @@ class Controller
                 continue;
             }
 
-            // if field is never persistent
-            if ($f->never_persist) {
+            // security fix : https://github.com/atk4/audit/pull/30
+            if ($f->never_persist || $f->never_save || $f->read_only) {
                 continue;
             }
 
