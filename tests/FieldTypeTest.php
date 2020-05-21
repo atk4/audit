@@ -30,6 +30,11 @@ class TestModel extends \atk4\data\Model
         $this->addField('f_ser_json', ['type' => 'array', 'serialize' => 'json']);
         $this->addField('f_ser_ser', ['type' => 'array', 'serialize' => 'serialize']);
 
+        // security test - never show in changes
+        $this->addField('f_security_never_persist', ['never_persist' => true]);
+        $this->addField('f_security_never_save', ['never_save' => true]);
+        $this->addField('f_security_read_only', ['read_only' => true]);
+
         $this->add(new \atk4\audit\Controller());
     }
 }
@@ -83,6 +88,9 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
                     'f_enum'        => 'M',
                     'f_ser_json'    => json_encode([789,'qwe'=>'asd']),
                     'f_ser_ser'     => serialize([789,'qwe'=>'asd']),
+                    'f_security_never_persist' => 'never persist',
+                    'f_security_never_save' => 'never save',
+                    'f_security_read_only' => 'read only',
                 ],
             ],
             'audit_log' => $this->audit_db,
@@ -108,6 +116,9 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
                     'f_enum'        => 'F',
                     'f_ser_json'    => [987,'qwe'=>'zxc'],
                     'f_ser_ser'     => [987,'qwe'=>'zxc'],
+                    'f_security_never_persist' => 'change never persist',
+                    'f_security_never_save' => 'change never save',
+                    //'f_security_read_only' => 'change read only', trigger error on change before
                 ]);
         $m->save();
 
@@ -128,5 +139,9 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
         $this->assertTrue(is_int(strpos($l['descr'], 'f_enum=')));
         $this->assertTrue(is_int(strpos($l['descr'], 'f_ser_json=')));
         $this->assertTrue(is_int(strpos($l['descr'], 'f_ser_ser=')));
+
+        $this->assertFalse(strpos($l['descr'], 'f_security_never_persist='));
+        $this->assertFalse(strpos($l['descr'], 'f_security_never_save='));
+        $this->assertFalse(strpos($l['descr'], 'f_security_read_only='));
     }
 }

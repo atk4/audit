@@ -272,6 +272,11 @@ class Controller
                 continue;
             }
 
+            // security fix : https://github.com/atk4/audit/pull/30
+            if ($f->never_persist || $f->never_save || $f->read_only) {
+                continue;
+            }
+
             // don't log DSQL expressions because they can be recursive and we can't store them
             if ($original instanceof Expression || $m[$key] instanceof Expression) {
                 continue;
