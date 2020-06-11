@@ -179,7 +179,7 @@ class Controller
      */
     public function push(Model $m, $action)
     {
-        // add audit model
+        /** @var AuditLog $a */
         $a = $m->ref('AuditLog');
 
         // set audit record values
@@ -266,25 +266,30 @@ class Controller
     {
         $diff = [];
         foreach ($m->dirty as $key => $original) {
-            $f = $m->hasField($key);
+            try {
+                // get the field or throw
+                $f = $m->getField($key);
 
-            // don't log fields if no_audit=true is set
-            if ($f && isset($f->no_audit) && $f->no_audit) {
-                continue;
+                // don't log fields if no_audit=true is set
+                if (isset($f->no_audit) && $f->no_audit) {
+                    continue;
+                }
+
+                // security fix : https://github.com/atk4/audit/pull/30
+                if ($f->never_persist || $f->never_save || $f->read_only) {
+                    continue;
+                }
+
+                // don't log DSQL expressions because they can be recursive and we can't store them
+                if ($f instanceof Field_SQL_Expression) {
+                    continue;
+                }
+
+                // key = [old value, new value]
+                $diff[$key] = [$original, $m->get($key)];
+
+            } catch(\Throwable $t) {
             }
-
-            // security fix : https://github.com/atk4/audit/pull/30
-            if ($f->never_persist || $f->never_save || $f->read_only) {
-                continue;
-            }
-
-            // don't log DSQL expressions because they can be recursive and we can't store them
-            if ($original instanceof Expression || $f instanceof Field_SQL_Expression) {
-                continue;
-            }
-
-            // key = [old value, new value]
-            $diff[$key] = [$original, $m->get($key)];
         }
 
         return $diff;
@@ -350,22 +355,19 @@ class Controller
                 // if is an object/array comparison is tricky
                 if (is_array($a->get('request_diff')[$f][1]) || is_object($a->get('request_diff')[$f][1])) {
                     // compare object/array using json serialization
-                    if(json_encode($a->get('request_diff')[$f][1]) === json_encode($f1)) {
+                    if (json_encode($a->get('request_diff')[$f][1]) === json_encode($f1)) {
                         unset($d[$f]);
-                        continue;
                     }
                 } else {
-                    if ($a->get('request_diff')[$f][1] === $f1) {
+                    if ($a->get('request_diff')[$f][1] === $f0) {
                         unset($d[$f]);
-                        continue;
                     }
                 }
-
             }
 
             $a->set('reactive_diff', $d);
 
-            if (count($d) > 0) {
+            if (count($d) > 0 && empty($a->get('descr'))) {
                 $a->set('descr','(resulted in ' . $this->getDescr($a->get('reactive_diff'), $m) . ')');
             }
         }
