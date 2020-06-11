@@ -73,7 +73,7 @@ class Lister extends \atk4\ui\Lister
             $this->t_row->trySet('user', $this->model->ref('updated_by_user_id')->getTitle());
         }
 
-        $diff = $this->model['request_diff'];
+        $diff = $this->model->get('request_diff') ?? [];
 
         if ($this->t_row->hasTag('changes') && count($diff) > 0) {
             $t_change = clone $this->t_row_change;
@@ -153,6 +153,14 @@ class Lister extends \atk4\ui\Lister
 
         $class             = $this->model->get('model');
         $this->linkedModel = new $class($this->app->db);
+
+        // this conditions can be added here not in AuditLog Model
+        // i hope, here are harmless - to hide empty rows
+        $this->model->addCondition([
+            ['descr', 'not', null],
+            ['request_diff', 'not', null],
+            ['reactive_diff', 'not', null],
+        ]);
 
         return $this->model;
     }
