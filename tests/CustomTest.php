@@ -20,7 +20,7 @@ class AuditableGenderUser extends \atk4\data\Model
 
         $this->add(new \atk4\audit\Controller());
 
-        $this->addHook('beforeSave', function ($m) {
+        $this->onHook(self::HOOK_BEFORE_SAVE, function ($m) {
             if ($m->isDirty('gender')) {
                 //$m->audit_log['action'] = 'genderbending'; // deprecated usage
                 //$m->auditController->audit_log_stack[0]['action'] = 'genderbending';
@@ -34,7 +34,7 @@ class CustomLog extends \atk4\audit\model\AuditLog
 {
     public function getDescr()
     {
-        return count($this['request_diff']) . ' fields magically change';
+        return count($this->get('request_diff')) . ' fields magically change';
     }
 }
 
@@ -73,12 +73,12 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
         $m = new AuditableGenderUser($this->db);
 
         $m->load(1); // load Vinny
-        $m['gender'] = 'F';
+        $m->set('gender', 'F');
         $m->save();
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('genderbending', $l['action']);
+        $this->assertEquals('genderbending', $l->get('action'));
     }
 
     public function testCustomAction()
@@ -96,12 +96,12 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
 
         $m->load(2); // load Zoe
         $m->auditController->custom_action = 'married';
-        $m['surname'] = 'Shira';
+        $m->set('surname', 'Shira');
         $m->save();
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('married', $l['action']);
+        $this->assertEquals('married', $l->get('action'));
     }
 
     public function testManualLog()
@@ -122,8 +122,8 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('load', $l['action']);
-        $this->assertEquals(['foo'=>'bar'], $l['request_diff']);
+        $this->assertEquals('load', $l->get('action'));
+        $this->assertEquals(['foo'=>'bar'], $l->get('request_diff'));
     }
 
     public function testCustomDescr()
@@ -140,12 +140,12 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
         $m = new AuditableGenderUser($this->db, ['audit_model' => new CustomLog()]);
 
         $m->load(2); // load Zoe
-        $m['name'] = 'Joe';
-        $m['surname'] = 'XX';
+        $m->set('name', 'Joe');
+        $m->set('surname', 'XX');
         $m->save();
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('2 fields magically change', $l['descr']);
+        $this->assertEquals('2 fields magically change', $l->get('descr'));
     }
 }

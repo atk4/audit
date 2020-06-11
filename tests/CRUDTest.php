@@ -155,7 +155,7 @@ class CRUDTest extends \atk4\schema\PhpunitTestCase
         $m = new AuditableUser($this->db);
 
         $m->load(1); // load Vinny
-        $m['name'] = 'Vinny'; // false change
+        $m->set('name', 'Vinny'); // false change
         $m->save();
 
         // should be no audit records for Vinny because there were no actual changes

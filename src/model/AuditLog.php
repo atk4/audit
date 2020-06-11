@@ -86,16 +86,17 @@ class AuditLog extends Model
         }
 
         $this->atomic(function () {
-            $m = new $this['model']($this->persistence);
+            $modelfqcn = $this->get('model');
+            $m = new $modelfqcn($this->persistence);
 
-            $f = 'undo_' . $this['action'];
+            $f = 'undo_' . $this->get('action');
 
-            $m->auditController->custom_action = 'undo ' . $this['action'];
+            $m->auditController->custom_action = 'undo ' . $this->get('action');
             $m->auditController->custom_fields['revert_audit_log_id'] = $this->id;
 
             $this->$f($m);
 
-            $this['is_reverted'] = true;
+            $this->set('is_reverted', true);
             $this->save();
         });
     }
@@ -148,7 +149,7 @@ class AuditLog extends Model
      */
     public function undo_create($m)
     {
-        $m->load($this['model_id']);
+        $m->load($this->get('model_id'));
         $m->delete();
     }
 }

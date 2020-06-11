@@ -91,26 +91,26 @@ class Controller
 
         // adds hooks
         $m->onHook(
-            'beforeSave',
+            Model::HOOK_BEFORE_SAVE,
             \Closure::fromCallable([$this,'beforeSave']),
             [],
             -100
         );
         $m->onHook(
-            'beforeDelete',
+            Model::HOOK_BEFORE_DELETE,
             \Closure::fromCallable([$this,'beforeDelete']),
             [],
             -100
         );// called as soon as possible
 
         $m->onHook(
-            'afterSave',
+            Model::HOOK_AFTER_SAVE,
             \Closure::fromCallable([$this,'afterSave']),
             [],
             100
         );
         $m->onHook(
-            'afterDelete',
+            Model::HOOK_AFTER_DELETE,
             \Closure::fromCallable([$this,'afterDelete']),
             [],
             100
@@ -154,11 +154,11 @@ class Controller
         // adds custom log methods in model
         // log() method can clash with some debug logger, so we use two methods just in case
         if (!$m->hasMethod('log')) {
-            $m->addMethod('log', [$this, 'customLog']);
+            $m->addMethod('log', \Closure::fromCallable([$this, 'customLog']));
         }
 
         if (!$m->hasMethod('auditLog')) {
-            $m->addMethod('auditLog', [$this, 'customLog']);
+            $m->addMethod('auditLog', \Closure::fromCallable([$this, 'customLog']));
         }
 
         // adds link to audit controller in model properties
@@ -182,7 +182,7 @@ class Controller
         $a = $m->ref('AuditLog');
 
         // set audit record values
-        $a['ts'] = new DateTime();
+        $a->set('ts', new DateTime());
 
         // sometimes we already have conditions set on model, but there are strange cases,
         // when they are not. That's why we needed following 2 lines :(
@@ -195,7 +195,7 @@ class Controller
             $this->custom_action = null;
         }
 
-        $a['action'] = $action;
+        $a->set('action', $action);
 
         if ($this->custom_fields) {
             $a->set($this->custom_fields);
@@ -204,7 +204,7 @@ class Controller
 
         if ($this->audit_log_stack) {
             // link to previous audit record
-            $a['initiator_audit_log_id'] = $this->audit_log_stack[0]->id;
+            $a->set('initiator_audit_log_id', $this->audit_log_stack[0]->id);
         }
 
         // save the initial action
@@ -248,7 +248,7 @@ class Controller
 
         // save time taken
         if ($this->record_time_taken) {
-            $a['time_taken'] = (float)microtime() - $a->start_mt;
+            $a->set('time_taken', (float)microtime() - $a->start_mt);
         }
 
         return $a;
@@ -278,12 +278,12 @@ class Controller
             }
 
             // don't log DSQL expressions because they can be recursive and we can't store them
-            if ($original instanceof Expression || $m[$key] instanceof Expression) {
+            if ($original instanceof Expression || $m->getField($key) instanceof Expression) {
                 continue;
             }
 
             // key = [old value, new value]
-            $diff[$key] = [$original, $m[$key]];
+            $diff[$key] = [$original, $m->get($key)];
         }
 
         return $diff;
@@ -303,9 +303,9 @@ class Controller
         $action = $is_update ? 'update' : 'create';
         $a = $this->push($m, $action);
 
-        $a['request_diff'] = $this->getDiffs($m);
+        $a->set('request_diff', $this->getDiffs($m));
 
-        if (!$a['descr'] && $is_update) {
+        if (!$a->get('descr') && $is_update) {
             $this->setDescr($a, $m, $action);
         }
     }
@@ -325,14 +325,14 @@ class Controller
         // pull from audit stack
         $a = $this->pull($m);
 
-        if ($a['model_id'] === null) {
+        if ($a->get('model_id') === null) {
             // new record
-            $a['reactive_diff'] = $m->get();
-            $a['model_id'] = $m->id;
+            $a->set('reactive_diff', $m->get());
+            $a->set('model_id', $m->id);
 
             // fill missing description for new record
             $action = 'save';
-            if (!$a['descr'] && $is_update) {
+            if (empty($a->get('descr')) && $is_update) {
                 $this->setDescr($a, $m, $action);
             }
         } else {
@@ -341,20 +341,20 @@ class Controller
             $d = $this->getDiffs($m);
             foreach ($d as $f => list($f0, $f1)) {
                 if (
-                    isset($a['request_diff'][$f][1])
-                    && $a['request_diff'][$f][1] === $f1
+                    isset($a->get('request_diff')[$f][1])
+                    && $a->get('request_diff')[$f][1] === $f1
                 ) {
                     unset($d[$f]);
                 }
             }
-            $a['reactive_diff'] = $d;
+            $a->set('reactive_diff', $d);
 
-            if ($a['reactive_diff']) {
+            if ($d) {
                 $a['descr'] .= ' (resulted in ' . $this->getDescr($a['reactive_diff'], $m) . ')';
             }
         }
 
-        if ($a['request_diff'] || $a['reactive_diff']) {
+        if (!empty($a->get('request_diff')) || !empty($a->get('reactive_diff'))) {
             // there was changes - let's update audit record
             $a->save();
         } else {
@@ -374,16 +374,19 @@ class Controller
      */
     public function setDescr(AuditLog $a, Model $m, string $action)
     {
+        $descr = '';
         if ($a->hasMethod('getDescr')) {
-            $a['descr'] = $a->getDescr();
+            $descr = $a->getDescr();
         } else {
             // could use $m->getTitle() here, but we don't want to see IDs in log descriptions
             if ($m->hasElement($m->title_field)) {
-                $a['descr'] = $action . ' ' . $m[$m->title_field] . ': ' . $this->getDescr($a['request_diff'], $m);
+                $descr = $action . ' ' . $m->getTitle() . ': ' . $this->getDescr($a->get('request_diff'), $m);
             } else {
-                $a['descr'] = $action . ': ' . $this->getDescr($a['request_diff'], $m);
+                $descr = $action . ': ' . $this->getDescr($a->get('request_diff'), $m);
             }
         }
+
+        $a->set('descr', $descr);
     }
 
     /**
@@ -401,15 +404,17 @@ class Controller
         if ($m->only_fields) {
             $m = $m->newInstance()->load($model_id); // we need all fields
         }
-        $a['request_diff'] = array_map(function ($v) {
+        $a->set('request_diff', array_map(function ($v) {
             return [$v, null];
-        }, $m->get());
+        }, $m->get()));
 
-        $a['descr'] = 'delete id=' . $model_id;
+        $descr = 'delete id=' . $model_id;
 
         if ($m->title_field && $m->hasField($m->title_field)) {
-            $a['descr'] .= ' (' . $m[$m->title_field] . ')';
+            $descr .= ' (' . $m->getTitle() . ')';
         }
+
+        $a->set('descr',$descr);
     }
 
     /**
@@ -504,7 +509,7 @@ class Controller
             }
         }
 
-        $a['descr'] = $descr;
+        $a->set('descr', $descr);
 
         if ($fields) {
             $a->set($fields);

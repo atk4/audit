@@ -125,23 +125,23 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
         $l = $m->ref('AuditLog')->loadLast();
 
         // validate that all fields are mentioned in change description
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_string=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_text=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_boolean=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_integer=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_money=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_float=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_date=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_datetime=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_time=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_array=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_object=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_enum=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_ser_json=')));
-        $this->assertTrue(is_int(strpos($l['descr'], 'f_ser_ser=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_string=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_text=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_boolean=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_integer=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_money=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_float=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_date=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_datetime=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_time=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_array=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_object=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_enum=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_ser_json=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_ser_ser=')));
 
-        $this->assertFalse(strpos($l['descr'], 'f_security_never_persist='));
-        $this->assertFalse(strpos($l['descr'], 'f_security_never_save='));
-        $this->assertFalse(strpos($l['descr'], 'f_security_read_only='));
+        $this->assertFalse(strpos($l->get('descr'), 'f_security_never_persist='));
+        $this->assertFalse(strpos($l->get('descr'), 'f_security_never_save='));
+        $this->assertFalse(strpos($l->get('descr'), 'f_security_read_only='));
     }
 }
