@@ -35,6 +35,9 @@ class TestModel extends \atk4\data\Model
         $this->addField('f_security_never_save', ['never_save' => true]);
         $this->addField('f_security_read_only', ['read_only' => true]);
 
+        // check expression not stored
+        $this->addExpression('f_expression', '[f_float]*[f_money]');
+
         $this->add(new \atk4\audit\Controller());
     }
 }
@@ -143,5 +146,9 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
         $this->assertFalse(strpos($l->get('descr'), 'f_security_never_persist='));
         $this->assertFalse(strpos($l->get('descr'), 'f_security_never_save='));
         $this->assertFalse(strpos($l->get('descr'), 'f_security_read_only='));
+
+
+        $this->assertEquals($m->get('f_expression'), $m->get('f_float') * $m->get('f_money'));
+        $this->assertFalse(strpos($l->get('descr'), 'f_expression='));
     }
 }

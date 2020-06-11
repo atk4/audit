@@ -8,6 +8,7 @@ use atk4\core\Exception;
 use atk4\core\FactoryTrait;
 use atk4\core\InitializerTrait;
 use atk4\core\TrackableTrait;
+use atk4\data\Field_SQL_Expression;
 use atk4\dsql\Expression;
 use DateTime;
 use atk4\data\Model;
@@ -278,7 +279,7 @@ class Controller
             }
 
             // don't log DSQL expressions because they can be recursive and we can't store them
-            if ($original instanceof Expression || $m->getField($key) instanceof Expression) {
+            if ($original instanceof Expression || $f instanceof Field_SQL_Expression) {
                 continue;
             }
 
@@ -347,10 +348,11 @@ class Controller
                     unset($d[$f]);
                 }
             }
+
             $a->set('reactive_diff', $d);
 
-            if ($d) {
-                $a['descr'] .= ' (resulted in ' . $this->getDescr($a['reactive_diff'], $m) . ')';
+            if (count($d) > 0) {
+                $a->set('descr','(resulted in ' . $this->getDescr($a->get('reactive_diff'), $m) . ')');
             }
         }
 
