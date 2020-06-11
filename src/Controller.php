@@ -341,12 +341,26 @@ class Controller
             // updated record
             $d = $this->getDiffs($m);
             foreach ($d as $f => list($f0, $f1)) {
-                if (
-                    isset($a->get('request_diff')[$f][1])
-                    && $a->get('request_diff')[$f][1] === $f1
-                ) {
-                    unset($d[$f]);
+
+                // if not set don't purge
+                if (!isset($a->get('request_diff')[$f][1])) {
+                    continue;
                 }
+
+                // if is an object/array comparison is tricky
+                if (is_array($a->get('request_diff')[$f][1]) || is_object($a->get('request_diff')[$f][1])) {
+                    // compare object/array using json serialization
+                    if(json_encode($a->get('request_diff')[$f][1]) === json_encode($f1)) {
+                        unset($d[$f]);
+                        continue;
+                    }
+                } else {
+                    if ($a->get('request_diff')[$f][1] === $f1) {
+                        unset($d[$f]);
+                        continue;
+                    }
+                }
+
             }
 
             $a->set('reactive_diff', $d);
