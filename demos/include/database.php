@@ -3,16 +3,20 @@
 // A very basic file that sets up Agile Data to be used in some demonstrations
 use atk4\audit\model\AuditLog;
 
+// A very basic file that sets up Agile Data to be used in some demonstrations
 try {
-    if (file_exists('include/db.php')) {
-        include 'include/db.php';
+    if (file_exists(__DIR__ . '/db.php')) {
+        require_once __DIR__ . '/db.php';
     } else {
-        $db = new \atk4\data\Persistence\SQL('mysql:dbname=atk4;host=localhost', 'root', 'root');
+        require_once __DIR__ . '/db.example.php';
     }
 } catch (\PDOException $e) {
-    throw new \atk4\ui\Exception([
-        'This demo requires access to the database. See "demos/include/database.php"',
-    ], null, $e);
+
+    var_dump($e);
+
+    throw (new \atk4\ui\Exception(
+        'This demo requires access to the database. See "demos/database.php"')
+    )->addMoreInfo('PDO error', $e->getMessage());
 }
 
 $app->db = $db;
