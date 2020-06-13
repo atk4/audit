@@ -11,10 +11,8 @@ try {
         require_once __DIR__ . '/db.example.php';
     }
 } catch (\PDOException $e) {
-    throw (new \atk4\ui\Exception(
-        'This demo requires access to the database. See "demos/database.php"'
-    )
-    )->addMoreInfo('PDO error', $e->getMessage());
+    throw (new \atk4\ui\Exception('This demo requires access to a database. See "demos/database.php"'))
+        ->addMoreInfo('PDO error', $e->getMessage());
 }
 
 $app->db = $db;
