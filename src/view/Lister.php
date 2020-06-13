@@ -156,12 +156,12 @@ class Lister extends \atk4\ui\Lister
 
         // this conditions can be added here not in AuditLog Model
         // i hope, here are harmless - to hide empty rows
-/*        $this->model->addCondition([
-            ['descr', 'not', null],
-            ['request_diff', 'not', null],
-            ['reactive_diff', 'not', null],
-        ]);
-*/
+        /*        $this->model->addCondition([
+                    ['descr', 'not', null],
+                    ['request_diff', 'not', null],
+                    ['reactive_diff', 'not', null],
+                ]);
+        */
         return $this->model;
     }
 }

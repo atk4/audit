@@ -153,11 +153,11 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_money=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_float=')));
 
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_date='.$m->get('f_date')->format('Y-m-d'))));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_date=' . $m->get('f_date')->format('Y-m-d'))));
 
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_datetime='.$m->get('f_datetime')->format('Y-m-d H:i:s'))));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_datetime=' . $m->get('f_datetime')->format('Y-m-d H:i:s'))));
 
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_time='.$m->get('f_time')->format('H:i:s'))));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_time=' . $m->get('f_time')->format('H:i:s'))));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_array=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_object=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_object_serialized=foo is foo')));

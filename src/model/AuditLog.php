@@ -43,7 +43,7 @@ class AuditLog extends Model
         $this->addField('action');
         $this->addField('time_taken', ['type' => 'float']);
 
-        $this->addField('descr',[
+        $this->addField('descr', [
             'caption' => 'Description',
             'type' => 'text'
         ]);
@@ -60,7 +60,7 @@ class AuditLog extends Model
             'type' => 'array',
             'serialize' => 'json'
         ]); // reactive diff
-        $this->addField('is_reverted',[
+        $this->addField('is_reverted', [
             'type' => 'boolean',
             'default' => false
         ]);
@@ -101,7 +101,6 @@ class AuditLog extends Model
         }
 
         $this->atomic(function () {
-
             $modelfqcn = $this->get('model');
             $m = new $modelfqcn($this->persistence);
 
@@ -129,8 +128,7 @@ class AuditLog extends Model
         $m->load($this->get('model_id'));
 
         foreach ($this->get('request_diff') as $field => [$old, $new]) {
-
-            if(!$m->hasField($field)) {
+            if (!$m->hasField($field)) {
                 continue;
             }
 
@@ -148,7 +146,7 @@ class AuditLog extends Model
             if (json_encode([$m->get($field)]) !== json_encode([$new])) {
                 throw (new \atk4\core\Exception(
                     'New value does not match current. Risky to undo'
-                    ))
+                ))
                     ->addMoreInfo('new', $new)
                     ->addMoreInfo('current', $m->get($field));
             }
@@ -177,8 +175,7 @@ class AuditLog extends Model
     public function undo_delete($m)
     {
         foreach ($this->get('request_diff') as $field => [$old, $new]) {
-
-            if(!$m->hasField($field)) {
+            if (!$m->hasField($field)) {
                 continue;
             }
 

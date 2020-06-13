@@ -266,8 +266,7 @@ class Controller
     {
         $diff = [];
         foreach ($m->dirty as $key => $original) {
-
-            if (!$this->isDiffFieldAuditable($m,$key)) {
+            if (!$this->isDiffFieldAuditable($m, $key)) {
                 continue;
             }
 
@@ -350,7 +349,7 @@ class Controller
             $a->set('reactive_diff', $d);
 
             if (count($d) > 0 && empty($a->get('descr'))) {
-                $a->set('descr','(resulted in ' . $this->getDescr($a->get('reactive_diff'), $m) . ')');
+                $a->set('descr', '(resulted in ' . $this->getDescr($a->get('reactive_diff'), $m) . ')');
             }
         }
 
@@ -406,8 +405,7 @@ class Controller
 
         $diff = [];
         foreach ($m->data as $key => $original) {
-
-            if (!$this->isDiffFieldAuditable($m,$key)) {
+            if (!$this->isDiffFieldAuditable($m, $key)) {
                 continue;
             }
 
@@ -429,7 +427,7 @@ class Controller
             $descr .= ' (' . $m->getTitle() . ')';
         }
 
-        $a->set('descr',$descr);
+        $a->set('descr', $descr);
     }
 
     /**
@@ -475,7 +473,6 @@ class Controller
 
         $t = [];
         foreach ($diff as $key => list($from, $to)) {
-
             $from = $this->getDescrFieldValue($m, $key, $from);
             $to = $this->getDescrFieldValue($m, $key, $to);
 
@@ -534,19 +531,20 @@ class Controller
     protected function getDescrFieldValue(Model $m, string $fieldname, $value)
     {
         try {
-
             $field_must_be_object = in_array(
-                $m->getField($fieldname)->type, [
+                $m->getField($fieldname)->type,
+                [
                     'date',
                     'datetime',
                     'time',
                     'object'
-                ]);
+                ]
+            );
 
             if (is_string($value) && $field_must_be_object) {
                 $value = unserialize($value);
 
-                if($this->canBeString($value)) {
+                if ($this->canBeString($value)) {
                     return (string) $value;
                 }
             }
@@ -560,10 +558,9 @@ class Controller
         return (string) $value;
     }
 
-    private function isDiffFieldAuditable(Model $m, string $key) : bool
+    private function isDiffFieldAuditable(Model $m, string $key): bool
     {
-
-        if(!$m->hasField($key)) {
+        if (!$m->hasField($key)) {
             return false;
         }
 

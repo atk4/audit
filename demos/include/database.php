@@ -58,7 +58,8 @@ if (!class_exists('Country')) {
             ]);
         }
 
-        public function undo() {
+        public function undo()
+        {
 
             /** @var AuditLog $audit */
             $audit = $this->ref('AuditLog');
