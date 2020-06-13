@@ -8,6 +8,8 @@ class TestModel extends \atk4\data\Model
 {
     public $table = 'test';
 
+    public $title_field = 'f_string';
+
     public function init(): void
     {
         parent::init();
@@ -23,7 +25,8 @@ class TestModel extends \atk4\data\Model
         $this->addField('f_datetime', ['type' => 'datetime']);
         $this->addField('f_time', ['type' => 'time']);
         $this->addField('f_array', ['type' => 'array']);
-        $this->addField('f_object', ['type' => 'object']);
+        $this->addField('f_object', ['type' => 'object', 'serialize' => 'serialize']);
+        $this->addField('f_object_serialized', ['type' => 'object', 'serialize' => 'serialize']);
         $this->addField('f_enum', ['enum' => ['M','F']]);
 
         // custom serialization
@@ -48,6 +51,19 @@ class MyObject
     public function __construct($foo = null)
     {
         $this->foo = $foo;
+    }
+}
+
+class MyObjectSerializable
+{
+    public $foo;
+    public function __construct($foo = null)
+    {
+        $this->foo = $foo;
+    }
+    public function __toString()
+    {
+        return 'foo is ' . $this->foo;
     }
 }
 
@@ -87,7 +103,8 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
                     'f_datetime'    => (new \DateTime())->format('Y-m-d H:i:s'),
                     'f_time'        => (new \DateTime())->format('H:i:s'),
                     'f_array'       => json_encode([123,'foo'=>'bar']),
-                    'f_object'      => json_encode(new MyObject()),
+                    'f_object'      => serialize(new MyObject()),
+                    'f_object_serialized' => serialize(new MyObjectSerializable()),
                     'f_enum'        => 'M',
                     'f_ser_json'    => json_encode([789,'qwe'=>'asd']),
                     'f_ser_ser'     => serialize([789,'qwe'=>'asd']),
@@ -116,6 +133,7 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
                     'f_time'        => (new \DateTime())->sub(new \DateInterval('P1D')),
                     'f_array'       => [456,'foo'=>'qwe'],
                     'f_object'      => new MyObject('bar'),
+                    'f_object_serialized' => new MyObjectSerializable('foo'),
                     'f_enum'        => 'F',
                     'f_ser_json'    => [987,'qwe'=>'zxc'],
                     'f_ser_ser'     => [987,'qwe'=>'zxc'],
@@ -134,11 +152,15 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_integer=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_money=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_float=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_date=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_datetime=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_time=')));
+
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_date='.$m->get('f_date')->format('Y-m-d'))));
+
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_datetime='.$m->get('f_datetime')->format('Y-m-d H:i:s'))));
+
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_time='.$m->get('f_time')->format('H:i:s'))));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_array=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_object=')));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_object_serialized=foo is foo')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_enum=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_ser_json=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_ser_ser=')));

@@ -1,13 +1,24 @@
 <?php
 
+use atk4\data\Persistence;
+
 require_once 'include/init.php';
 require_once 'include/database.php';
 
+$audit = new \atk4\audit\Controller();
+/** @var Persistence $db */
+$db->onHook(Persistence::HOOK_AFTER_ADD, function ($owner, $element) use ($audit) {
+    if ($element instanceof \atk4\data\Model) {
+        if (isset($element->no_audit) && $element->no_audit) {
+            // Whitelisting this model, won't audit
+            return;
+        }
+
+        $audit->setUp($element);
+    }
+});
 // set up data model with audit add-on enabled
 $m = new Country($db);
-$c = $m->add(new \atk4\audit\Controller());
-
-
 
 // 2 columns
 $cols = \atk4\ui\Columns::addTo($app);

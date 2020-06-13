@@ -10,6 +10,7 @@ use atk4\core\InitializerTrait;
 use atk4\core\TrackableTrait;
 use atk4\data\Field_SQL_Expression;
 use atk4\dsql\Expression;
+use Closure;
 use DateTime;
 use atk4\data\Model;
 
@@ -50,8 +51,6 @@ class Controller
      *
      * @param array|string|Model $defaults            Seed options or just
      *                                                audit model
-     *
-     * @throws Exception
      */
     public function __construct($defaults = [])
     {
@@ -65,6 +64,8 @@ class Controller
 
     /**
      * Initialize - set up all necessary hooks etc.
+     *
+     * @throws Exception
      */
     public function init(): void
     {
@@ -81,7 +82,6 @@ class Controller
      * @param Model $m
      *
      * @throws Exception
-     * @throws \atk4\data\Exception
      */
     public function setUp(Model $m)
     {
@@ -93,26 +93,26 @@ class Controller
         // adds hooks
         $m->onHook(
             Model::HOOK_BEFORE_SAVE,
-            \Closure::fromCallable([$this,'beforeSave']),
+            Closure::fromCallable([$this,'beforeSave']),
             [],
             -100
         );
         $m->onHook(
             Model::HOOK_BEFORE_DELETE,
-            \Closure::fromCallable([$this,'beforeDelete']),
+            Closure::fromCallable([$this,'beforeDelete']),
             [],
             -100
         );// called as soon as possible
 
         $m->onHook(
             Model::HOOK_AFTER_SAVE,
-            \Closure::fromCallable([$this,'afterSave']),
+            Closure::fromCallable([$this,'afterSave']),
             [],
             100
         );
         $m->onHook(
             Model::HOOK_AFTER_DELETE,
-            \Closure::fromCallable([$this,'afterDelete']),
+            Closure::fromCallable([$this,'afterDelete']),
             [],
             100
         );// called as late as possible
@@ -155,11 +155,11 @@ class Controller
         // adds custom log methods in model
         // log() method can clash with some debug logger, so we use two methods just in case
         if (!$m->hasMethod('log')) {
-            $m->addMethod('log', \Closure::fromCallable([$this, 'customLog']));
+            $m->addMethod('log', Closure::fromCallable([$this, 'customLog']));
         }
 
         if (!$m->hasMethod('auditLog')) {
-            $m->addMethod('auditLog', \Closure::fromCallable([$this, 'customLog']));
+            $m->addMethod('auditLog', Closure::fromCallable([$this, 'customLog']));
         }
 
         // adds link to audit controller in model properties
@@ -229,11 +229,9 @@ class Controller
     /**
      * Pull most recent change from audit log stack.
      *
-     * @param Model $m
-     *
      * @return AuditLog
      */
-    public function pull(Model $m)
+    public function pull()
     {
         $a = array_shift($this->audit_log_stack);
 
@@ -260,36 +258,49 @@ class Controller
      *
      * @param Model $m
      *
+     * @throws \atk4\data\Exception
+     *
      * @return array
      */
     public function getDiffs(Model $m)
     {
         $diff = [];
         foreach ($m->dirty as $key => $original) {
-            try {
-                // get the field or throw
-                $f = $m->getField($key);
 
-                // don't log fields if no_audit=true is set
-                if (isset($f->no_audit) && $f->no_audit) {
-                    continue;
-                }
-
-                // security fix : https://github.com/atk4/audit/pull/30
-                if ($f->never_persist || $f->never_save || $f->read_only) {
-                    continue;
-                }
-
-                // don't log DSQL expressions because they can be recursive and we can't store them
-                if ($f instanceof Field_SQL_Expression) {
-                    continue;
-                }
-
-                // key = [old value, new value]
-                $diff[$key] = [$original, $m->get($key)];
-
-            } catch(\Throwable $t) {
+            if(!$m->hasField($key)) {
+                continue;
             }
+
+            $f = $m->getField($key);
+
+            // don't log fields if no_audit=true is set
+            if (isset($f->no_audit) && $f->no_audit) {
+                continue;
+            }
+
+            // security fix : https://github.com/atk4/audit/pull/30
+            if ($f->never_persist || $f->never_save || $f->read_only) {
+                continue;
+            }
+
+            // don't log DSQL expressions because they can be recursive and we can't store them
+            if ($m->get($key) instanceof Expression) {
+                continue;
+            }
+
+            $value = $m->get($key);
+
+            // object need to be serialized before save in audit
+            // if not it will pass in json_encode and became an array
+            if (is_object($original)) {
+                $original = serialize($original);
+            }
+            if (is_object($value)) {
+                $value = serialize($value);
+            }
+
+            // key = [old value, new value]
+            $diff[$key] = [$original, $value];
         }
 
         return $diff;
@@ -329,7 +340,7 @@ class Controller
     public function afterSave(Model $m, $is_update)
     {
         // pull from audit stack
-        $a = $this->pull($m);
+        $a = $this->pull();
 
         if ($a->get('model_id') === null) {
             // new record
@@ -352,16 +363,8 @@ class Controller
                     continue;
                 }
 
-                // if is an object/array comparison is tricky
-                if (is_array($a->get('request_diff')[$f][1]) || is_object($a->get('request_diff')[$f][1])) {
-                    // compare object/array using json serialization
-                    if (json_encode($a->get('request_diff')[$f][1]) === json_encode($f1)) {
-                        unset($d[$f]);
-                    }
-                } else {
-                    if ($a->get('request_diff')[$f][1] === $f0) {
-                        unset($d[$f]);
-                    }
+                if (json_encode([$a->get('request_diff')[$f][1]]) === json_encode([$f1])) {
+                    unset($d[$f]);
                 }
             }
 
@@ -392,12 +395,11 @@ class Controller
      */
     public function setDescr(AuditLog $a, Model $m, string $action)
     {
-        $descr = '';
         if ($a->hasMethod('getDescr')) {
             $descr = $a->getDescr();
         } else {
             // could use $m->getTitle() here, but we don't want to see IDs in log descriptions
-            if ($m->hasElement($m->title_field)) {
+            if ($m->hasField($m->title_field)) {
                 $descr = $action . ' ' . $m->getTitle() . ': ' . $this->getDescr($a->get('request_diff'), $m);
             } else {
                 $descr = $action . ': ' . $this->getDescr($a->get('request_diff'), $m);
@@ -422,9 +424,42 @@ class Controller
         if ($m->only_fields) {
             $m = $m->newInstance()->load($model_id); // we need all fields
         }
-        $a->set('request_diff', array_map(function ($v) {
-            return [$v, null];
-        }, $m->get()));
+
+        $diff = [];
+        foreach ($m->data as $key => $original) {
+
+            if(!$m->hasField($key)) {
+                continue;
+            }
+            // get the field or throw
+            $f = $m->getField($key);
+
+            // don't log fields if no_audit=true is set
+            if (isset($f->no_audit) && $f->no_audit) {
+                continue;
+            }
+
+            // security fix : https://github.com/atk4/audit/pull/30
+            if ($f->never_persist || $f->never_save || $f->read_only) {
+                continue;
+            }
+
+            // don't log DSQL expressions because they can be recursive and we can't store them
+            if ($m->get($key) instanceof Expression) {
+                continue;
+            }
+
+            // object need to be serialized before save in audit
+            // if not it will pass in json_encode and became an array
+            if (is_object($original)) {
+                $original = serialize($original);
+            }
+
+            // key = [old value, new value]
+            $diff[$key] = [$original, null];
+        }
+
+        $a->set('request_diff', $diff);
 
         $descr = 'delete id=' . $model_id;
 
@@ -445,7 +480,7 @@ class Controller
      */
     public function afterDelete(Model $m, $model_id)
     {
-        $this->pull($m)->save();
+        $this->pull()->save();
     }
 
     /**
@@ -478,27 +513,18 @@ class Controller
 
         $t = [];
         foreach ($diff as $key => list($from, $to)) {
-            // should use typecastSaveRow not typecastSaveField because we can have fields with serialize property set too
-            // don't typecast value if it's empty anyway: https://github.com/atk4/data/issues/439
-            $from = ($from ? @$m->persistence->typecastSaveRow(
-                $m,
-                [$key => $from]
-            )[$key] : $from);
-            $to = ($to ? @$m->persistence->typecastSaveRow(
-                $m,
-                [$key => $to]
-            )[$key] : $to);
 
-            if (!$this->canBeString($from) || !$this->canBeString($to)) {
-                throw new Exception([
-                    'Unable to typecast value for storing',
-                    'field' => $key,
-                    'from'  => $from,
-                    'to'    => $to,
-                ]);
+            $from = $this->getDescrFieldValue($m, $key, $from);
+            $to = $this->getDescrFieldValue($m, $key, $to);
+
+            if (!$this->canBeString($to)) {
+                throw (new Exception('Unable to typecast value for storing'))
+                    ->addMoreInfo('field', $key)
+                    ->addMoreInfo('from', $from)
+                    ->addMoreInfo('to', $to);
             }
 
-            $t[] = $key . '=' . $to;
+            $t[] = $key . '=' . (string) $to;
         }
 
         return join(', ', $t);
@@ -533,6 +559,46 @@ class Controller
             $a->set($fields);
         }
 
-        $this->pull($m)->save();
+        $this->pull()->save();
+    }
+
+    /**
+     * @param Model  $m
+     * @param string $fieldname
+     * @param        $value
+     *
+     * @return string
+     */
+    protected function getDescrFieldValue(Model $m, string $fieldname, $value): string
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        try {
+
+            $field_must_be_object = in_array(
+                $m->getField($fieldname)->type, [
+                    'date',
+                    'datetime',
+                    'time',
+                    'object'
+                ]);
+
+            if (is_string($value) && $field_must_be_object) {
+                $value = unserialize($value);
+
+                if($this->canBeString($value)) {
+                    return (string) $value;
+                }
+            }
+
+            // should use typecastSaveRow not typecastSaveField because we can have fields with serialize property set too
+            // don't typecast value if it's empty anyway: https://github.com/atk4/data/issues/439
+            $value = $m->persistence->typecastSaveRow($m, [$fieldname => $value])[$fieldname];
+        } catch (\Throwable $t) {
+        }
+
+        return (string) $value;
     }
 }

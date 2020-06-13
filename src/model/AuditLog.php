@@ -5,6 +5,7 @@ namespace atk4\audit\model;
 use atk4\audit\Controller;
 use atk4\data\Exception;
 use atk4\data\Model;
+use Throwable;
 
 class AuditLog extends Model
 {
@@ -32,24 +33,38 @@ class AuditLog extends Model
 
         $c = get_class($this);
 
-        $this->hasOne('initiator_audit_log_id', new $c());
+        $this->hasOne('initiator_audit_log_id', $c);
 
         $this->addField('ts', ['type' => 'datetime']);
 
         $this->addField('model', ['type' => 'string']); // model class name
-        $this->addField('model_id'); // id of related model record
+        $this->addField('model_id');                    // id of related model record
 
         $this->addField('action');
         $this->addField('time_taken', ['type' => 'float']);
 
-        $this->addField('descr', ['caption'=>'Description','type' => 'text']);
+        $this->addField('descr',[
+            'caption' => 'Description',
+            'type' => 'text'
+        ]);
 
-        $this->addField('user_info', ['type' => 'array', 'serialize'=>'json']); // JSON containing keys for browser etc
-        $this->addField('request_diff', ['type' => 'array', 'serialize'=>'json']); // requested changes
-        $this->addField('reactive_diff', ['type' => 'array', 'serialize'=>'json']); // reactive diff
-
-        $this->addField('is_reverted', ['type' => 'boolean', 'default' => false]);
-        $this->hasOne('revert_audit_log_id', new $c());
+        $this->addField('user_info', [
+            'type'      => 'array',
+            'serialize' => 'json',
+        ]);                                              // JSON containing keys for browser etc
+        $this->addField('request_diff', [
+            'type' => 'array',
+            'serialize' => 'json'
+        ]); // requested changes
+        $this->addField('reactive_diff', [
+            'type' => 'array',
+            'serialize' => 'json'
+        ]); // reactive diff
+        $this->addField('is_reverted',[
+            'type' => 'boolean',
+            'default' => false
+        ]);
+        $this->hasOne('revert_audit_log_id', $c);
 
         $this->setOrder($this->order_field . ' desc');
     }
@@ -63,7 +78,7 @@ class AuditLog extends Model
      */
     public function loadLast()
     {
-        return $this->setOrder('id desc')->tryLoadAny();
+        return $this->setOrder('id', true)->tryLoadAny();
     }
 
     /**
@@ -86,6 +101,7 @@ class AuditLog extends Model
         }
 
         $this->atomic(function () {
+
             $modelfqcn = $this->get('model');
             $m = new $modelfqcn($this->persistence);
 
@@ -110,25 +126,49 @@ class AuditLog extends Model
      */
     public function undo_update($m)
     {
-        $m->load($this['model_id']);
+        $m->load($this->get('model_id'));
 
-        foreach ($this['request_diff'] as $field => list($old, $new)) {
-            if ($m[$field] !== $new) {
-                throw new \atk4\core\Exception([
-                    'New value does not match current. Risky to undo',
-                    'new' => $new, 'current' => $m[$field]
-                ]);
+        foreach ($this->get('request_diff') as $field => [$old, $new]) {
+
+            if(!$m->hasField($field)) {
+                continue;
             }
 
-            $m[$field] = $old;
+            $f = $m->getField($field);
+
+            if (is_string($new) && in_array($f->type, [
+                    'date',
+                    'time',
+                    'datetime',
+                    'object',
+                ])) {
+                $new = unserialize($new);
+            }
+
+            if (json_encode([$m->get($field)]) !== json_encode([$new])) {
+                throw (new \atk4\core\Exception(
+                    'New value does not match current. Risky to undo'
+                    ))
+                    ->addMoreInfo('new', $new)
+                    ->addMoreInfo('current', $m->get($field));
+            }
+
+            if (is_string($old) && in_array($f->type, [
+                    'date',
+                    'time',
+                    'datetime',
+                    'object',
+                ])) {
+                $old = unserialize($old);
+            }
+
+            $m->set($field, $old);
         }
 
         $m->save();
     }
 
     /**
-     * @todo Imants: I think this will not work. Not sure what should be here.
-     *       Maybe reactive_diff?
      *
      * @param Model $m
      *
@@ -136,7 +176,28 @@ class AuditLog extends Model
      */
     public function undo_delete($m)
     {
-        $m->set($this['request_diff']);
+        foreach ($this->get('request_diff') as $field => [$old, $new]) {
+
+            if(!$m->hasField($field)) {
+                continue;
+            }
+
+
+            $f = $m->getField($field);
+
+            if (is_string($old) && in_array($f->type, [
+                    'date',
+                    'time',
+                    'datetime',
+                    'object',
+                ])
+            ) {
+                $old = unserialize($old);
+            }
+
+            $m->set($field, $old);
+        }
+
         $m->save();
     }
 

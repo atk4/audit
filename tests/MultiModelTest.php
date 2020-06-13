@@ -63,12 +63,11 @@ class Invoice extends \atk4\data\Model
 
     public function adjustTotal($change)
     {
-        if ($this->auditController) {
-            $this->auditController->custom_fields = [
-                'action'=>'total_adjusted',
-                'descr'=>'Changing total by ' . $change
-            ];
-        }
+        $this->ref('AuditLog')->custom_fields = [
+            'action'=>'total_adjusted',
+            'descr'=>'Changing total by ' . $change
+        ];
+
         $this->set('total', $this->get('total') + $change);
         $this->save();
     }
@@ -132,9 +131,9 @@ class MultiModelTest extends \atk4\schema\PhpunitTestCase
 
         //$m->ref('Lines')->ref('AuditLog')->loadLast()->undo();
 
-        $a = $this->db->add(clone $audit->audit_model);
-        $a->load(1);
-        $a->undo(); // undo invoice creation - should undo all other nested changes too
+        $m = new Invoice($this->db);
+        $a = $m->ref('AuditLog')->newInstance();
+        $a->load(1)->undo(); // undo invoice creation - should undo all other nested changes too
 
         $this->assertEquals(8, count($this->getDB()['audit_log']));
         $this->assertEquals(0, count($this->getDB()['line']));
