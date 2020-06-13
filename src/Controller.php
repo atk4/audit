@@ -267,24 +267,7 @@ class Controller
         $diff = [];
         foreach ($m->dirty as $key => $original) {
 
-            if(!$m->hasField($key)) {
-                continue;
-            }
-
-            $f = $m->getField($key);
-
-            // don't log fields if no_audit=true is set
-            if (isset($f->no_audit) && $f->no_audit) {
-                continue;
-            }
-
-            // security fix : https://github.com/atk4/audit/pull/30
-            if ($f->never_persist || $f->never_save || $f->read_only) {
-                continue;
-            }
-
-            // don't log DSQL expressions because they can be recursive and we can't store them
-            if ($m->get($key) instanceof Expression) {
+            if (!$this->isDiffFieldAuditable($m,$key)) {
                 continue;
             }
 
@@ -292,12 +275,8 @@ class Controller
 
             // object need to be serialized before save in audit
             // if not it will pass in json_encode and became an array
-            if (is_object($original)) {
-                $original = serialize($original);
-            }
-            if (is_object($value)) {
-                $value = serialize($value);
-            }
+            $original = is_object($original) ? serialize($original) : $original;
+            $value = is_object($value) ? serialize($value) : $value;
 
             // key = [old value, new value]
             $diff[$key] = [$original, $value];
@@ -428,24 +407,7 @@ class Controller
         $diff = [];
         foreach ($m->data as $key => $original) {
 
-            if(!$m->hasField($key)) {
-                continue;
-            }
-            // get the field or throw
-            $f = $m->getField($key);
-
-            // don't log fields if no_audit=true is set
-            if (isset($f->no_audit) && $f->no_audit) {
-                continue;
-            }
-
-            // security fix : https://github.com/atk4/audit/pull/30
-            if ($f->never_persist || $f->never_save || $f->read_only) {
-                continue;
-            }
-
-            // don't log DSQL expressions because they can be recursive and we can't store them
-            if ($m->get($key) instanceof Expression) {
+            if (!$this->isDiffFieldAuditable($m,$key)) {
                 continue;
             }
 
@@ -567,14 +529,10 @@ class Controller
      * @param string $fieldname
      * @param        $value
      *
-     * @return string
+     * @return mixed
      */
-    protected function getDescrFieldValue(Model $m, string $fieldname, $value): string
+    protected function getDescrFieldValue(Model $m, string $fieldname, $value)
     {
-        if (empty($value)) {
-            return $value;
-        }
-
         try {
 
             $field_must_be_object = in_array(
@@ -600,5 +558,32 @@ class Controller
         }
 
         return (string) $value;
+    }
+
+    private function isDiffFieldAuditable(Model $m, string $key) : bool
+    {
+
+        if(!$m->hasField($key)) {
+            return false;
+        }
+
+        $f = $m->getField($key);
+
+        // don't log fields if no_audit=true is set
+        if (isset($f->no_audit) && $f->no_audit) {
+            return false;
+        }
+
+        // security fix : https://github.com/atk4/audit/pull/30
+        if ($f->never_persist || $f->never_save || $f->read_only) {
+            return false;
+        }
+
+        // don't log DSQL expressions because they can be recursive and we can't store them
+        if ($m->get($key) instanceof Expression) {
+            return false;
+        }
+
+        return true;
     }
 }
