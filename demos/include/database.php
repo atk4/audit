@@ -17,7 +17,6 @@ try {
 
 $app->db = $db;
 
-
 // Define some data models
 if (!class_exists('Country')) {
     class Country extends \atk4\data\Model

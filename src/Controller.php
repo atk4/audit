@@ -8,8 +8,6 @@ use atk4\core\Exception;
 use atk4\core\FactoryTrait;
 use atk4\core\InitializerTrait;
 use atk4\core\TrackableTrait;
-use atk4\data\Field_SQL_Expression;
-use atk4\dsql\Expression;
 use Closure;
 use DateTime;
 use atk4\data\Model;
@@ -573,11 +571,6 @@ class Controller
 
         // security fix : https://github.com/atk4/audit/pull/30
         if ($f->never_persist || $f->never_save || $f->read_only) {
-            return false;
-        }
-
-        // don't log DSQL expressions because they can be recursive and we can't store them
-        if ($m->get($key) instanceof Expression) {
             return false;
         }
 
