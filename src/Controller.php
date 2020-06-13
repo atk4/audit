@@ -8,7 +8,6 @@ use atk4\core\Exception;
 use atk4\core\FactoryTrait;
 use atk4\core\InitializerTrait;
 use atk4\core\TrackableTrait;
-use Closure;
 use DateTime;
 use atk4\data\Model;
 
@@ -91,26 +90,26 @@ class Controller
         // adds hooks
         $m->onHook(
             Model::HOOK_BEFORE_SAVE,
-            Closure::fromCallable([$this,'beforeSave']),
+            \Closure::fromCallable([$this,'beforeSave']),
             [],
             -100
         );
         $m->onHook(
             Model::HOOK_BEFORE_DELETE,
-            Closure::fromCallable([$this,'beforeDelete']),
+            \Closure::fromCallable([$this,'beforeDelete']),
             [],
             -100
         );// called as soon as possible
 
         $m->onHook(
             Model::HOOK_AFTER_SAVE,
-            Closure::fromCallable([$this,'afterSave']),
+            \Closure::fromCallable([$this,'afterSave']),
             [],
             100
         );
         $m->onHook(
             Model::HOOK_AFTER_DELETE,
-            Closure::fromCallable([$this,'afterDelete']),
+            \Closure::fromCallable([$this,'afterDelete']),
             [],
             100
         );// called as late as possible
@@ -153,11 +152,11 @@ class Controller
         // adds custom log methods in model
         // log() method can clash with some debug logger, so we use two methods just in case
         if (!$m->hasMethod('log')) {
-            $m->addMethod('log', Closure::fromCallable([$this, 'customLog']));
+            $m->addMethod('log', \Closure::fromCallable([$this, 'customLog']));
         }
 
         if (!$m->hasMethod('auditLog')) {
-            $m->addMethod('auditLog', Closure::fromCallable([$this, 'customLog']));
+            $m->addMethod('auditLog', \Closure::fromCallable([$this, 'customLog']));
         }
 
         // adds link to audit controller in model properties
