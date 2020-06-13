@@ -214,6 +214,6 @@ class CommonTest extends \atk4\schema\PhpunitTestCase
 
         $this->assertTrue($m->loaded());
 
-        $this->assertEquals($before_delete_data,$m->get());
+        $this->assertEquals($before_delete_data, $m->get());
     }
 }
