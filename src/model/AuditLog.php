@@ -144,9 +144,7 @@ class AuditLog extends Model
             }
 
             if (json_encode([$m->get($field)]) !== json_encode([$new])) {
-                throw (new \atk4\core\Exception(
-                    'New value does not match current. Risky to undo'
-                ))
+                throw (new \atk4\core\Exception('New value does not match current. Risky to undo'))
                     ->addMoreInfo('new', $new)
                     ->addMoreInfo('current', $m->get($field));
             }
