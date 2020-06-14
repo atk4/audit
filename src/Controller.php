@@ -8,7 +8,6 @@ use atk4\core\Exception;
 use atk4\core\FactoryTrait;
 use atk4\core\InitializerTrait;
 use atk4\core\TrackableTrait;
-use DateTime;
 use atk4\data\Model;
 
 class Controller
@@ -180,7 +179,7 @@ class Controller
         $a = $m->ref('AuditLog');
 
         // set audit record values
-        $a->set('ts', new DateTime());
+        $a->set('ts', new \DateTime());
 
         // sometimes we already have conditions set on model, but there are strange cases,
         // when they are not. That's why we needed following 2 lines :(

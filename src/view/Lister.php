@@ -6,7 +6,6 @@ use atk4\data\Field_SQL_Expression;
 use atk4\data\Model;
 use atk4\ui\Exception;
 use atk4\ui\Template;
-use DateTime;
 use Throwable;
 
 /**
@@ -138,7 +137,7 @@ class Lister extends \atk4\ui\Lister
 
         try {
             if (isset($value['date'])) {
-                $value = new DateTime($value['date']);
+                $value = new \DateTime($value['date']);
                 return $value->format($this->app->ui_persistence->datetime_format);
             }
         } catch (Throwable $e) {
