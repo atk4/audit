@@ -93,7 +93,7 @@ class Controller
             \Closure::fromCallable([$this, 'beforeDelete']),
             [],
             -100
-        );// called as soon as possible
+        ); // called as soon as possible
 
         $m->onHook(
             Model::HOOK_AFTER_SAVE,
@@ -397,24 +397,21 @@ class Controller
     }
 
     /**
-     * Credit to mpen: http://stackoverflow.com/a/27368848/204819
+     * Credit to open: http://stackoverflow.com/a/27368848/204819.
      *
      * @param mixed $var
      */
     protected function canBeString($var): bool
     {
-        return $var === null || is_scalar($var) || is_callable([$var, '__toString',]);
+        return $var === null || is_scalar($var) || is_callable([$var, '__toString']);
     }
 
     /**
      * Return string with key=value info.
      *
      * @param array $diff
-     * @param Model $m
-     *
-     * @return string
      */
-    public function getDescr($diff, Model $m)
+    public function getDescr($diff, Model $m): string
     {
         if (!$diff) {
             return 'no changes';

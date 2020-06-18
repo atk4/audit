@@ -185,7 +185,7 @@ class CommonTest extends \atk4\schema\PhpunitTestCase
                     'f_ser_ser' => serialize([
                         789,
                         'qwe' => 'asd',
-                    ])
+                    ]),
                 ],
             ],
             'audit_log' => $this->audit_db,

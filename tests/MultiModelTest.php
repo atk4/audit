@@ -66,15 +66,14 @@ class Invoice extends \atk4\data\Model
     public function adjustTotal($change)
     {
         $this->ref('AuditLog')->custom_fields = [
-            'action'=>'total_adjusted',
-            'descr'=>'Changing total by ' . $change,
+            'action' => 'total_adjusted',
+            'descr' => 'Changing total by ' . $change,
         ];
 
         $this->set('total', $this->get('total') + $change);
         $this->save();
     }
 }
-
 
 /**
  * Tests basic create, update and delete operatiotns.
