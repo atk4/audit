@@ -7,7 +7,7 @@ namespace atk4\audit\tests;
 use atk4\data\Model;
 use atk4\data\Persistence;
 
-class Line extends \atk4\data\Model
+class Line extends Model
 {
     public $table = 'line';
 
@@ -59,7 +59,7 @@ class Invoice extends \atk4\data\Model
         $this->addField('total', ['type' => 'money', 'default' => 0.00]);
 
         $this->onHook(Model::HOOK_BEFORE_DELETE, function ($m) {
-            $m->ref('Lines', ['no_adjust'=>true])->each('delete');
+            $m->ref('Lines', ['no_adjust' => true])->each('delete');
         });
     }
 
@@ -67,7 +67,7 @@ class Invoice extends \atk4\data\Model
     {
         $this->ref('AuditLog')->custom_fields = [
             'action'=>'total_adjusted',
-            'descr'=>'Changing total by ' . $change
+            'descr'=>'Changing total by ' . $change,
         ];
 
         $this->set('total', $this->get('total') + $change);
@@ -77,31 +77,30 @@ class Invoice extends \atk4\data\Model
 
 
 /**
- * Tests basic create, update and delete operatiotns
+ * Tests basic create, update and delete operatiotns.
  */
 class MultiModelTest extends \atk4\schema\PhpunitTestCase
 {
     protected $audit_db = ['_' => [
-                    'initiator_audit_log_id' => 1,
-                    'ts' => '',
-                    'model' => '',
-                    'model_id' => 1,
-                    'action' => '',
-                    'user_info' => '',
-                    'time_taken' => 1.1,
-                    'request_diff' => '',
-                    'reactive_diff' => '',
-                    'descr' => '',
-                    'is_reverted' => '',
-                    'revert_audit_log_id' => 1
-                ]];
-
+        'initiator_audit_log_id' => 1,
+        'ts' => '',
+        'model' => '',
+        'model_id' => 1,
+        'action' => '',
+        'user_info' => '',
+        'time_taken' => 1.1,
+        'request_diff' => '',
+        'reactive_diff' => '',
+        'descr' => '',
+        'is_reverted' => '',
+        'revert_audit_log_id' => 1,
+    ]];
 
     public function testTotals()
     {
         $q = [
-            'invoice' => ['_'=>['ref'=>'', 'total'=>0.1]],
-            'line' => ['_'=>['invoice_id'=>0, 'item'=>'', 'price'=>0.01, 'qty'=>0, 'total'=>0.1]],
+            'invoice' => ['_' => ['ref' => '', 'total' => 0.1]],
+            'line' => ['_' => ['invoice_id' => 0, 'item' => '', 'price' => 0.01, 'qty' => 0, 'total' => 0.1]],
             'audit_log' => $this->audit_db,
         ];
         $this->setDB($q);
@@ -121,11 +120,11 @@ class MultiModelTest extends \atk4\schema\PhpunitTestCase
         });
 
         $m = new Invoice($this->db);
-        $m->save(['ref'=>'inv1']);
+        $m->save(['ref' => 'inv1']);
         $this->assertEquals(0, $m->get('total'));
 
-        $m->ref('Lines')->insert(['item'=>'Chair', 'price'=>2.50, 'qty'=>3]);
-        $m->ref('Lines')->insert(['item'=>'Desk', 'price'=>10.20, 'qty'=>1]);
+        $m->ref('Lines')->insert(['item' => 'Chair', 'price' => 2.50, 'qty' => 3]);
+        $m->ref('Lines')->insert(['item' => 'Desk', 'price' => 10.20, 'qty' => 1]);
 
         $this->assertEquals(5, count($this->getDB()['audit_log'])); // invoice + line + adjust + line + adjust
         $this->assertEquals(2, count($this->getDB()['line']));
@@ -142,12 +141,12 @@ class MultiModelTest extends \atk4\schema\PhpunitTestCase
         $this->assertEquals(0, count($this->getDB()['invoice']));
 
         // test audit log relations
-        $this->assertEquals(null, $a->load(1)->get('initiator_audit_log_id')); // create invoice
-        $this->assertEquals(null, $a->load(2)->get('initiator_audit_log_id')); // create line
+        $this->assertNull($a->load(1)->get('initiator_audit_log_id')); // create invoice
+        $this->assertNull($a->load(2)->get('initiator_audit_log_id')); // create line
         $this->assertEquals(2, $a->load(3)->get('initiator_audit_log_id')); // adjust invoice
-        $this->assertEquals(null, $a->load(4)->get('initiator_audit_log_id')); // create line
+        $this->assertNull($a->load(4)->get('initiator_audit_log_id')); // create line
         $this->assertEquals(4, $a->load(5)->get('initiator_audit_log_id')); // adjust invoice
-        $this->assertEquals(null, $a->load(6)->get('initiator_audit_log_id')); // delete invoice
+        $this->assertNull($a->load(6)->get('initiator_audit_log_id')); // delete invoice
         $this->assertEquals(6, $a->load(7)->get('initiator_audit_log_id')); // delete line
         $this->assertEquals(6, $a->load(8)->get('initiator_audit_log_id')); // delete line
 

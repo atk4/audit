@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace atk4\audit\tests;
 
-use atk4\audit\model\AuditLog;
-use atk4\ui\App;
-
 /** @runTestsInSeparateProcesses */
 class ViewTest extends \atk4\schema\PhpunitTestCase
 {

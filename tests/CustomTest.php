@@ -6,7 +6,7 @@ namespace atk4\audit\tests;
 
 use atk4\data\Model;
 
-class AuditableGenderUser extends \atk4\data\Model
+class AuditableGenderUser extends Model
 {
     public $table = 'user';
 
@@ -18,7 +18,7 @@ class AuditableGenderUser extends \atk4\data\Model
 
         $this->addField('name');
         $this->addField('surname');
-        $this->addField('gender', ['enum' => ['M','F']]);
+        $this->addField('gender', ['enum' => ['M', 'F']]);
 
         $this->add(new \atk4\audit\Controller());
 
@@ -41,25 +41,24 @@ class CustomLog extends \atk4\audit\model\AuditLog
 }
 
 /**
- * Tests basic create, update and delete operatiotns
+ * Tests basic create, update and delete operations.
  */
 class CustomTest extends \atk4\schema\PhpunitTestCase
 {
     protected $audit_db = ['_' => [
-                    'initiator_audit_log_id' => 1,
-                    'ts' => '',
-                    'model' => '',
-                    'model_id' => 1,
-                    'action' => '',
-                    'user_info' => '',
-                    'time_taken' => 1.1,
-                    'request_diff' => '',
-                    'reactive_diff' => '',
-                    'descr' => '',
-                    'is_reverted' => '',
-                    'revert_audit_log_id' => 1
-                ]];
-
+        'initiator_audit_log_id' => 1,
+        'ts' => '',
+        'model' => '',
+        'model_id' => 1,
+        'action' => '',
+        'user_info' => '',
+        'time_taken' => 1.1,
+        'request_diff' => '',
+        'reactive_diff' => '',
+        'descr' => '',
+        'is_reverted' => '',
+        'revert_audit_log_id' => 1,
+    ]];
 
     public function testBending()
     {
@@ -120,12 +119,12 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
         $m = new AuditableGenderUser($this->db);
 
         $m->load(2); // load Zoe
-        $m->log('load', 'Testing', ['request_diff' => ['foo'=>'bar']]);
+        $m->log('load', 'Testing', ['request_diff' => ['foo' => 'bar']]);
 
         $l = $m->ref('AuditLog')->loadLast();
 
         $this->assertEquals('load', $l->get('action'));
-        $this->assertEquals(['foo'=>'bar'], $l->get('request_diff'));
+        $this->assertEquals(['foo' => 'bar'], $l->get('request_diff'));
     }
 
     public function testCustomDescr()

@@ -50,7 +50,7 @@ if (!class_exists('Country')) {
                 'ui' => [
                     'icon' => 'undo',
                     'button' => [null, 'icon' => 'undo'],
-                    'execButton' => [\atk4\ui\Button::class, 'undo', 'blue']
+                    'execButton' => [\atk4\ui\Button::class, 'undo', 'blue'],
                 ],
             ]);
         }

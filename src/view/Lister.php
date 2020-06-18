@@ -6,7 +6,6 @@ namespace atk4\audit\view;
 
 use atk4\data\Field_SQL_Expression;
 use atk4\data\Model;
-use atk4\ui\Exception;
 use atk4\ui\Template;
 use Throwable;
 
@@ -74,7 +73,7 @@ class Lister extends \atk4\ui\Lister
 
         if ($this->t_row->hasTag('changes') && count($diff) > 0) {
             $t_change = clone $this->t_row_change;
-            $html     = '';
+            $html = '';
             foreach ($diff as $field => list($old_value, $new_value)) {
                 if ($field === 'id') {
                     continue;
@@ -126,13 +125,15 @@ class Lister extends \atk4\ui\Lister
 
         if ($this->linkedModel->hasRef($field)) {
             $refModel = clone $this->linkedModel->refModel($field);
-            $refModel->tryLoad((int)$value);
+            $refModel->tryLoad((int) $value);
+
             return $refModel->getTitle();
         }
 
         try {
             if (isset($value['date'])) {
                 $value = new \DateTime($value['date']);
+
                 return $value->format($this->app->ui_persistence->datetime_format);
             }
         } catch (Throwable $e) {

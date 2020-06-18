@@ -8,7 +8,8 @@ require_once 'include/init.php';
 require_once 'include/database.php';
 
 $audit = new \atk4\audit\Controller();
-/** @var Persistence $db */
+
+// @var Persistence $db
 $db->onHook(Persistence::HOOK_AFTER_ADD, function ($owner, $element) use ($audit) {
     if ($element instanceof \atk4\data\Model) {
         if (isset($element->no_audit) && $element->no_audit) {
@@ -19,6 +20,7 @@ $db->onHook(Persistence::HOOK_AFTER_ADD, function ($owner, $element) use ($audit
         $audit->setUp($element);
     }
 });
+
 // set up data model with audit add-on enabled
 $m = new Country($db);
 
@@ -26,8 +28,6 @@ $m = new Country($db);
 $cols = \atk4\ui\Columns::addTo($app);
 $c1 = $cols->addColumn();
 $c2 = $cols->addColumn();
-
-
 
 // left side country CRUD
 \atk4\ui\Header::addTo($c1)->set('Countries');
@@ -40,15 +40,14 @@ $crud->menu
     ->addItem(['Delete ALL audit data', 'icon' => 'trash'])
     ->on('click', function () use ($m, $c2) {
         $m->ref('AuditLog')->action('delete')->execute();
+
         return $c2->jsReload();
     });
 
 // add CRUD action to load jailed audit records in lister
 $crud->addActionButton('Audit ->', function ($js, $id) use ($c2) {
-    return $c2->jsReload(['model_id'=>$id]);
+    return $c2->jsReload(['model_id' => $id]);
 });
-
-
 
 // right side Audit History
 

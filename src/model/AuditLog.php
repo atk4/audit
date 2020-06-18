@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace atk4\audit\model;
 
 use atk4\audit\Controller;
-use atk4\data\Exception;
 use atk4\data\Model;
-use Throwable;
 
 class AuditLog extends Model
 {
@@ -33,7 +31,7 @@ class AuditLog extends Model
     {
         parent::init();
 
-        $c = get_class($this);
+        $c = static::class;
 
         $this->hasOne('initiator_audit_log_id', $c);
 
@@ -47,24 +45,24 @@ class AuditLog extends Model
 
         $this->addField('descr', [
             'caption' => 'Description',
-            'type' => 'text'
+            'type' => 'text',
         ]);
 
         $this->addField('user_info', [
-            'type'      => 'array',
+            'type' => 'array',
             'serialize' => 'json',
         ]);                                              // JSON containing keys for browser etc
         $this->addField('request_diff', [
             'type' => 'array',
-            'serialize' => 'json'
+            'serialize' => 'json',
         ]); // requested changes
         $this->addField('reactive_diff', [
             'type' => 'array',
-            'serialize' => 'json'
+            'serialize' => 'json',
         ]); // reactive diff
         $this->addField('is_reverted', [
             'type' => 'boolean',
-            'default' => false
+            'default' => false,
         ]);
         $this->hasOne('revert_audit_log_id', $c);
 
@@ -107,7 +105,7 @@ class AuditLog extends Model
             $m->auditController->custom_action = 'undo ' . $this->get('action');
             $m->auditController->custom_fields['revert_audit_log_id'] = $this->id;
 
-            $this->$f($m);
+            $this->{$f}($m);
 
             $this->set('is_reverted', true);
             $this->save();
@@ -129,11 +127,11 @@ class AuditLog extends Model
             $f = $m->getField($field);
 
             if (is_string($new) && in_array($f->type, [
-                    'date',
-                    'time',
-                    'datetime',
-                    'object',
-                ])) {
+                'date',
+                'time',
+                'datetime',
+                'object',
+            ], true)) {
                 $new = unserialize($new);
             }
 
@@ -144,11 +142,11 @@ class AuditLog extends Model
             }
 
             if (is_string($old) && in_array($f->type, [
-                    'date',
-                    'time',
-                    'datetime',
-                    'object',
-                ])) {
+                'date',
+                'time',
+                'datetime',
+                'object',
+            ], true)) {
                 $old = unserialize($old);
             }
 
@@ -168,16 +166,14 @@ class AuditLog extends Model
                 continue;
             }
 
-
             $f = $m->getField($field);
 
             if (is_string($old) && in_array($f->type, [
-                    'date',
-                    'time',
-                    'datetime',
-                    'object',
-                ])
-            ) {
+                'date',
+                'time',
+                'datetime',
+                'object',
+            ], true)) {
                 $old = unserialize($old);
             }
 

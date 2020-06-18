@@ -6,7 +6,7 @@ namespace atk4\audit\tests;
 
 use atk4\data\Model;
 
-class AuditableUser extends \atk4\data\Model
+class AuditableUser extends Model
 {
     public $table = 'user';
 
@@ -22,24 +22,24 @@ class AuditableUser extends \atk4\data\Model
 }
 
 /**
- * Tests basic create, update and delete operations
+ * Tests basic create, update and delete operations.
  */
 class CRUDTest extends \atk4\schema\PhpunitTestCase
 {
     protected $audit_db = ['_' => [
-                    'initiator_audit_log_id' => 1,
-                    'ts' => '',
-                    'model' => '',
-                    'model_id' => 1,
-                    'action' => '',
-                    'user_info' => '',
-                    'time_taken' => 1.1,
-                    'request_diff' => '',
-                    'reactive_diff' => '',
-                    'descr' => '',
-                    'is_reverted' => '',
-                    'revert_audit_log_id' => 1
-                ]];
+        'initiator_audit_log_id' => 1,
+        'ts' => '',
+        'model' => '',
+        'model_id' => 1,
+        'action' => '',
+        'user_info' => '',
+        'time_taken' => 1.1,
+        'request_diff' => '',
+        'reactive_diff' => '',
+        'descr' => '',
+        'is_reverted' => '',
+        'revert_audit_log_id' => 1,
+    ]];
 
     /*
     public function testUpdate()

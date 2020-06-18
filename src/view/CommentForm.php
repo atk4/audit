@@ -18,7 +18,7 @@ class CommentForm extends \atk4\ui\Form
     public $buttonSave = false;
 
     /**
-     * Init layout
+     * Init layout.
      */
     public function initLayout()
     {
@@ -28,10 +28,10 @@ class CommentForm extends \atk4\ui\Form
         $this->layout->inline = true;
 
         // add field
-        $field = $this->addField('__new_comment', new \atk4\ui\FormField\Line(['caption'=>'Add Comment']));
+        $field = $this->addField('__new_comment', new \atk4\ui\FormField\Line(['caption' => 'Add Comment']));
 
         // submit button
-        $button = $field->addAction(['icon'=>'comment']);
+        $button = $field->addAction(['icon' => 'comment']);
         $button->on('click', $this->js()->form('submit'));
 
         $this->onSubmit(function ($f) {

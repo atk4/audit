@@ -84,29 +84,29 @@ class Controller
         // adds hooks
         $m->onHook(
             Model::HOOK_BEFORE_SAVE,
-            \Closure::fromCallable([$this,'beforeSave']),
+            \Closure::fromCallable([$this, 'beforeSave']),
             [],
             -100
         );
         $m->onHook(
             Model::HOOK_BEFORE_DELETE,
-            \Closure::fromCallable([$this,'beforeDelete']),
+            \Closure::fromCallable([$this, 'beforeDelete']),
             [],
             -100
         );// called as soon as possible
 
         $m->onHook(
             Model::HOOK_AFTER_SAVE,
-            \Closure::fromCallable([$this,'afterSave']),
+            \Closure::fromCallable([$this, 'afterSave']),
             [],
             100
         );
         $m->onHook(
             Model::HOOK_AFTER_DELETE,
-            \Closure::fromCallable([$this,'afterDelete']),
+            \Closure::fromCallable([$this, 'afterDelete']),
             [],
             100
-        );// called as late as possible
+        ); // called as late as possible
 
         // adds hasMany reference to audit records
         $m->addRef('AuditLog', function ($m) {
@@ -159,13 +159,8 @@ class Controller
 
     /**
      * Push change into audit log (and audit log stack).
-     *
-     * @param Model  $m
-     * @param string $action
-     *
-     * @return AuditLog
      */
-    public function push(Model $m, $action)
+    public function push(Model $m, string $action): AuditLog
     {
         /** @var AuditLog $a */
         $a = $m->ref('AuditLog');
@@ -201,7 +196,7 @@ class Controller
 
         // memorize start time
         if ($this->record_time_taken) {
-            $a->start_mt = (float)microtime();
+            $a->start_mt = (float) microtime();
         }
 
         //Imants: deprecated - use $m->auditController->audit_log_stack[0] instead
@@ -235,7 +230,7 @@ class Controller
 
         // save time taken
         if ($this->record_time_taken) {
-            $a->set('time_taken', (float)microtime() - $a->start_mt);
+            $a->set('time_taken', (float) microtime() - $a->start_mt);
         }
 
         return $a;
@@ -243,12 +238,8 @@ class Controller
 
     /**
      * Calculates and returns array of all changed fields and their values.
-     *
-     * @param Model $m
-     *
-     * @return array
      */
-    public function getDiffs(Model $m)
+    public function getDiffs(Model $m): array
     {
         $diff = [];
         foreach ($m->dirty as $key => $original) {
@@ -272,11 +263,8 @@ class Controller
 
     /**
      * Executes before model record is saved.
-     *
-     * @param Model $m
-     * @param bool  $is_update
      */
-    public function beforeSave(Model $m, $is_update)
+    public function beforeSave(Model $m, bool $is_update)
     {
         $action = $is_update ? 'update' : 'create';
         $a = $this->push($m, $action);
@@ -290,12 +278,8 @@ class Controller
 
     /**
      * Executes after model record is saved.
-     *
-     * @param Model $m
-     *
-     * @param bool  $is_update
      */
-    public function afterSave(Model $m, $is_update)
+    public function afterSave(Model $m, bool $is_update)
     {
         // pull from audit stack
         $a = $this->pull();
@@ -311,11 +295,9 @@ class Controller
                 $this->setDescr($a, $m, $action);
             }
         } else {
-
             // updated record
             $d = $this->getDiffs($m);
             foreach ($d as $f => list($f0, $f1)) {
-
                 // if not set don't purge
                 if (!isset($a->get('request_diff')[$f][1])) {
                     continue;
@@ -368,8 +350,7 @@ class Controller
     /**
      * Executes before model record is deleted.
      *
-     * @param Model $m
-     * @param       $model_id
+     * @param mixed $model_id
      */
     public function beforeDelete(Model $m, $model_id)
     {
@@ -408,8 +389,7 @@ class Controller
     /**
      * Executes after model record is deleted.
      *
-     * @param Model $m
-     * @param       $model_id
+     * @param mixed $model_id
      */
     public function afterDelete(Model $m, $model_id)
     {
@@ -420,12 +400,10 @@ class Controller
      * Credit to mpen: http://stackoverflow.com/a/27368848/204819
      *
      * @param mixed $var
-     *
-     * @return bool
      */
-    protected function canBeString($var)
+    protected function canBeString($var): bool
     {
-        return $var === null || is_scalar($var) || is_callable([$var,'__toString',]);
+        return $var === null || is_scalar($var) || is_callable([$var, '__toString',]);
     }
 
     /**
@@ -457,18 +435,13 @@ class Controller
             $t[] = $key . '=' . (string) $to;
         }
 
-        return join(', ', $t);
+        return implode(', ', $t);
     }
 
     /**
      * Create custom log record.
-     *
-     * @param Model  $m
-     * @param string $action
-     * @param string $descr
-     * @param array  $fields
      */
-    public function customLog(Model $m, string $action, ?string $descr = null, array $fields = [])
+    public function customLog(Model $m, string $action, string $descr = null, array $fields = [])
     {
         $a = $this->push($m, $action);
 
@@ -490,13 +463,9 @@ class Controller
     }
 
     /**
-     * @param Model  $m
-     * @param string $fieldname
-     * @param        $value
-     *
-     * @return mixed
+     * @param mixed $value
      */
-    protected function getDescrFieldValue(Model $m, string $fieldname, $value)
+    protected function getDescrFieldValue(Model $m, string $fieldname, $value): string
     {
         try {
             $field_must_be_object = in_array(
@@ -505,8 +474,9 @@ class Controller
                     'date',
                     'datetime',
                     'time',
-                    'object'
-                ]
+                    'object',
+                ],
+                true
             );
 
             if (is_string($value) && $field_must_be_object) {

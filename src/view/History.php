@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace atk4\audit\view;
 
-use atk4\core\Exception;
 use atk4\data\Model;
 use atk4\ui\View;
 
