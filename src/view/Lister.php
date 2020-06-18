@@ -1,12 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\audit\view;
 
 use atk4\data\Field_SQL_Expression;
 use atk4\data\Model;
-use atk4\ui\Exception;
 use atk4\ui\Template;
-use DateTime;
 use Throwable;
 
 /**
@@ -24,13 +24,13 @@ class Lister extends \atk4\ui\Lister
     public $ui = 'small feed';
 
     /** @see init() */
-    public $defaultTemplate = null;
+    public $defaultTemplate;
 
     /** @var Template Template chunk for one changed field */
     public $t_row_change;
 
     /** @var Model */
-    private $linkedModel;
+    protected $linkedModel;
 
     /**
      * Initialization.
@@ -47,8 +47,6 @@ class Lister extends \atk4\ui\Lister
 
     /**
      * From the current template will extract {change} into $this->t_row_change.
-     *
-     * @throws Exception
      */
     public function initChunks()
     {
@@ -64,8 +62,6 @@ class Lister extends \atk4\ui\Lister
      * Render individual row.
      *
      * Adds rendering of field value changes section.
-     *
-     * @throws \atk4\core\Exception
      */
     public function renderRow()
     {
@@ -73,11 +69,11 @@ class Lister extends \atk4\ui\Lister
             $this->t_row->trySet('user', $this->model->ref('updated_by_user_id')->getTitle());
         }
 
-        $diff = $this->model['request_diff'];
+        $diff = $this->model->get('request_diff') ?? [];
 
         if ($this->t_row->hasTag('changes') && count($diff) > 0) {
             $t_change = clone $this->t_row_change;
-            $html     = '';
+            $html = '';
             foreach ($diff as $field => list($old_value, $new_value)) {
                 if ($field === 'id') {
                     continue;
@@ -110,17 +106,14 @@ class Lister extends \atk4\ui\Lister
         return parent::renderRow();
     }
 
-    public function isEmptyOrNull($val)
+    public function isEmptyOrNull($val): bool
     {
         return empty(!is_string($val) ? $val : trim($val));
     }
 
     /**
-     * @param $field
-     * @param $value
-     *
-     * @throws \atk4\core\Exception
-     * @throws \atk4\data\Exception
+     * @param string $field
+     * @param mixed  $value
      *
      * @return mixed
      */
@@ -132,13 +125,15 @@ class Lister extends \atk4\ui\Lister
 
         if ($this->linkedModel->hasRef($field)) {
             $refModel = clone $this->linkedModel->refModel($field);
-            $refModel->tryLoad((int)$value);
+            $refModel->tryLoad((int) $value);
+
             return $refModel->getTitle();
         }
 
         try {
             if (isset($value['date'])) {
-                $value = new DateTime($value['date']);
+                $value = new \DateTime($value['date']);
+
                 return $value->format($this->app->ui_persistence->datetime_format);
             }
         } catch (Throwable $e) {
@@ -151,9 +146,16 @@ class Lister extends \atk4\ui\Lister
     {
         parent::setModel($m);
 
-        $class             = $this->model->get('model');
+        $class = $this->model->get('model');
         $this->linkedModel = new $class($this->app->db);
 
+        // this conditions can be added here not in AuditLog Model
+        // i hope, here are harmless - to hide empty rows
+        //        $this->model->addCondition([
+        //            ['descr', 'not', null],
+        //            ['request_diff', 'not', null],
+        //            ['reactive_diff', 'not', null],
+        //        ]);
         return $this->model;
     }
 }

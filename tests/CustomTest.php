@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\audit\tests;
 
 use atk4\data\Model;
 
-class AuditableGenderUser extends \atk4\data\Model
+class AuditableGenderUser extends Model
 {
     public $table = 'user';
 
@@ -16,11 +18,11 @@ class AuditableGenderUser extends \atk4\data\Model
 
         $this->addField('name');
         $this->addField('surname');
-        $this->addField('gender', ['enum' => ['M','F']]);
+        $this->addField('gender', ['enum' => ['M', 'F']]);
 
         $this->add(new \atk4\audit\Controller());
 
-        $this->addHook('beforeSave', function ($m) {
+        $this->onHook(self::HOOK_BEFORE_SAVE, function ($m) {
             if ($m->isDirty('gender')) {
                 //$m->audit_log['action'] = 'genderbending'; // deprecated usage
                 //$m->auditController->audit_log_stack[0]['action'] = 'genderbending';
@@ -34,30 +36,29 @@ class CustomLog extends \atk4\audit\model\AuditLog
 {
     public function getDescr()
     {
-        return count($this['request_diff']) . ' fields magically change';
+        return count($this->get('request_diff')) . ' fields magically change';
     }
 }
 
 /**
- * Tests basic create, update and delete operatiotns
+ * Tests basic create, update and delete operations.
  */
 class CustomTest extends \atk4\schema\PhpunitTestCase
 {
     protected $audit_db = ['_' => [
-                    'initiator_audit_log_id' => 1,
-                    'ts' => '',
-                    'model' => '',
-                    'model_id' => 1,
-                    'action' => '',
-                    'user_info' => '',
-                    'time_taken' => 1.1,
-                    'request_diff' => '',
-                    'reactive_diff' => '',
-                    'descr' => '',
-                    'is_reverted' => '',
-                    'revert_audit_log_id' => 1
-                ]];
-
+        'initiator_audit_log_id' => 1,
+        'ts' => '',
+        'model' => '',
+        'model_id' => 1,
+        'action' => '',
+        'user_info' => '',
+        'time_taken' => 1.1,
+        'request_diff' => '',
+        'reactive_diff' => '',
+        'descr' => '',
+        'is_reverted' => '',
+        'revert_audit_log_id' => 1,
+    ]];
 
     public function testBending()
     {
@@ -73,12 +74,12 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
         $m = new AuditableGenderUser($this->db);
 
         $m->load(1); // load Vinny
-        $m['gender'] = 'F';
+        $m->set('gender', 'F');
         $m->save();
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('genderbending', $l['action']);
+        $this->assertSame('genderbending', $l->get('action'));
     }
 
     public function testCustomAction()
@@ -96,12 +97,12 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
 
         $m->load(2); // load Zoe
         $m->auditController->custom_action = 'married';
-        $m['surname'] = 'Shira';
+        $m->set('surname', 'Shira');
         $m->save();
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('married', $l['action']);
+        $this->assertSame('married', $l->get('action'));
     }
 
     public function testManualLog()
@@ -118,12 +119,12 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
         $m = new AuditableGenderUser($this->db);
 
         $m->load(2); // load Zoe
-        $m->log('load', 'Testing', ['request_diff' => ['foo'=>'bar']]);
+        $m->log('load', 'Testing', ['request_diff' => ['foo' => 'bar']]);
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('load', $l['action']);
-        $this->assertEquals(['foo'=>'bar'], $l['request_diff']);
+        $this->assertSame('load', $l->get('action'));
+        $this->assertSame(['foo' => 'bar'], $l->get('request_diff'));
     }
 
     public function testCustomDescr()
@@ -140,12 +141,12 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
         $m = new AuditableGenderUser($this->db, ['audit_model' => new CustomLog()]);
 
         $m->load(2); // load Zoe
-        $m['name'] = 'Joe';
-        $m['surname'] = 'XX';
+        $m->set('name', 'Joe');
+        $m->set('surname', 'XX');
         $m->save();
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('2 fields magically change', $l['descr']);
+        $this->assertSame('2 fields magically change', $l->get('descr'));
     }
 }
