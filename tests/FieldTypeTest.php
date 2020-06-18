@@ -107,7 +107,7 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
                     'f_date' => (new \DateTime())->format('Y-m-d'),
                     'f_datetime' => (new \DateTime())->format('Y-m-d H:i:s'),
                     'f_time' => (new \DateTime())->format('H:i:s'),
-                    'f_array' => json_encode([123,'foo' => 'bar']),
+                    'f_array' => json_encode([123, 'foo' => 'bar']),
                     'f_object' => serialize(new MyObject()),
                     'f_object_serialized' => serialize(new MyObjectSerializable()),
                     'f_enum' => 'M',
