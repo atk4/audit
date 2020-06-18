@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\audit\view;
 
 use atk4\data\Field_SQL_Expression;

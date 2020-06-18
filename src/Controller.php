@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace atk4\audit;
 
 use atk4\audit\model\AuditLog;
@@ -554,7 +556,7 @@ class Controller
         return (string) $value;
     }
 
-    private function isDiffFieldAuditable(Model $m, string $key): bool
+    protected function isDiffFieldAuditable(Model $m, string $key): bool
     {
         if (!$m->hasField($key)) {
             return false;

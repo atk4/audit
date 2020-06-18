@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 require_once 'include/init.php';
 require_once 'include/database.php';
 

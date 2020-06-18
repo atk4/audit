@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // A very basic file that sets up Agile Data to be used in some demonstrations
 use atk4\audit\model\AuditLog;
 
@@ -55,7 +57,6 @@ if (!class_exists('Country')) {
 
         public function undo()
         {
-
             /** @var AuditLog $audit */
             $audit = $this->ref('AuditLog');
             $audit->loadLast();

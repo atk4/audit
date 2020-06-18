@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use atk4\data\Persistence;
 
 require_once 'include/init.php';
