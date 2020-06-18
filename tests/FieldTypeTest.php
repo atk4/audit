@@ -41,7 +41,7 @@ class TestModel extends Model
         $this->addField('f_security_read_only', ['read_only' => true]);
 
         // check expression not stored
-        $this->addExpression('f_expression', '[f_float]*[f_money]');
+        $this->addExpression('f_expression', ['[f_float]*[f_money]', 'type' => 'money']);
 
         $this->add(new \atk4\audit\Controller());
     }
@@ -174,7 +174,7 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
         $this->assertFalse(strpos($l->get('descr'), 'f_security_never_save='));
         $this->assertFalse(strpos($l->get('descr'), 'f_security_read_only='));
 
-        $this->assertEquals($m->get('f_expression'), $m->get('f_float') * $m->get('f_money'));
+        $this->assertSame($m->get('f_expression'), round($m->get('f_float') * $m->get('f_money'), 4)); // need to cast and round because money type does that
         $this->assertFalse(strpos($l->get('descr'), 'f_expression='));
     }
 }

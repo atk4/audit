@@ -79,7 +79,7 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('genderbending', $l->get('action'));
+        $this->assertSame('genderbending', $l->get('action'));
     }
 
     public function testCustomAction()
@@ -102,7 +102,7 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('married', $l->get('action'));
+        $this->assertSame('married', $l->get('action'));
     }
 
     public function testManualLog()
@@ -123,8 +123,8 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('load', $l->get('action'));
-        $this->assertEquals(['foo' => 'bar'], $l->get('request_diff'));
+        $this->assertSame('load', $l->get('action'));
+        $this->assertSame(['foo' => 'bar'], $l->get('request_diff'));
     }
 
     public function testCustomDescr()
@@ -147,6 +147,6 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertEquals('2 fields magically change', $l->get('descr'));
+        $this->assertSame('2 fields magically change', $l->get('descr'));
     }
 }

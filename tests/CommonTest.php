@@ -100,8 +100,9 @@ class CommonTest extends \atk4\schema\PhpunitTestCase
 
         $after_undo = $m->load(1)->get();
 
-        $this->assertNotEquals($initial_state, $after_save);
-        $this->assertEquals($initial_state, $after_undo);
+        $this->assertNotSame($initial_state, $after_save);
+        // need to serialize because of DateTime objects
+        $this->assertSame(serialize($initial_state), serialize($after_undo));
     }
 
     public function testUndoCreate()
@@ -216,6 +217,7 @@ class CommonTest extends \atk4\schema\PhpunitTestCase
 
         $this->assertTrue($m->loaded());
 
-        $this->assertEquals($before_delete_data, $m->get());
+        // need to serialize because of DateTime objects
+        $this->assertSame(serialize($before_delete_data), serialize($m->get()));
     }
 }
