@@ -21,7 +21,7 @@ use atk4\ui\View;
 class History extends View
 {
     /** @see init() */
-    public $defaultTemplate = null;
+    public $defaultTemplate;
 
     /** @var string Lister class */
     public $lister_class = Lister::class;
@@ -40,8 +40,6 @@ class History extends View
 
     /**
      * Initialization.
-     *
-     * @throws Exception
      */
     public function init(): void
     {
@@ -65,8 +63,6 @@ class History extends View
      * Set audit model.
      *
      * @param Model $m Data model (not audit data model)
-     *
-     * @throws Exception
      *
      * @return Model Data model
      */

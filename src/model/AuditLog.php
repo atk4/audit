@@ -21,7 +21,7 @@ class AuditLog extends Model
     public $no_audit = true;
 
     /** @var Controller */
-    public $auditController = null;
+    public $auditController;
 
     /** @var string Order records by this field by default */
     public $order_field = 'id';
@@ -74,8 +74,6 @@ class AuditLog extends Model
     /**
      * Loads most recent audit record.
      *
-     * @throws Exception
-     *
      * @return $this
      */
     public function loadLast()
@@ -85,10 +83,8 @@ class AuditLog extends Model
 
     /**
      * Returns user remote address.
-     *
-     * @return array
      */
-    public function getUserInfo()
+    public function getUserInfo(): array
     {
         return isset($_SERVER['REMOTE_ADDR']) ? ['ip' => $_SERVER['REMOTE_ADDR']] : [];
     }
@@ -120,12 +116,8 @@ class AuditLog extends Model
 
     /**
      * Rollback change in model data.
-     *
-     * @param Model $m
-     *
-     * @throws Exception|\atk4\core\Exception
      */
-    public function undo_update($m)
+    public function undo_update(Model $m)
     {
         $m->load($this->get('model_id'));
 
@@ -167,12 +159,9 @@ class AuditLog extends Model
     }
 
     /**
-     *
-     * @param Model $m
-     *
-     * @throws Exception
+     * No description.
      */
-    public function undo_delete($m)
+    public function undo_delete(Model $m)
     {
         foreach ($this->get('request_diff') as $field => [$old, $new]) {
             if (!$m->hasField($field)) {
@@ -200,12 +189,8 @@ class AuditLog extends Model
 
     /**
      * Deletes model record.
-     *
-     * @param Model $m
-     *
-     * @throws Exception
      */
-    public function undo_create($m)
+    public function undo_create(Model $m)
     {
         $m->load($this->get('model_id'));
         $m->delete();

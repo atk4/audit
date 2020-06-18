@@ -39,7 +39,7 @@ class Controller
     public $start_mt;
 
     /** @var string name of custom action, for example "comment" */
-    public $custom_action = null;
+    public $custom_action;
 
     /** @var array custom fields to add */
     public $custom_fields = [];
@@ -47,8 +47,7 @@ class Controller
     /**
      * Constructor - set up properties and audit model.
      *
-     * @param array|string|Model $defaults            Seed options or just
-     *                                                audit model
+     * @param array|string|Model $defaults Seed options or just audit model
      */
     public function __construct($defaults = [])
     {
@@ -62,8 +61,6 @@ class Controller
 
     /**
      * Initialize - set up all necessary hooks etc.
-     *
-     * @throws Exception
      */
     public function init(): void
     {
@@ -76,10 +73,6 @@ class Controller
 
     /**
      * Will set up specified model to be logged.
-     *
-     * @param Model $m
-     *
-     * @throws Exception
      */
     public function setUp(Model $m)
     {
@@ -170,9 +163,6 @@ class Controller
      * @param Model  $m
      * @param string $action
      *
-     * @throws Exception
-     * @throws \atk4\data\Exception
-     *
      * @return AuditLog
      */
     public function push(Model $m, $action)
@@ -256,8 +246,6 @@ class Controller
      *
      * @param Model $m
      *
-     * @throws \atk4\data\Exception
-     *
      * @return array
      */
     public function getDiffs(Model $m)
@@ -287,9 +275,6 @@ class Controller
      *
      * @param Model $m
      * @param bool  $is_update
-     *
-     * @throws Exception
-     * @throws \atk4\data\Exception
      */
     public function beforeSave(Model $m, $is_update)
     {
@@ -309,9 +294,6 @@ class Controller
      * @param Model $m
      *
      * @param bool  $is_update
-     *
-     * @throws Exception
-     * @throws \atk4\data\Exception
      */
     public function afterSave(Model $m, $is_update)
     {
@@ -366,8 +348,6 @@ class Controller
      * @param AuditLog $a      Audit model
      * @param Model    $m      Data model
      * @param string   $action Action taken
-     *
-     * @throws Exception
      */
     public function setDescr(AuditLog $a, Model $m, string $action)
     {
@@ -390,9 +370,6 @@ class Controller
      *
      * @param Model $m
      * @param       $model_id
-     *
-     * @throws Exception
-     * @throws \atk4\data\Exception
      */
     public function beforeDelete(Model $m, $model_id)
     {
@@ -433,8 +410,6 @@ class Controller
      *
      * @param Model $m
      * @param       $model_id
-     *
-     * @throws \atk4\data\Exception
      */
     public function afterDelete(Model $m, $model_id)
     {
@@ -458,8 +433,6 @@ class Controller
      *
      * @param array $diff
      * @param Model $m
-     *
-     * @throws Exception
      *
      * @return string
      */
@@ -494,9 +467,6 @@ class Controller
      * @param string $action
      * @param string $descr
      * @param array  $fields
-     *
-     * @throws Exception
-     * @throws \atk4\data\Exception
      */
     public function customLog(Model $m, string $action, ?string $descr = null, array $fields = [])
     {
