@@ -22,14 +22,14 @@ class History extends View
     /** @see init() */
     public $defaultTemplate;
 
-    /** @var string Lister class */
-    public $lister_class = Lister::class;
+    /** @var array Lister class seed */
+    public $listerClass = [Lister::class];
 
     /** @var Lister */
     public $lister;
 
-    /** @var string Form class */
-    public $form_class = CommentForm::class;
+    /** @var array Form class seed */
+    public $formClass = [CommentForm::class];
 
     /** @var CommentForm */
     public $form;
@@ -51,11 +51,11 @@ class History extends View
 
         // add form
         if ($this->enable_comments) {
-            $this->form = $this->add(new $this->form_class());
+            $this->form = $this->add($this->formClass);
         }
 
         // add lister
-        $this->lister = $this->add(new $this->lister_class());
+        $this->lister = $this->add($this->listerClass);
     }
 
     /**

@@ -49,7 +49,7 @@ if (!class_exists('Country')) {
                 'callback' => 'undo',
                 'ui' => [
                     'icon' => 'undo',
-                    'button' => [null, 'icon' => 'undo'],
+                    //???'button' => [null, 'icon' => 'undo'],
                     'execButton' => [\atk4\ui\Button::class, 'undo', 'blue'],
                 ],
             ]);
