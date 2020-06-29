@@ -28,7 +28,7 @@ class CommentForm extends \atk4\ui\Form
         $this->layout->inline = true;
 
         // add field
-        $field = $this->addField('__new_comment', new \atk4\ui\FormField\Line(['caption' => 'Add Comment']));
+        $field = $this->addControl('__new_comment', new \atk4\ui\Form\Control\Line(['caption' => 'Add Comment']));
 
         // submit button
         $button = $field->addAction(['icon' => 'comment']);

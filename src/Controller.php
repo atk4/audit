@@ -56,7 +56,7 @@ class Controller
         $this->setDefaults($defaults);
 
         // create audit model object if it's not already there
-        $this->audit_model = $this->factory($this->audit_model);
+        $this->audit_model = $this->factory([$this->audit_model]);
     }
 
     /**
@@ -486,7 +486,7 @@ class Controller
 
             // should use typecastSaveRow not typecastSaveField because we can have fields with serialize property set too
             // don't typecast value if it's empty anyway: https://github.com/atk4/data/issues/439
-            $value = $m->persistence->typecastSaveRow($m, [$fieldname => $value])[$fieldname];
+            $value = current($m->persistence->typecastSaveRow($m, [$fieldname => $value]));
         } catch (\Throwable $t) {
         }
 
