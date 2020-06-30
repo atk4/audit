@@ -43,9 +43,9 @@ if (!class_exists('Country')) {
                 }
             });
 
-            $this->addAction('undo', [
+            $this->addUserAction('undo', [
                 'fields' => false,
-                'scope' => \atk4\data\UserAction\Generic::SINGLE_RECORD,
+                'appliesTo' => \atk4\data\Model\UserAction::APPLIES_TO_SINGLE_RECORD,
                 'callback' => 'undo',
                 'ui' => [
                     'icon' => 'undo',
