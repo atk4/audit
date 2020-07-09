@@ -31,7 +31,7 @@ $c2 = $cols->addColumn();
 
 // left side country CRUD
 \atk4\ui\Header::addTo($c1)->set('Countries');
-$crud = \atk4\ui\CRUD::addTo($c1);
+$crud = \atk4\ui\Crud::addTo($c1);
 $crud->setModel($m, ['id', 'name', 'iso', 'iso3']);
 $crud->setIpp(5);
 
