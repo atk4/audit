@@ -126,7 +126,7 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
         // this should create audit log record with all field values
         $m = new TestModel($this->db);
         $m->load(1);
-        $m->set([
+        $m->setMulti([
             'f_string' => 'def',
             'f_text' => 'abc',
             'f_boolean' => true,

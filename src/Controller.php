@@ -182,7 +182,7 @@ class Controller
         $a->set('action', $action);
 
         if ($this->custom_fields) {
-            $a->set($this->custom_fields);
+            $a->setMulti($this->custom_fields);
             $this->custom_fields = [];
         }
 
@@ -224,7 +224,7 @@ class Controller
         }
 
         if ($this->custom_fields) {
-            $a->set($this->custom_fields);
+            $a->setMulti($this->custom_fields);
             $this->custom_fields = [];
         }
 
@@ -453,7 +453,7 @@ class Controller
         $a->set('descr', $descr);
 
         if ($fields) {
-            $a->set($fields);
+            $a->setMulti($fields);
         }
 
         $this->pull()->save();

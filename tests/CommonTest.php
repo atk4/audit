@@ -69,7 +69,7 @@ class CommonTest extends \atk4\schema\PhpunitTestCase
 
         $initial_state = $m->get();
 
-        $m->set([
+        $m->setMulti([
             'f_string' => 'def',
             'f_text' => 'abc',
             'f_boolean' => true,
