@@ -188,7 +188,6 @@ class AuditLog extends Model
      */
     public function undo_create(Model $m)
     {
-        $m->load($this->get('model_id'));
-        $m->delete();
+        $m->delete($this->get('model_id'));
     }
 }

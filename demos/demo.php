@@ -58,5 +58,5 @@ if ($id = $app->stickyGet('model_id')) {
 }
 
 \atk4\ui\Header::addTo($c2)->set($m2->loaded() ? 'History of ' . $m2->getTitle() : 'All History');
-$h = $c2->add(new \atk4\audit\view\History());
+$h = \atk4\audit\view\History::addTo($c2);
 $h->setModel($m2);

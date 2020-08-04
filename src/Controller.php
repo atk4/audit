@@ -171,8 +171,8 @@ class Controller
         // sometimes we already have conditions set on model, but there are strange cases,
         // when they are not. That's why we needed following 2 lines :(
         // BUT hopefully don't need them anymore - let's see.
-        //$a['model'] = get_class($m);
-        //$a['model_id'] = $m->id;
+        //$a->set('model', get_class($m));
+        //$a->set('model_id', $m->id);
 
         if ($this->custom_action) {
             $action = $this->custom_action;
@@ -443,8 +443,8 @@ class Controller
         $a = $this->push($m, $action);
 
         if ($descr === null) {
-            if ($m->hasElement($m->title_field)) {
-                $descr = $action . ' ' . $m[$m->title_field] . ': ';
+            if ($m->hasField($m->title_field)) {
+                $descr = $action . ' ' . $m->get($m->title_field) . ': ';
             } else {
                 $descr = $action;
             }
