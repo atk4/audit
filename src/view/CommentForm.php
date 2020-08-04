@@ -17,12 +17,9 @@ class CommentForm extends \atk4\ui\Form
     /** We should not have save button in this form */
     public $buttonSave = false;
 
-    /**
-     * Init layout.
-     */
-    public function initLayout()
+    public function init(): void
     {
-        parent::initLayout();
+        parent::init();
 
         // form should be inline
         $this->layout->inline = true;
