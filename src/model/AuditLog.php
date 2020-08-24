@@ -76,7 +76,7 @@ class AuditLog extends Model
      */
     public function loadLast()
     {
-        return $this->setOrder('id', true)->tryLoadAny();
+        return $this->setOrder('id', 'desc')->tryLoadAny();
     }
 
     /**
