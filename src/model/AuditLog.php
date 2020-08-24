@@ -66,7 +66,7 @@ class AuditLog extends Model
         ]);
         $this->hasOne('revert_audit_log_id', ['model' => $c]);
 
-        $this->setOrder($this->order_field . ' desc');
+        $this->setOrder($this->order_field, 'desc');
     }
 
     /**
