@@ -25,7 +25,7 @@ if (!class_exists('Country')) {
     {
         public $table = 'country';
 
-        public function init(): void
+        protected function init(): void
         {
             parent::init();
 

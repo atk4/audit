@@ -35,7 +35,7 @@ class Lister extends \atk4\ui\Lister
     /**
      * Initialization.
      */
-    public function init(): void
+    protected function init(): void
     {
         // set up default template
         if (!$this->defaultTemplate) {

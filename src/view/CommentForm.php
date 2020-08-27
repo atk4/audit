@@ -17,7 +17,7 @@ class CommentForm extends \atk4\ui\Form
     /** We should not have save button in this form */
     public $buttonSave = false;
 
-    public function init(): void
+    protected function init(): void
     {
         parent::init();
 

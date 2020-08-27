@@ -62,7 +62,7 @@ class Controller
     /**
      * Initialize - set up all necessary hooks etc.
      */
-    public function init(): void
+    protected function init(): void
     {
         $this->_init();
 

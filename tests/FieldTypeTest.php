@@ -12,7 +12,7 @@ class TestModel extends Model
 
     public $title_field = 'f_string';
 
-    public function init(): void
+    protected function init(): void
     {
         parent::init();
 

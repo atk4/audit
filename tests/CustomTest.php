@@ -12,7 +12,7 @@ class AuditableGenderUser extends Model
 
     public $audit_model;
 
-    public function init(): void
+    protected function init(): void
     {
         parent::init();
 

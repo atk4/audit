@@ -40,7 +40,7 @@ class History extends View
     /**
      * Initialization.
      */
-    public function init(): void
+    protected function init(): void
     {
         // set up default template
         if (!$this->defaultTemplate) {
