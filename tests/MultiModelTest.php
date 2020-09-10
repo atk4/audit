@@ -105,7 +105,7 @@ class MultiModelTest extends \atk4\schema\PhpunitTestCase
             'line' => ['_' => ['invoice_id' => 0, 'item' => '', 'price' => 0.01, 'qty' => 0, 'total' => 0.1]],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         $audit = new \atk4\audit\Controller();
         $audit->audit_model->addMethod('undo_total_adjusted', function () {});
@@ -128,9 +128,9 @@ class MultiModelTest extends \atk4\schema\PhpunitTestCase
         $m->ref('Lines')->insert(['item' => 'Chair', 'price' => 2.50, 'qty' => 3]);
         $m->ref('Lines')->insert(['item' => 'Desk', 'price' => 10.20, 'qty' => 1]);
 
-        $this->assertSame(5, count($this->getDB()['audit_log'])); // invoice + line + adjust + line + adjust
-        $this->assertSame(2, count($this->getDB()['line']));
-        $this->assertSame(1, count($this->getDB()['invoice']));
+        $this->assertSame(5, count($this->getDb()['audit_log'])); // invoice + line + adjust + line + adjust
+        $this->assertSame(2, count($this->getDb()['line']));
+        $this->assertSame(1, count($this->getDb()['invoice']));
 
         //$m->ref('Lines')->ref('AuditLog')->loadLast()->undo();
 
@@ -140,9 +140,9 @@ class MultiModelTest extends \atk4\schema\PhpunitTestCase
         $a->undo(); // undo invoice creation - should undo all other nested changes too
 
 /*
-        $this->assertSame(8, count($this->getDB()['audit_log']));
-        $this->assertSame(0, count($this->getDB()['line']));
-        $this->assertSame(0, count($this->getDB()['invoice']));
+        $this->assertSame(8, count($this->getDb()['audit_log']));
+        $this->assertSame(0, count($this->getDb()['line']));
+        $this->assertSame(0, count($this->getDb()['invoice']));
 
         // test audit log relations
         $this->assertNull($a->load(1)->get('initiator_audit_log_id')); // create invoice

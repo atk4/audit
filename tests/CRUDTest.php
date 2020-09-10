@@ -51,7 +51,7 @@ class CRUDTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         $m = new AuditableUser($this->db);
 
@@ -88,8 +88,8 @@ class CRUDTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
-        $zz = $this->getDB('user');
+        $this->setDb($q);
+        $zz = $this->getDb('user');
 
         $m = new AuditableUser($this->db);
 
@@ -111,7 +111,7 @@ class CRUDTest extends \atk4\schema\PhpunitTestCase
         $this->assertSame(false, $l['is_reverted']);
 
         // table is back to how it was
-        $this->assertSame($zz, $this->getDB('user'));
+        $this->assertSame($zz, $this->getDb('user'));
     }
 
     public function testAddDelete()
@@ -123,8 +123,8 @@ class CRUDTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
-        $zz = $this->getDB('user');
+        $this->setDb($q);
+        $zz = $this->getDb('user');
 
         $m = new AuditableUser($this->db);
 
@@ -139,7 +139,7 @@ class CRUDTest extends \atk4\schema\PhpunitTestCase
         $log->each('undo');
 
         // table is back to how it was
-        $this->assertSame($zz, $this->getDB('user'));
+        $this->assertSame($zz, $this->getDb('user'));
     }
     */
 
@@ -152,7 +152,7 @@ class CRUDTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         $m = new AuditableUser($this->db);
 

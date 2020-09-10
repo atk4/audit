@@ -60,7 +60,7 @@ class CommonTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         // load record, change all fields and save
         // this should create audit log record with all field values
@@ -142,7 +142,7 @@ class CommonTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         // load record, change all fields and save
         // this should create audit log record with all field values
@@ -191,33 +191,34 @@ class CommonTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         // load record, change all fields and save
         // this should create audit log record with all field values
         $m = new TestModel($this->db);
-        $m->load(1);
-        $m->save();
-        $m->load(1);
-        $before_delete_data = $m->get();
-        $m->delete();
+        $m1 = (clone $m)->load(1);
+        $m1->save();
 
-        $m->tryLoad(1);
-        $this->assertFalse($m->loaded());
+        $m2 = (clone $m)->load(1);
+        $before_delete_data = $m2->get();
+        $m2->delete();
+
+        $m3 = (clone $m)->tryLoad(1);
+        $this->assertFalse($m3->loaded());
 
         $audit = $m->ref('AuditLog')->newInstance();
         $audit->addCondition('model', TestModel::class);
         $audit->addCondition('model_id', 1);
         $audit->tryLoadAny();
-        $m = new TestModel($this->db);
-        $audit->undo_delete($m);
 
-        $m = new TestModel($this->db);
-        $m->tryLoad(1);
+        $m4 = new TestModel($this->db);
+        $audit->undo_delete($m4);
 
-        $this->assertTrue($m->loaded());
+        $m5 = new TestModel($this->db);
+        $m5->tryLoad(1);
+        $this->assertTrue($m5->loaded());
 
         // need to serialize because of DateTime objects
-        $this->assertSame(serialize($before_delete_data), serialize($m->get()));
+        $this->assertSame(json_encode($before_delete_data), json_encode($m5->get()));
     }
 }

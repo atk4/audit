@@ -69,7 +69,7 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         $m = new AuditableGenderUser($this->db);
 
@@ -91,7 +91,7 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         $m = new AuditableGenderUser($this->db);
 
@@ -114,7 +114,7 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         $m = new AuditableGenderUser($this->db);
 
@@ -136,7 +136,7 @@ class CustomTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         $m = new AuditableGenderUser($this->db, ['audit_model' => new CustomLog()]);
 

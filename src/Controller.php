@@ -137,7 +137,7 @@ class Controller
             // jail
             $a->addCondition('model', get_class($m));
             if ($m->loaded()) {
-                $a->addCondition('model_id', $m->id);
+                $a->addCondition('model_id', $m->getId());
             }
 
             return $a;
@@ -172,7 +172,7 @@ class Controller
         // when they are not. That's why we needed following 2 lines :(
         // BUT hopefully don't need them anymore - let's see.
         //$a->set('model', get_class($m));
-        //$a->set('model_id', $m->id);
+        //$a->set('model_id', $m->getId());
 
         if ($this->custom_action) {
             $action = $this->custom_action;
@@ -188,7 +188,7 @@ class Controller
 
         if ($this->audit_log_stack) {
             // link to previous audit record
-            $a->set('initiator_audit_log_id', $this->audit_log_stack[0]->id);
+            $a->set('initiator_audit_log_id', $this->audit_log_stack[0]->getId());
         }
 
         // save the initial action
@@ -287,7 +287,7 @@ class Controller
         if ($a->get('model_id') === null) {
             // new record
             $a->set('reactive_diff', $m->get());
-            $a->set('model_id', $m->id);
+            $a->set('model_id', $m->getId());
 
             // fill missing description for new record
             $action = 'save';

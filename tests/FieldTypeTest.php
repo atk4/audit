@@ -17,6 +17,7 @@ class TestModel extends Model
         parent::init();
 
         // all field types
+        $this->getField($this->id_field)->type = 'integer';
         $this->addField('f_string', ['type' => 'string']);
         $this->addField('f_text', ['type' => 'text']);
         $this->addField('f_boolean', ['type' => 'boolean']);
@@ -120,7 +121,7 @@ class FieldTypeTest extends \atk4\schema\PhpunitTestCase
             ],
             'audit_log' => $this->audit_db,
         ];
-        $this->setDB($q);
+        $this->setDb($q);
 
         // load record, change all fields and save
         // this should create audit log record with all field values

@@ -103,7 +103,7 @@ class AuditLog extends Model
             $f = 'undo_' . $this->get('action');
 
             $m->auditController->custom_action = 'undo ' . $this->get('action');
-            $m->auditController->custom_fields['revert_audit_log_id'] = $this->id;
+            $m->auditController->custom_fields['revert_audit_log_id'] = $this->getId();
 
             $this->{$f}($m);
 

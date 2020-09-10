@@ -32,7 +32,7 @@
   },
   "require-release": {
     "php": ">=7.3.0",
-    "atk4/data": "2.1.*",
+    "atk4/data": "2.2.*",
     "ext-json": "*"
   },
   "require-dev": {
@@ -43,8 +43,8 @@
     "phpunit/phpunit": ">=9.0"
   },
   "require-dev-release": {
-    "atk4/ui": "2.1.*",
-    "atk4/schema": "2.1.*",
+    "atk4/ui": "2.2.*",
+    "atk4/schema": "2.2.*",
     "friendsofphp/php-cs-fixer": "^2.16",
     "phpunit/phpcov": "*",
     "phpunit/phpunit": ">=9.0"
