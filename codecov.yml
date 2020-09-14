@@ -1,5 +1,8 @@
 ignore:
+  - demos
   - docs
+  - template
+  - tests
 comment: false
 coverage:
   status:
