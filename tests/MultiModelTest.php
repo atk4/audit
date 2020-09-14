@@ -12,6 +12,7 @@ class Line extends Model
     public $table = 'line';
 
     public $no_adjust = false;
+    protected $old_total;
 
     protected function init(): void
     {
@@ -30,13 +31,14 @@ class Line extends Model
 
         $this->onHook(Model::HOOK_BEFORE_SAVE, function ($m) {
             $m->set('total', $m->get('price') * $m->get('qty'));
+            $m->old_total = $m->isDirty('total') ? $m->dirty['total'] : null;
         });
 
         $this->onHook(Model::HOOK_AFTER_SAVE, function ($m) {
-            if ($m->isDirty('total')) {
-                $change = $m->get('total') - $m->dirty['total'];
-
+            if ($m->old_total !== null) {
+                $change = $m->get('total') - $m->old_total;
                 $this->ref('invoice_id')->adjustTotal($change);
+                $m->old_total = null;
             }
         });
 
@@ -110,14 +112,14 @@ class MultiModelTest extends \atk4\schema\PhpunitTestCase
         $audit = new \atk4\audit\Controller();
         $audit->audit_model->addMethod('undo_total_adjusted', function () {});
 
-        $this->db->onHook(Persistence::HOOK_AFTER_ADD, function ($owner, $element) use ($audit) {
-            if ($element instanceof \atk4\data\Model) {
-                if (isset($element->no_audit) && $element->no_audit) {
+        $this->db->onHook(Persistence::HOOK_AFTER_ADD, function ($owner, $model) use ($audit) {
+            if ($model instanceof \atk4\data\Model) {
+                if (isset($model->no_audit) && $model->no_audit) {
                     // Whitelisting this model, won't audit
                     return;
                 }
 
-                $audit->setUp($element);
+                $audit->setUp($model);
             }
         });
 
