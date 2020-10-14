@@ -10,7 +10,9 @@ jobs:
     container:
       image: atk4/image:latest # https://github.com/atk4/image
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
       - run: echo ${{ github.ref }}
       - name: Update to stable dependencies
         run: |
@@ -19,9 +21,9 @@ jobs:
           v=$(echo ${{ github.ref }} | cut -d / -f 4)
           echo "::set-env name=version::$v"
 
-      - uses: teaminkling/autocommit@master
+      - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit-message: Setting release dependencies
+          commit_message: Setting release dependencies
       - uses: ad-m/github-push-action@master
         with:
           branch: ${{ github.ref }}
