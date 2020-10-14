@@ -33,9 +33,9 @@ class CommentForm extends \atk4\ui\Form
 
         $this->onSubmit(function ($f) {
             // History->model = real data model
-            $f->owner->model->auditLog('comment', $f->model->get('__new_comment'));
+            $f->getOwner()->model->auditLog('comment', $f->model->get('__new_comment'));
 
-            return $f->owner->jsReload();
+            return $f->getOwner()->jsReload();
         });
     }
 }

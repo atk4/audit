@@ -66,8 +66,8 @@ class Controller
     {
         $this->_init();
 
-        if (isset($this->owner) && $this->owner instanceof Model) {
-            $this->setUp($this->owner);
+        if ($this->getOwner() instanceof Model) {
+            $this->setUp($this->getOwner());
         }
     }
 

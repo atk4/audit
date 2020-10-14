@@ -134,7 +134,7 @@ class Lister extends \atk4\ui\Lister
             if (isset($value['date'])) {
                 $value = new \DateTime($value['date']);
 
-                return $value->format($this->app->ui_persistence->datetime_format);
+                return $value->format($this->getApp()->ui_persistence->datetime_format);
             }
         } catch (Throwable $e) {
         }
@@ -147,7 +147,7 @@ class Lister extends \atk4\ui\Lister
         parent::setModel($m);
 
         $class = $this->model->get('model');
-        $this->linkedModel = new $class($this->app->db);
+        $this->linkedModel = new $class($this->getApp()->db);
 
         // this conditions can be added here not in AuditLog Model
         // i hope, here are harmless - to hide empty rows
