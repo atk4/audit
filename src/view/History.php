@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\view;
+namespace atk4\audit\View;
 
 use atk4\data\Model;
 use atk4\ui\View;
@@ -48,14 +48,6 @@ class History extends View
         }
 
         parent::init();
-
-        // add form
-        if ($this->enable_comments) {
-            $this->form = $this->add($this->formClass);
-        }
-
-        // add lister
-        $this->lister = $this->add($this->listerClass);
     }
 
     /**
@@ -69,9 +61,14 @@ class History extends View
     {
         parent::setModel($m);
 
-        if ($this->lister) {
-            $this->lister->setModel($m->ref('AuditLog'));
+        // add form
+        if ($this->enable_comments) {
+            $this->form = $this->add($this->formClass);
         }
+
+        // add lister
+        $this->lister = $this->add($this->listerClass);
+        $this->lister->setModel($m->ref('AuditLog'));
 
         return $m;
     }

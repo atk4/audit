@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\model;
+namespace atk4\audit\Model;
 
 use atk4\audit\Controller;
+use atk4\core\Exception;
 use atk4\data\Model;
 
 class AuditLog extends Model
@@ -89,11 +90,13 @@ class AuditLog extends Model
 
     /**
      * For a specified model record differences.
+     *
+     * @todo Currently there is limitation - you can't undo and undo
      */
     public function undo()
     {
         if (!$this->loaded()) {
-            throw new \atk4\core\Exception('Load specific AuditLog entry before executing undo()');
+            throw new Exception('Load specific AuditLog entry before executing undo()');
         }
 
         $this->atomic(function () {
@@ -136,7 +139,7 @@ class AuditLog extends Model
             }
 
             if (json_encode([$m->get($field)]) !== json_encode([$new])) {
-                throw (new \atk4\core\Exception('New value does not match current. Risky to undo'))
+                throw (new Exception('New value does not match current. Risky to undo'))
                     ->addMoreInfo('new', $new)
                     ->addMoreInfo('current', $m->get($field));
             }

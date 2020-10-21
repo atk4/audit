@@ -3,9 +3,12 @@
 declare(strict_types=1);
 
 // A very basic file that sets up Agile Data to be used in some demonstrations
-use atk4\audit\model\AuditLog;
 
-// A very basic file that sets up Agile Data to be used in some demonstrations
+use atk4\audit\Model\AuditLog;
+use atk4\data\Model;
+use atk4\ui\Button;
+use atk4\ui\Exception;
+
 try {
     if (file_exists(__DIR__ . '/db.php')) {
         require_once __DIR__ . '/db.php';
@@ -13,7 +16,7 @@ try {
         require_once __DIR__ . '/db.example.php';
     }
 } catch (\PDOException $e) {
-    throw (new \atk4\ui\Exception('This demo requires access to a database. See "demos/database.php"'))
+    throw (new Exception('This demo requires access to a database. See "demos/database.php"'))
         ->addMoreInfo('PDO error', $e->getMessage());
 }
 
@@ -21,7 +24,7 @@ $app->db = $db;
 
 // Define some data models
 if (!class_exists('Country')) {
-    class Country extends \atk4\data\Model
+    class Country extends Model
     {
         public $table = 'country';
 
@@ -34,10 +37,10 @@ if (!class_exists('Country')) {
 
             $this->addField('iso', ['caption' => 'ISO', 'required' => true, 'type' => 'string']);
             $this->addField('iso3', ['caption' => 'ISO3', 'required' => true, 'type' => 'string']);
-            $this->addField('numcode', ['caption' => 'ISO Numeric Code', 'type' => 'number', 'required' => true]);
-            $this->addField('phonecode', ['caption' => 'Phone Prefix', 'type' => 'number', 'required' => true]);
+            $this->addField('numcode', ['caption' => 'ISO Numeric Code', 'type' => 'integer', 'required' => true]);
+            $this->addField('phonecode', ['caption' => 'Phone Prefix', 'type' => 'integer', 'required' => true]);
 
-            $this->onHook(\atk4\data\Model::HOOK_BEFORE_SAVE, function ($m) {
+            $this->onHook(Model::HOOK_BEFORE_SAVE, function ($m) {
                 if (!$m->get('sys_name')) {
                     $m->set('sys_name', strtoupper($m->get('name')));
                 }
@@ -45,12 +48,12 @@ if (!class_exists('Country')) {
 
             $this->addUserAction('undo', [
                 'fields' => false,
-                'appliesTo' => \atk4\data\Model\UserAction::APPLIES_TO_SINGLE_RECORD,
+                'appliesTo' => Model\UserAction::APPLIES_TO_SINGLE_RECORD,
                 'callback' => 'undo',
                 'ui' => [
                     'icon' => 'undo',
                     //???'button' => [null, 'icon' => 'undo'],
-                    'execButton' => [\atk4\ui\Button::class, 'undo', 'blue'],
+                    'execButton' => [Button::class, 'undo', 'blue'],
                 ],
             ]);
         }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace atk4\audit;
 
-use atk4\audit\model\AuditLog;
+use atk4\audit\Model\AuditLog;
 use atk4\core\DIContainerTrait;
 use atk4\core\Exception;
 use atk4\core\FactoryTrait;
