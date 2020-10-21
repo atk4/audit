@@ -24,8 +24,6 @@ class AuditableGenderUser extends Model
 
         $this->onHook(self::HOOK_BEFORE_SAVE, function ($m) {
             if ($m->isDirty('gender')) {
-                //$m->audit_log['action'] = 'genderbending'; // deprecated usage
-                //$m->auditController->audit_log_stack[0]['action'] = 'genderbending';
                 $m->auditController->custom_action = 'genderbending';
             }
         });

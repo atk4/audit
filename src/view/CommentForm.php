@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\view;
+namespace atk4\audit\View;
+
+use atk4\ui\Form;
+use atk4\ui\Form\Control;
 
 /**
  * Comment form view for audit log records.
@@ -10,7 +13,7 @@ namespace atk4\audit\view;
  * Usage:
  *  see in History view source code
  */
-class CommentForm extends \atk4\ui\Form
+class CommentForm extends Form
 {
     public $ui = 'reply small form';
 
@@ -25,7 +28,7 @@ class CommentForm extends \atk4\ui\Form
         $this->layout->inline = true;
 
         // add field
-        $field = $this->addControl('__new_comment', new \atk4\ui\Form\Control\Line(['caption' => 'Add Comment']));
+        $field = $this->addControl('__new_comment', new Control\Line(['caption' => 'Add Comment']));
 
         // submit button
         $button = $field->addAction(['icon' => 'comment']);

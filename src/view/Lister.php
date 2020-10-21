@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\view;
+namespace atk4\audit\View;
 
 use atk4\data\Field_SQL_Expression;
 use atk4\data\Model;
@@ -93,7 +93,6 @@ class Lister extends \atk4\ui\Lister
                 }
 
                 $t_change->trySet('field', $this->linkedModel->getField($field)->getCaption());
-
                 $t_change->trySet('old_value', $this->normalizeValue($field, $old_value), false);
                 $t_change->trySet('new_value', $this->normalizeValue($field, $new_value), false);
                 $html .= $t_change->render();

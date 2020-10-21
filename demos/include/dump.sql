@@ -5,7 +5,7 @@ CREATE TABLE `country` (
   `name` varchar(80) NOT NULL,
   `nicename` varchar(80) NOT NULL,
   `iso3` char(3) DEFAULT NULL,
-  `numcode` smallint(6) DEFAULT NULL,
+  `numcode` int(6) DEFAULT NULL,
   `phonecode` int(5) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
