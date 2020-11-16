@@ -7,7 +7,7 @@ namespace atk4\audit;
 use atk4\audit\Model\AuditLog;
 use atk4\core\DIContainerTrait;
 use atk4\core\Exception;
-use atk4\core\FactoryTrait;
+use atk4\core\Factory;
 use atk4\core\InitializerTrait;
 use atk4\core\TrackableTrait;
 use atk4\data\Model;
@@ -19,7 +19,6 @@ class Controller
     }
     use TrackableTrait;
     use DIContainerTrait;
-    use FactoryTrait;
 
     /**
      * Audit data model.
@@ -56,7 +55,7 @@ class Controller
         $this->setDefaults($defaults);
 
         // create audit model object if it's not already there
-        $this->audit_model = $this->factory([$this->audit_model]);
+        $this->audit_model = Factory::factory([$this->audit_model]);
     }
 
     /**
