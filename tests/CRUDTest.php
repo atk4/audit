@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace atk4\audit\tests;
 
+use atk4\audit\Controller;
 use atk4\data\Model;
+use atk4\schema\PhpunitTestCase;
 
 class AuditableUser extends Model
 {
@@ -17,14 +19,14 @@ class AuditableUser extends Model
         $this->addField('name');
         $this->addField('surname');
 
-        $this->add(new \atk4\audit\Controller());
+        $this->add(new Controller());
     }
 }
 
 /**
  * Tests basic create, update and delete operations.
  */
-class CRUDTest extends \atk4\schema\PhpunitTestCase
+class CRUDTest extends PhpunitTestCase
 {
     protected $audit_db = ['_' => [
         'initiator_audit_log_id' => 1,

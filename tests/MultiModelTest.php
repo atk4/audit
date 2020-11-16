@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace atk4\audit\tests;
 
+use atk4\audit\Controller;
 use atk4\data\Model;
 use atk4\data\Persistence;
+use atk4\schema\PhpunitTestCase;
 
 class Line extends Model
 {
@@ -48,7 +50,7 @@ class Line extends Model
     }
 }
 
-class Invoice extends \atk4\data\Model
+class Invoice extends Model
 {
     public $table = 'invoice';
 
@@ -83,7 +85,7 @@ class Invoice extends \atk4\data\Model
 /**
  * Tests basic create, update and delete operatiotns.
  */
-class MultiModelTest extends \atk4\schema\PhpunitTestCase
+class MultiModelTest extends PhpunitTestCase
 {
     protected $audit_db = ['_' => [
         'initiator_audit_log_id' => 1,
@@ -109,11 +111,11 @@ class MultiModelTest extends \atk4\schema\PhpunitTestCase
         ];
         $this->setDb($q);
 
-        $audit = new \atk4\audit\Controller();
+        $audit = new Controller();
         $audit->audit_model->addMethod('undo_total_adjusted', function () {});
 
         $this->db->onHook(Persistence::HOOK_AFTER_ADD, function ($owner, $model) use ($audit) {
-            if ($model instanceof \atk4\data\Model) {
+            if ($model instanceof Model) {
                 if (isset($model->no_audit) && $model->no_audit) {
                     // Whitelisting this model, won't audit
                     return;

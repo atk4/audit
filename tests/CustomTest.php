@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace atk4\audit\tests;
 
+use atk4\audit\Controller;
+use atk4\audit\Model\AuditLog;
 use atk4\data\Model;
+use atk4\schema\PhpunitTestCase;
 
 class AuditableGenderUser extends Model
 {
@@ -20,7 +23,7 @@ class AuditableGenderUser extends Model
         $this->addField('surname');
         $this->addField('gender', ['enum' => ['M', 'F']]);
 
-        $this->add(new \atk4\audit\Controller());
+        $this->add(new Controller());
 
         $this->onHook(self::HOOK_BEFORE_SAVE, function ($m) {
             if ($m->isDirty('gender')) {
@@ -30,7 +33,7 @@ class AuditableGenderUser extends Model
     }
 }
 
-class CustomLog extends \atk4\audit\model\AuditLog
+class CustomLog extends AuditLog
 {
     public function getDescr()
     {
@@ -41,7 +44,7 @@ class CustomLog extends \atk4\audit\model\AuditLog
 /**
  * Tests basic create, update and delete operations.
  */
-class CustomTest extends \atk4\schema\PhpunitTestCase
+class CustomTest extends PhpunitTestCase
 {
     protected $audit_db = ['_' => [
         'initiator_audit_log_id' => 1,
