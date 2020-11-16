@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace atk4\audit\tests;
 
+use atk4\audit\Controller;
 use atk4\data\Model;
+use atk4\schema\PhpunitTestCase;
 
 class TestModel extends Model
 {
@@ -44,7 +46,7 @@ class TestModel extends Model
         // check expression not stored
         $this->addExpression('f_expression', ['[f_float]*[f_money]', 'type' => 'money']);
 
-        $this->add(new \atk4\audit\Controller());
+        $this->add(new Controller());
     }
 }
 
@@ -76,7 +78,7 @@ class MyObjectSerializable
 /**
  * Tests audit compatibility with all possible field types.
  */
-class FieldTypeTest extends \atk4\schema\PhpunitTestCase
+class FieldTypeTest extends PhpunitTestCase
 {
     protected $audit_db = ['_' => [
         'initiator_audit_log_id' => 1,
