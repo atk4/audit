@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\View;
+namespace Atk4\Audit\View;
 
-use atk4\data\Model;
-use atk4\ui\View;
+use Atk4\Data\Model;
+use Atk4\Ui\View;
 
 /**
  * History view for audit log records.
  *
  * Usage:
  *  $m = new Model();
- *  $m->add(new \atk4\audit\Controller());
+ *  $m->add(new \Atk4\Audit\Controller());
  *
- *  $v = $view->add(new \atk4\audit\view\History(['enable_comments'=>true]));
+ *  $v = $view->add(new \Atk4\Audit\View\History(['enable_comments'=>true]));
  *  $v->setModel($m);
  */
 class History extends View

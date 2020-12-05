@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\tests;
+namespace Atk4\Audit\Tests;
 
-use atk4\schema\PhpunitTestCase;
+use Atk4\Schema\PhpunitTestCase;
 
 /** @runTestsInSeparateProcesses */
 class ViewTest extends PhpunitTestCase

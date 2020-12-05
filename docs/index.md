@@ -14,7 +14,7 @@ Huge focus on extensibility allow you to **customise** name of log table, change
 To enable extension for your model, add the following line into Model's method `init`:
 
 ``` php
-$this->add(new \atk4\audit\Controller());
+$this->add(new \Atk4\Audit\Controller());
 ```
 
 For a basic usage you will also need to create `audit_log` table by importing `audit_log.sql` file. The audit-log is automatically populated when you perform an operation with the model next time:
@@ -28,22 +28,22 @@ $m->save();
 The following new record will be stored inside `audit_log` table:
 
 ``` json
-{  
+{
    "id":1,
    "initiator_audit_log_id":null,
-   "ts":{  
+   "ts":{
       "date":"2016-10-03 21:44:14.000000",
       "timezone_type":3,
       "timezone":"UTC"
    },
-   "model":"atk4\\ui\\tests\\AuditableUser",
+   "model":"Atk4\\Ui\\Tests\\AuditableUser",
    "model_id":"1",
    "action":"update",
    "time_taken":0.00174,
    "descr":"update name=Ken",
    "user_info":null,
-   "request_diff":{  
-      "name":[  
+   "request_diff":{
+      "name":[
          "Vinny",
          "Ken"
       ]
@@ -146,7 +146,7 @@ Then you have some "reactive" changes for the `Invoice` model too:
 The default way for Audit Log is to store only "reactive" changes, however you can enable storing of both "requested" and "reactivte":
 
 ``` php
-$audit = new \atk4\audit\Controller([
+$audit = new \Atk4\Audit\Controller([
     new Audit(),
     ['requested_log' => true, 'reactive_log' => true, 'link' => true]
 );
@@ -158,7 +158,7 @@ The option for `nested` will also associate changes inside `Invoice` with the re
 
 Audit Extension uses array persistence to prepare values for storage inside JSON. If you need to tweak how values are stored exactly, you shourd refer to documentation on [typecasting](http://agile-data.readthedocs.io/en/develop/persistence.html?highlight=typecasting#type-converting).
 
-System is storing using business-domain field names. If "net" has an actual field of "sql_net", then audit will store "net". Additionally 
+System is storing using business-domain field names. If "net" has an actual field of "sql_net", then audit will store "net". Additionally
 
 ## Undo and Replay features
 
@@ -188,7 +188,7 @@ Similarly you can also call `undo()`, which will:
 
 Both `Undo` and `Replay` functionality can bypass the verification steps or can actually enforce `Reactive` changes to be used. Those modes are less safe but if that's what you want you can try it.
 
-Finally, Replay feature can also override `id` of the original model. In this scenario changes will be re-applied to a different record. 
+Finally, Replay feature can also override `id` of the original model. In this scenario changes will be re-applied to a different record.
 
 ### When Undo and Replay are useful?
 

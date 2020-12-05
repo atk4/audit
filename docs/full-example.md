@@ -27,7 +27,7 @@ create table line (id int not null primary key auto_increment, invoice_id int, i
 ## Setting up Models
 
 ``` php
-class Invoice extends \atk4\data\Model
+class Invoice extends \Atk4\Data\Model
 {
     public $table = 'invoice';
     function init()
@@ -58,7 +58,7 @@ The Invoice model defines all fields and types as well as reference to invoice l
 Notice how I'm creating a custom `log` entry when adjustTotal() is executed. Next - the Line model:
 
 ``` php
-class Line extends \atk4\data\Model {
+class Line extends \Atk4\Data\Model {
     public $table = 'line';
 
     function init()
@@ -107,16 +107,16 @@ echo 'lines = '.json_encode($m->ref('Lines')->export())."\n";
 Run to get this output (formatted):
 
 ``` json
-invoices = [  
-   {  
+invoices = [
+   {
       "id":1,
       "ref":"inv1",
       "total":17.7
    }
 ]
 
-lines = [  
-   {  
+lines = [
+   {
       "id":1,
       "invoice_id":"1",
       "item":"Chair",
@@ -124,7 +124,7 @@ lines = [
       "qty":3,
       "total":7.5
    },
-   {  
+   {
       "id":2,
       "invoice_id":"1",
       "item":"Desk",
@@ -140,10 +140,10 @@ lines = [
 So far everything is working perfectly, but there is no audit yet! To enable audit, we need to execute the following:
 
 ``` php
-$audit = new \atk4\audit\Controller();
+$audit = new \Atk4\Audit\Controller();
 
 $this->db->addHook('afterAdd', function($owner, $element) use($audit) {
-    if ($element instanceof \atk4\data\Model) {
+    if ($element instanceof \Atk4\Data\Model) {
         if (isset($element->no_audit) && $element->no_audit) {
             // Whitelisting this model, won't audit
             return;
@@ -154,7 +154,7 @@ $this->db->addHook('afterAdd', function($owner, $element) use($audit) {
 });
 ```
 
-followed by our "test-code" once again. The result is the same, but this time an audit_log table was populated. 
+followed by our "test-code" once again. The result is the same, but this time an audit_log table was populated.
 
 ## Explanation of AuditLog Entries
 
@@ -179,7 +179,7 @@ $m->save(['ref'=>'inv1']);
 | is_reverted            | 0                               | Will be set to 1 if you execute `undo()` |
 | revert_audit_log_id    | null                            | When reverted, will point to revert log. |
 
-This record corresponds to us creating initial model. Next we were adding invoice line, which was reflected in the audit_log. 
+This record corresponds to us creating initial model. Next we were adding invoice line, which was reflected in the audit_log.
 
 ``` php
 $m->ref('Lines')->insert(['item'=>'Chair', 'price'=>2.50, 'qty'=>3]);
@@ -271,8 +271,8 @@ Attempt to undo action 5 will end in failure:
 ``` php
 $a->load(4)->undo();
 
-// Method is not defined for this object: 
-// atk4\\audit\\model\\AuditLog
+// Method is not defined for this object:
+// Atk4\\Audit\\Model\\AuditLog
 // undo_total_adjusted
 ```
 
@@ -280,7 +280,7 @@ If we wanted to undo this operation, we would have to create our own "undo" hand
 
 ``` php
 // after this line
-$audit = new \atk4\audit\Controller();
+$audit = new \Atk4\Audit\Controller();
 // add this line
 $audit->audit_model->addMethod('undo_total_adjusted', function() {} );
 ```
@@ -304,12 +304,12 @@ $this->addHook('beforeDelete', function($m) {
 The reason I'm passing `no_adjust` here is because I don't want Lines to do unnecessary changes by adjusting total of Invoice that is about to be deleted. We need to listen for this property inside `Line` model:
 
 ``` php
-class Line extends \atk4\data\Model {
+class Line extends \Atk4\Data\Model {
     public $table = 'line';
 
     // add this line
     public $no_adjust = false;
-  
+
       function init()
       {
         parent::init();

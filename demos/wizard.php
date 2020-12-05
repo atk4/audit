@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
+namespace Atk4\Audit\Demo;
+
 require_once 'include/init.php';
 require_once 'include/database.php';
 
-\atk4\ui\Header::addTo($app, ['Quickly checking if database is OK']);
-$console = \MigratorConsole::addTo($app);
+\Atk4\Ui\Header::addTo($app, ['Quickly checking if database is OK']);
+$console = MigratorConsole::addTo($app);
 
-$button = \atk4\ui\Button::addTo($app, ['<< Back', 'huge wide blue'])
+$button = \Atk4\Ui\Button::addTo($app, ['<< Back', 'huge wide blue'])
     ->addStyle('display', 'none')
     ->link(['index']);
 
 // do migration
-$console->migrateModels(['\Country', '\atk4\audit\Model\AuditLog']);
+$console->migrateModels(['\Country', '\Atk4\Audit\Model\AuditLog']);

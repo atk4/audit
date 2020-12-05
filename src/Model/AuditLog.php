@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\Model;
+namespace Atk4\Audit\Model;
 
-use atk4\audit\Controller;
-use atk4\core\Exception;
-use atk4\data\Model;
+use Atk4\Audit\Controller;
+use Atk4\Core\Exception;
+use Atk4\Data\Model;
 
 class AuditLog extends Model
 {
