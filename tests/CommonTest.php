@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\tests;
+namespace Atk4\Audit\Tests;
 
-use atk4\audit\Model\AuditLog;
-use atk4\schema\PhpunitTestCase;
+use Atk4\Audit\Model\AuditLog;
+use Atk4\Schema\PhpunitTestCase;
 
 class CommonTest extends PhpunitTestCase
 {

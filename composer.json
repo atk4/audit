@@ -53,12 +53,12 @@
   },
   "autoload": {
     "psr-4": {
-      "atk4\\audit\\": "src/"
+      "Atk4\\Audit\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "atk4\\audit\\tests\\": "tests/"
+      "Atk4\\Audit\\Tests\\": "tests/"
     }
   }
 }

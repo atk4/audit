@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\View;
+namespace Atk4\Audit\View;
 
-use atk4\data\Field_SQL_Expression;
-use atk4\data\Model;
-use atk4\ui\Template;
+use Atk4\Data\FieldSqlExpression;
+use Atk4\Data\Model;
+use Atk4\Ui\Template;
 use Throwable;
 
 /**
@@ -14,12 +14,12 @@ use Throwable;
  *
  * Usage:
  *  $m = new Model();
- *  $m->add(new \atk4\audit\Controller());
+ *  $m->add(new \Atk4\Audit\Controller());
  *
- *  $l = $view->add(new \atk4\audit\view\Lister());
+ *  $l = $view->add(new \Atk4\Audit\View\Lister());
  *  $l->setModel($m->ref('AuditLog'));
  */
-class Lister extends \atk4\ui\Lister
+class Lister extends \Atk4\Ui\Lister
 {
     public $ui = 'small feed';
 

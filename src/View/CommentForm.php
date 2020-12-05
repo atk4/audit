@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit\View;
+namespace Atk4\Audit\View;
 
-use atk4\ui\Form;
-use atk4\ui\Form\Control;
+use Atk4\Ui\Form;
+use Atk4\Ui\Form\Control;
 
 /**
  * Comment form view for audit log records.

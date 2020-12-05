@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-use atk4\schema\Migration;
-use atk4\ui\Console;
+namespace Atk4\Audit\Demo;
+
+use Atk4\Schema\Migration;
+use Atk4\Ui\Console;
 
 /**
  * Makes sure your database is adjusted for one or several models,

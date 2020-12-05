@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 // A very basic file that sets up Agile Data to be used in some demonstrations
 
-use atk4\audit\Model\AuditLog;
-use atk4\data\Model;
-use atk4\ui\Button;
-use atk4\ui\Exception;
+namespace Atk4\Audit\Demo;
+
+use Atk4\Audit\Model\AuditLog;
+use Atk4\Data\Model;
+use Atk4\Ui\Button;
+use Atk4\Ui\Exception;
 
 try {
     if (file_exists(__DIR__ . '/db.php')) {

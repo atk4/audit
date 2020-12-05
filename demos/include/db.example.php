@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-namespace atk4\ui\demo;
+namespace Atk4\Ui\Demo;
 
-$db = new \atk4\data\Persistence\SQL('sqlite::memory:');
+$db = new \Atk4\Data\Persistence\Sql('sqlite::memory:');

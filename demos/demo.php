@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-use atk4\audit\Controller;
-use atk4\audit\View\History;
-use atk4\data\Model;
-use atk4\data\Persistence;
-use atk4\ui\Columns;
-use atk4\ui\Crud;
-use atk4\ui\Header;
+namespace Atk4\Audit\Demo;
+
+use Atk4\Audit\Controller;
+use Atk4\Audit\View\History;
+use Atk4\Data\Model;
+use Atk4\Data\Persistence;
+use Atk4\Ui\Columns;
+use Atk4\Ui\Crud;
+use Atk4\Ui\Header;
 
 require_once 'include/init.php';
 require_once 'include/database.php';

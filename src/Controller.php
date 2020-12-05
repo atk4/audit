@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace atk4\audit;
+namespace Atk4\Audit;
 
-use atk4\audit\Model\AuditLog;
-use atk4\core\DIContainerTrait;
-use atk4\core\Exception;
-use atk4\core\Factory;
-use atk4\core\InitializerTrait;
-use atk4\core\TrackableTrait;
-use atk4\data\Model;
+use Atk4\Audit\Model\AuditLog;
+use Atk4\Core\DIContainerTrait;
+use Atk4\Core\Exception;
+use Atk4\Core\Factory;
+use Atk4\Core\InitializerTrait;
+use Atk4\Core\TrackableTrait;
+use Atk4\Data\Model;
 
 class Controller
 {

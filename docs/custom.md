@@ -18,7 +18,7 @@ $this->addHook('beforeSave', function($m) {
 
 Property `audit_log` is only available while model is being saved and will point to a model object. After operation completes, the property is removed.
 
-During the save, however, we can use this to change values. Another important point is that when `audit_log` is initially being set-up it was already saved, so that model will have a real `id` set. If no additional changes are done to the `$m` model or it's `audit_log` model, then there won't be any need to perform secondary save. 
+During the save, however, we can use this to change values. Another important point is that when `audit_log` is initially being set-up it was already saved, so that model will have a real `id` set. If no additional changes are done to the `$m` model or it's `audit_log` model, then there won't be any need to perform secondary save.
 
 (note: value of `descr` is computed later, but if you set your own value there, then the model will keep it instead)
 
@@ -63,7 +63,7 @@ In this case the nothing has happened with the model, but we are still recording
 Sometimes you would want to have your own model. Although you could create `AuditLog` model from scratch, you would be using some of the useful features, so I recommend you to extend the existing class:
 
 ``` php
-class CustomLog extends \atk4\audit\model\AuditLog {
+class CustomLog extends \Atk4\Audit\Model\AuditLog {
     function init(){
         parent::init();
         $this->addField('custom_data', ['type' => 'struct']);
@@ -78,7 +78,7 @@ This will extend AuditLog by adding additional field definition which you can us
 Field `descr` inside a model stores a human-readable value. If you have a different criteria for "human readable", then you can re-define description in your audit model. To do so, define method `getDescr` inside your AuditLog model:
 
 ``` php
-class CustomLog extends \atk4\audit\model\AuditLog {
+class CustomLog extends \Atk4\Audit\Model\AuditLog {
     function getDescr(){
         return count($this['request_diff']).' fields magically change';
     }

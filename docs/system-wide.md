@@ -1,11 +1,11 @@
 # System-wide Audit Usage
 
-In order for Audit to work, it requires 2 objects. Controller and AuditLog model. You can extend both of those classes if you wish to redefine any interna behvaiours. 
+In order for Audit to work, it requires 2 objects. Controller and AuditLog model. You can extend both of those classes if you wish to redefine any interna behvaiours.
 
 The default example creates a new controller and inserts it during model init, but normally you would want to re-use single instance of controller.
 
 ```php
-$audit_controller = new \atk4\data\audit\Controller();
+$audit_controller = new \Atk4\Audit\Controller();
 ```
 
 If you wish to link model with this controller manually, you can do so by calling `setUp()`:
@@ -18,10 +18,10 @@ $audit_controller->setUp($invoice);
 Of course setting controllers up like that will take you a lot of effort and add room for error, so instead I recommend you to automatically apply controller for all models through a hook inside `$db`:
 
 ``` php
-$audit = new \atk4\audit\Controller();
+$audit = new \Atk4\Audit\Controller();
 
 $db->addHook('afterAdd', function($owner, $element) use($audit) {
-    if ($element instanceof \atk4\data\Model) {
+    if ($element instanceof \Atk4\Data\Model) {
         if (isset($element->no_audit) && $element->no_audit) {
             // Whitelisting this model, won't audit
             break;
