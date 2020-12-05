@@ -296,7 +296,7 @@ class Controller
         } else {
             // updated record
             $d = $this->getDiffs($m);
-            foreach ($d as $f => list($f0, $f1)) {
+            foreach ($d as $f => [$f0, $f1]) {
                 // if not set don't purge
                 if (!isset($a->get('request_diff')[$f][1])) {
                     continue;
@@ -417,7 +417,7 @@ class Controller
         }
 
         $t = [];
-        foreach ($diff as $key => list($from, $to)) {
+        foreach ($diff as $key => [$from, $to]) {
             $from = $this->getDescrFieldValue($m, $key, $from);
             $to = $this->getDescrFieldValue($m, $key, $to);
 

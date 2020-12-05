@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\View;
 
-use Atk4\Data\FieldSqlExpression;
 use Atk4\Data\Model;
 use Atk4\Ui\Template;
 use Throwable;
@@ -74,7 +73,7 @@ class Lister extends \Atk4\Ui\Lister
         if ($this->t_row->hasTag('changes') && count($diff) > 0) {
             $t_change = clone $this->t_row_change;
             $html = '';
-            foreach ($diff as $field => list($old_value, $new_value)) {
+            foreach ($diff as $field => [$old_value, $new_value]) {
                 if ($field === 'id') {
                     continue;
                 }
