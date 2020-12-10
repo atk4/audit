@@ -14,11 +14,11 @@ use Atk4\Data\Model;
 
 class Controller
 {
+    use DIContainerTrait;
     use InitializerTrait {
         init as _init;
     }
     use TrackableTrait;
-    use DIContainerTrait;
 
     /**
      * Audit data model.
