@@ -34,7 +34,7 @@ class AuditLog extends Model
 
         $c = static::class;
 
-        $this->hasOne('initiator_audit_log_id', ['model' => $c]);
+        $this->hasOne('initiator_audit_log_id', ['model' => [$c]]);
 
         $this->addField('ts', ['type' => 'datetime']);
 
@@ -65,7 +65,7 @@ class AuditLog extends Model
             'type' => 'boolean',
             'default' => false,
         ]);
-        $this->hasOne('revert_audit_log_id', ['model' => $c]);
+        $this->hasOne('revert_audit_log_id', ['model' => [$c]]);
 
         $this->setOrder($this->order_field, 'desc');
     }
