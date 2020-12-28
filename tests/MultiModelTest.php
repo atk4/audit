@@ -20,7 +20,7 @@ class Line extends Model
     {
         parent::init();
 
-        $this->hasOne('invoice_id', Invoice::class);
+        $this->hasOne('invoice_id', ['model' => [Invoice::class]]);
 
         $this->addField('item', ['type' => 'string']);
         $this->addField('price', ['type' => 'money', 'default' => 0.00]);
@@ -58,7 +58,7 @@ class Invoice extends Model
     {
         parent::init();
 
-        $this->hasMany('Lines', Line::class);
+        $this->hasMany('Lines', ['model' => [Line::class]]);
         $this->addField('ref', ['type' => 'string']);
         $this->addField('total', ['type' => 'money', 'default' => 0.00]);
 
