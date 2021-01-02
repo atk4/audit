@@ -108,7 +108,7 @@ class Controller
         ); // called as late as possible
 
         // adds hasMany reference to audit records
-        $m->addRef('AuditLog', function ($m) {
+        $m->addRef('AuditLog', ['model' => function ($m) {
             // get audit model
             $a = isset($m->audit_model) ? clone $m->audit_model : clone $this->audit_model;
 
@@ -140,7 +140,7 @@ class Controller
             }
 
             return $a;
-        });
+        }]);
 
         // adds custom log methods in model
         // log() method can clash with some debug logger, so we use two methods just in case
