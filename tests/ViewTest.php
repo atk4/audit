@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Tests;
 
-use Atk4\Schema\PhpunitTestCase;
+use Atk4\Core\Phpunit\TestCase;
 
 /** @runTestsInSeparateProcesses */
-class ViewTest extends PhpunitTestCase
+class ViewTest extends TestCase
 {
     public function testDemo()
     {

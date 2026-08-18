@@ -7,7 +7,7 @@ namespace Atk4\Audit\Tests;
 use Atk4\Audit\Controller;
 use Atk4\Data\Model;
 use Atk4\Data\Persistence;
-use Atk4\Schema\PhpunitTestCase;
+use Atk4\Core\Phpunit\TestCase;
 
 class Line extends Model
 {
@@ -85,7 +85,7 @@ class Invoice extends Model
 /**
  * Tests basic create, update and delete operatiotns.
  */
-class MultiModelTest extends PhpunitTestCase
+class MultiModelTest extends TestCase
 {
     protected $audit_db = ['_' => [
         'initiator_audit_log_id' => 1,

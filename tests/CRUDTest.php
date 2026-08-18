@@ -6,7 +6,7 @@ namespace Atk4\Audit\Tests;
 
 use Atk4\Audit\Controller;
 use Atk4\Data\Model;
-use Atk4\Schema\PhpunitTestCase;
+use Atk4\Core\Phpunit\TestCase;
 
 class AuditableUser extends Model
 {
@@ -26,7 +26,7 @@ class AuditableUser extends Model
 /**
  * Tests basic create, update and delete operations.
  */
-class CRUDTest extends PhpunitTestCase
+class CRUDTest extends TestCase
 {
     protected $audit_db = ['_' => [
         'initiator_audit_log_id' => 1,

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Atk4\Audit\Tests;
 
 use Atk4\Audit\Model\AuditLog;
-use Atk4\Schema\PhpunitTestCase;
+use Atk4\Core\Phpunit\TestCase;
 
-class CommonTest extends PhpunitTestCase
+class CommonTest extends TestCase
 {
     protected $audit_db = ['_' => [
         'initiator_audit_log_id' => 1,
