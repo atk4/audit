@@ -1,9 +1,10 @@
-docs/build
-/build
+/docs/build
+/coverage
 /vendor
 /composer.lock
 .idea
 nbproject
+.vscode
 .DS_Store
 
 local
@@ -12,8 +13,8 @@ local
 cache
 *.cache
 *.cache.*
+*.cmd
 
 /phpunit.xml
-/phpunit-*.xml
 
 demos/include/db.php

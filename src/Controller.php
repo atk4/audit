@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Atk4\Audit;
 
 use Atk4\Audit\Model\AuditLog;
-use Atk4\Core\DIContainerTrait;
+use Atk4\Core\DiContainerTrait;
 use Atk4\Core\Exception;
 use Atk4\Core\Factory;
 use Atk4\Core\InitializerTrait;
@@ -14,7 +14,7 @@ use Atk4\Data\Model;
 
 class Controller
 {
-    use DIContainerTrait;
+    use DiContainerTrait;
     use InitializerTrait {
         init as _init;
     }
@@ -28,7 +28,7 @@ class Controller
      */
     public $audit_model = AuditLog::class;
 
-    /** @var array audit log stack - most recent record is first */
+    /** @var array<int,mixed> audit log stack - most recent record is first */
     public $audit_log_stack = [];
 
     /** @var bool should we record time taken to make this change? */
@@ -40,7 +40,7 @@ class Controller
     /** @var string name of custom action, for example "comment" */
     public $custom_action;
 
-    /** @var array custom fields to add */
+    /** @var array<string,mixed> custom fields to add */
     public $custom_fields = [];
 
     /**

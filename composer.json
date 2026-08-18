@@ -1,64 +1,67 @@
 {
-  "name": "atk4/audit",
-  "type": "library",
-  "description": "Agile Data - Audit Extension",
-  "keywords": [
-    "agile",
-    "data",
-    "framework",
-    "audit",
-    "event sourcing",
-    "crud",
-    "acl"
-  ],
-  "homepage": "http://agiletoolkit.org/data/extension/audit",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "Romans Malinovskis",
-      "email": "romans@agiletoolkit.org",
-      "homepage": "https://nearly.guru/"
+    "name": "atk4/audit",
+    "description": "Agile Data - Audit Extension",
+    "license": "MIT",
+    "type": "library",
+    "keywords": [
+        "agile",
+        "data",
+        "framework",
+        "audit",
+        "event sourcing",
+        "crud"
+    ],
+    "version": "dev-develop",
+    "authors": [
+        {
+            "name": "Romans Malinovskis",
+            "email": "romans@agiletoolkit.org",
+            "homepage": "https://nearly.guru/"
+        },
+        {
+            "name": "Imants Horsts",
+            "homepage": "https://darkside.lv/"
+        }
+    ],
+    "homepage": "https://github.com/atk4/audit",
+    "require": {
+        "php": ">=7.4 <8.4",
+        "atk4/data": "dev-develop",
+        "ext-json": "*"
+    },
+    "require-release": {
+        "php": ">=7.4 <8.4",
+        "atk4/data": "~6.0.0",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "atk4/ui": "dev-develop",
+        "ergebnis/composer-normalize": "^2.13",
+        "ergebnis/phpunit-slow-test-detector": "^2.9",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^9.5.5 || ^10.0 || ^11.0 || ^12.0 || ^13.0"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Atk4\\Audit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Atk4\\Audit\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "ergebnis/composer-normalize": true,
+            "phpstan/extension-installer": true
+        },
+        "sort-packages": true
     }
-  ],
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "config": {
-    "sort-packages": true
-  },
-  "require": {
-    "php": ">=7.3.0",
-    "atk4/data": "dev-develop",
-    "ext-json": "*"
-  },
-  "require-release": {
-    "php": ">=7.3.0",
-    "atk4/data": "~2.3.0",
-    "ext-json": "*"
-  },
-  "require-dev": {
-    "atk4/ui": "dev-develop",
-    "friendsofphp/php-cs-fixer": "^2.16",
-    "phpunit/phpcov": "*",
-    "phpunit/phpunit": ">=9.0"
-  },
-  "require-dev-release": {
-    "atk4/ui": "~2.3.0",
-    "friendsofphp/php-cs-fixer": "^2.16",
-    "phpunit/phpcov": "*",
-    "phpunit/phpunit": ">=9.0"
-  },
-  "suggest": {
-    "atk4/ui": "Provides you with extra Views to display history",
-    "atk4/mastercrud": "Intergates with MasterCRUD showing change history of your records"
-  },
-  "autoload": {
-    "psr-4": {
-      "Atk4\\Audit\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Atk4\\Audit\\Tests\\": "tests/"
-    }
-  }
 }

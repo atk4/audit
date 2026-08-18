@@ -22,13 +22,13 @@ class History extends View
     /** @see init() */
     public $defaultTemplate;
 
-    /** @var array Lister class seed */
+    /** @var array<mixed,mixed> Lister class seed */
     public $listerClass = [Lister::class];
 
     /** @var Lister */
     public $lister;
 
-    /** @var array Form class seed */
+    /** @var array<mixed,mixed> Form class seed */
     public $formClass = [CommentForm::class];
 
     /** @var CommentForm */
