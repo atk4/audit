@@ -28,7 +28,7 @@ class AuditableGenderUser extends Model
 
         $this->add(new Controller());
 
-        $this->onHook(self::HOOK_BEFORE_SAVE, function ($m) {
+        $this->onHook(self::HOOK_BEFORE_SAVE, static function ($m) {
             if ($m->isDirty('gender')) {
                 $m->auditController->custom_action = 'genderbending';
             }

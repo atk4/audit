@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Demo;
 
+use Atk4\Ui\Button;
+use Atk4\Ui\Header;
+
 require_once 'include/init.php';
 require_once 'include/database.php';
 
-\Atk4\Ui\Header::addTo($app, ['Quickly checking if database is OK']);
+Header::addTo($app, ['Quickly checking if database is OK']);
 $console = MigratorConsole::addTo($app);
 
-$button = \Atk4\Ui\Button::addTo($app, ['<< Back', 'huge wide blue'])
+$button = Button::addTo($app, ['<< Back', 'huge wide blue'])
     ->addStyle('display', 'none')
     ->link(['index']);
 

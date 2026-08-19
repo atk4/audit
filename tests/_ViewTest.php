@@ -7,7 +7,7 @@ namespace Atk4\Audit\Tests;
 use Atk4\Data\Schema\TestCase;
 
 /** @runTestsInSeparateProcesses */
-class ViewTest extends TestCase
+class _ViewTest extends TestCase
 {
     public function testDemo()
     {

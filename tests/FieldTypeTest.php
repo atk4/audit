@@ -150,7 +150,7 @@ class FieldTypeTest extends TestCase
             'f_ser_ser' => [987, 'qwe' => 'zxc'],
             'f_security_never_persist' => 'change never persist',
             'f_security_never_save' => 'change never save',
-            //'f_security_read_only' => 'change read only', trigger error on change before
+            // 'f_security_read_only' => 'change read only', trigger error on change before
         ]);
         $entity->save();
 

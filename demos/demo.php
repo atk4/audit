@@ -18,7 +18,7 @@ require_once 'include/database.php';
 $audit = new Controller();
 
 // @var Persistence $db
-$db->onHook(Persistence::HOOK_AFTER_ADD, function ($owner, $element) use ($audit) {
+$db->onHook(Persistence::HOOK_AFTER_ADD, static function ($owner, $element) use ($audit) {
     if ($element instanceof Model) {
         if (isset($element->no_audit) && $element->no_audit) {
             // Whitelisting this model, won't audit
@@ -46,14 +46,14 @@ $crud->setIpp(5);
 // Delete audit data button
 $crud->menu
     ->addItem(['Delete ALL audit data', 'icon' => 'trash'])
-    ->on('click', function () use ($m, $c2) {
+    ->on('click', static function () use ($m, $c2) {
         $m->ref('AuditLog')->action('delete')->execute();
 
         return $c2->jsReload();
     });
 
 // add CRUD action to load jailed audit records in lister
-$crud->addActionButton('Audit ->', function ($js, $id) use ($c2) {
+$crud->addActionButton('Audit ->', static function ($js, $id) use ($c2) {
     return $c2->jsReload(['model_id' => $id]);
 });
 

@@ -6,7 +6,6 @@ namespace Atk4\Audit\View;
 
 use Atk4\Data\Model;
 use Atk4\Ui\Template;
-use Throwable;
 
 /**
  * Lister view for audit log records.
@@ -134,7 +133,7 @@ class Lister extends \Atk4\Ui\Lister
 
                 return $value->format($this->getApp()->ui_persistence->datetime_format);
             }
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
         }
 
         return $value;

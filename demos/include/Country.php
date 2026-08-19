@@ -11,7 +11,7 @@ use Atk4\Data\Model;
 class Country extends Model
 {
     use AuditableModelTrait;
-    
+
     public $table = 'country';
 
     protected function init(): void
@@ -26,7 +26,7 @@ class Country extends Model
         $this->addField('numcode', ['caption' => 'ISO Numeric Code', 'type' => 'integer', 'required' => true]);
         $this->addField('phonecode', ['caption' => 'Phone Prefix', 'type' => 'integer', 'required' => true]);
 
-        $this->onHook(Model::HOOK_BEFORE_SAVE, function ($m) {
+        $this->onHook(Model::HOOK_BEFORE_SAVE, static function ($m) {
             if (!$m->get('sys_name')) {
                 $m->set('sys_name', strtoupper($m->get('name')));
             }
@@ -38,7 +38,7 @@ class Country extends Model
             'callback' => 'undo',
             'ui' => [
                 'icon' => 'undo',
-                //???'button' => [null, 'icon' => 'undo'],
+                // ???'button' => [null, 'icon' => 'undo'],
                 'execButton' => [Button::class, 'undo', 'blue'],
             ],
         ]);

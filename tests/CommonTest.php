@@ -88,7 +88,7 @@ class CommonTest extends TestCase
             'f_ser_ser' => [987, 'qwe' => 'zxc'],
             'f_security_never_persist' => 'change never persist',
             'f_security_never_save' => 'change never save',
-            //'f_security_read_only' => 'change read only', trigger error on change before
+            // 'f_security_read_only' => 'change read only', trigger error on change before
         ]);
         $entity->save();
 
@@ -197,7 +197,7 @@ class CommonTest extends TestCase
         // load record, change all fields and save
         // this should create audit log record with all field values
         $m = new TestModel($this->db);
-        
+
         $e1 = (clone $m)->load(1);
         $e1->save();
 
