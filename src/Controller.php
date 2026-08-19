@@ -170,8 +170,8 @@ class Controller
         // sometimes we already have conditions set on model, but there are strange cases,
         // when they are not. That's why we needed following 2 lines :(
         // BUT hopefully don't need them anymore - let's see.
-        //$a->set('model', get_class($m));
-        //$a->set('model_id', $m->getId());
+        // $a->set('model', get_class($m));
+        // $a->set('model_id', $m->getId());
 
         if ($this->custom_action) {
             $action = $this->custom_action;
@@ -198,9 +198,9 @@ class Controller
             $a->start_mt = (float) microtime();
         }
 
-        //Imants: deprecated - use $m->auditController->audit_log_stack[0] instead
+        // Imants: deprecated - use $m->auditController->audit_log_stack[0] instead
         // or $m->auditController->custom_action and custom_fields properties in your beforeSave hook
-        //$m->audit_log = $a;
+        // $m->audit_log = $a;
 
         // save audit record in beginning of stack
         array_unshift($this->audit_log_stack, $a);
@@ -437,7 +437,7 @@ class Controller
     /**
      * Create custom log record.
      */
-    public function customLog(Model $m, string $action, string $descr = null, array $fields = [])
+    public function customLog(Model $m, string $action, ?string $descr = null, array $fields = [])
     {
         $a = $this->push($m, $action);
 

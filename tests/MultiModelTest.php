@@ -34,12 +34,12 @@ class Line extends Model
             return;
         }
 
-        $this->onHook(Model::HOOK_BEFORE_SAVE, function ($m) {
+        $this->onHook(Model::HOOK_BEFORE_SAVE, static function ($m) {
             $m->set('total', $m->get('price') * $m->get('qty'));
             $m->old_total = $m->isDirty('total') ? $m->dirty['total'] : null;
         });
 
-        $this->onHook(Model::HOOK_AFTER_SAVE, function ($m) {
+        $this->onHook(Model::HOOK_AFTER_SAVE, static function ($m) {
             if ($m->old_total !== null) {
                 $change = $m->get('total') - $m->old_total;
                 $this->ref('invoice_id')->adjustTotal($change);
@@ -69,7 +69,7 @@ class Invoice extends Model
 
         $this->onHook(Model::HOOK_BEFORE_DELETE, function ($m) {
             $lines = $m->ref('Lines', ['no_adjust' => true]);
-            $lines->each(function ($m) {
+            $lines->each(static function ($m) {
                 $m->delete();
             });
         });
@@ -117,9 +117,9 @@ class MultiModelTest extends TestCase
         $this->setDb($q);
 
         $audit = new Controller();
-        $audit->audit_model->addMethod('undo_total_adjusted', function () {});
+        $audit->audit_model->addMethod('undo_total_adjusted', static function () {});
 
-        $this->db->onHook(Persistence::HOOK_AFTER_ADD, function ($owner, $model) use ($audit) {
+        $this->db->onHook(Persistence::HOOK_AFTER_ADD, static function ($owner, $model) use ($audit) {
             if ($model instanceof Model) {
                 if (isset($model->no_audit) && $model->no_audit) {
                     // Whitelisting this model, won't audit
@@ -142,14 +142,14 @@ class MultiModelTest extends TestCase
         self::assertSame(2, count($this->getDb()['line']));
         self::assertSame(1, count($this->getDb()['invoice']));
 
-        //$m->ref('Lines')->ref('AuditLog')->loadLast()->undo();
+        // $m->ref('Lines')->ref('AuditLog')->loadLast()->undo();
 
         $m = new Invoice($this->db);
         $a = $m->ref('AuditLog')->newInstance();
         $entity = $a->load(1);
         $entity->undo(); // undo invoice creation - should undo all other nested changes too
 
-/*
+        /*
         self::assertSame(8, count($this->getDb()['audit_log']));
         self::assertSame(0, count($this->getDb()['line']));
         self::assertSame(0, count($this->getDb()['invoice']));
@@ -166,6 +166,6 @@ class MultiModelTest extends TestCase
 
         // test revert audit log id
         self::assertSame('1', $a->load(6)->get('revert_audit_log_id')); // undo invoice creation
-*/
+        */
     }
 }

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Model;
 
-use Atk4\Audit\Controller;
 use Atk4\Audit\AuditableModelTrait;
+use Atk4\Audit\Controller;
 use Atk4\Core\Exception;
 use Atk4\Data\Model;
 
 class AuditLog extends Model
 {
     use AuditableModelTrait;
-    
+
     /** @var string Table name */
     public $table = 'audit_log';
 
