@@ -67,7 +67,7 @@ class Invoice extends Model
         $this->addField('ref', ['type' => 'string']);
         $this->addField('total', ['type' => 'atk4_money', 'default' => 0.00]);
 
-        $this->onHook(Model::HOOK_BEFORE_DELETE, function ($m) {
+        $this->onHook(Model::HOOK_BEFORE_DELETE, static function ($m) {
             $lines = $m->ref('Lines', ['no_adjust' => true]);
             $lines->each(static function ($m) {
                 $m->delete();
