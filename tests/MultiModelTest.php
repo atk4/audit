@@ -87,7 +87,7 @@ class Invoice extends Model
  */
 class MultiModelTest extends TestCase
 {
-    protected $audit_db = ['_' => [
+    protected $audit_db = [[
         'initiator_audit_log_id' => 1,
         'ts' => '',
         'model' => '',
