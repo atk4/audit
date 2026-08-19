@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Demo;
 
+use Atk4\Audit\AuditableModelTrait;
 use Atk4\Audit\Model\AuditLog;
 use Atk4\Data\Model;
 
 class Country extends Model
 {
+    use AuditableModelTrait;
+    
     public $table = 'country';
 
     protected function init(): void

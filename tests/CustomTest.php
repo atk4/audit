@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Tests;
 
+use Atk4\Audit\AuditableModelTrait;
 use Atk4\Audit\Controller;
 use Atk4\Audit\Model\AuditLog;
 use Atk4\Data\Model;
@@ -11,6 +12,8 @@ use Atk4\Data\Schema\TestCase;
 
 class AuditableGenderUser extends Model
 {
+    use AuditableModelTrait;
+
     public $table = 'user';
 
     public $audit_model;

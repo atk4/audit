@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Tests;
 
+use Atk4\Audit\AuditableModelTrait;
 use Atk4\Audit\Controller;
 use Atk4\Data\Model;
 use Atk4\Data\Schema\TestCase;
 
 class TestModel extends Model
 {
+    use AuditableModelTrait;
+
     public $table = 'test';
 
     public $title_field = 'f_string';

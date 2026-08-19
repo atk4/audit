@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Tests;
 
+use Atk4\Audit\AuditableModelTrait;
 use Atk4\Audit\Controller;
 use Atk4\Data\Model;
 use Atk4\Data\Persistence;
@@ -11,6 +12,8 @@ use Atk4\Data\Schema\TestCase;
 
 class Line extends Model
 {
+    use AuditableModelTrait;
+
     public $table = 'line';
 
     public $no_adjust = false;
@@ -52,6 +55,8 @@ class Line extends Model
 
 class Invoice extends Model
 {
+    use AuditableModelTrait;
+
     public $table = 'invoice';
 
     protected function init(): void
