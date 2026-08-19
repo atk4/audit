@@ -26,8 +26,8 @@
     "homepage": "https://github.com/atk4/audit",
     "require": {
         "php": ">=7.4 <8.4",
-        "atk4/data": "dev-develop",
-        "ext-json": "*"
+        "ext-json": "*",
+        "atk4/data": "dev-develop"
     },
     "require-release": {
         "php": ">=7.4 <8.4",
