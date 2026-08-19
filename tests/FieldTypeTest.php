@@ -157,30 +157,30 @@ class FieldTypeTest extends TestCase
         $l = $entity->ref('AuditLog')->loadLast();
 
         // validate that all fields are mentioned in change description
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_string=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_text=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_boolean=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_integer=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_money=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_float=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_string=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_text=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_boolean=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_integer=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_money=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_float=')));
 
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_date=' . $entity->get('f_date')->format('Y-m-d'))));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_date=' . $entity->get('f_date')->format('Y-m-d'))));
 
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_datetime=' . $entity->get('f_datetime')->format('Y-m-d H:i:s'))));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_datetime=' . $entity->get('f_datetime')->format('Y-m-d H:i:s'))));
 
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_time=' . $entity->get('f_time')->format('H:i:s'))));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_array=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_object=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_object_serialized=foo is foo')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_enum=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_ser_json=')));
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_ser_ser=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_time=' . $entity->get('f_time')->format('H:i:s'))));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_array=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_object=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_object_serialized=foo is foo')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_enum=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_ser_json=')));
+        self::assertTrue(is_int(strpos($l->get('descr'), 'f_ser_ser=')));
 
-        $this->assertFalse(strpos($l->get('descr'), 'f_security_never_persist='));
-        $this->assertFalse(strpos($l->get('descr'), 'f_security_never_save='));
-        $this->assertFalse(strpos($l->get('descr'), 'f_security_read_only='));
+        self::assertFalse(strpos($l->get('descr'), 'f_security_never_persist='));
+        self::assertFalse(strpos($l->get('descr'), 'f_security_never_save='));
+        self::assertFalse(strpos($l->get('descr'), 'f_security_read_only='));
 
-        $this->assertSame($entity->get('f_expression'), round($entity->get('f_float') * $entity->get('f_money'), 4)); // need to cast and round because atk4_money type does that
-        $this->assertFalse(strpos($l->get('descr'), 'f_expression='));
+        self::assertSame($entity->get('f_expression'), round($entity->get('f_float') * $entity->get('f_money'), 4)); // need to cast and round because atk4_money type does that
+        self::assertFalse(strpos($l->get('descr'), 'f_expression='));
     }
 }

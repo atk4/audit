@@ -83,7 +83,7 @@ class CustomTest extends TestCase
 
         $l = $entity->ref('AuditLog')->loadLast();
 
-        $this->assertSame('genderbending', $l->get('action'));
+        self::assertSame('genderbending', $l->get('action'));
     }
 
     public function testCustomAction()
@@ -106,7 +106,7 @@ class CustomTest extends TestCase
 
         $l = $entity->ref('AuditLog')->loadLast();
 
-        $this->assertSame('married', $l->get('action'));
+        self::assertSame('married', $l->get('action'));
     }
 
     public function testManualLog()
@@ -127,8 +127,8 @@ class CustomTest extends TestCase
 
         $l = $entity->ref('AuditLog')->loadLast();
 
-        $this->assertSame('load', $l->get('action'));
-        $this->assertSame(['foo' => 'bar'], $l->get('request_diff'));
+        self::assertSame('load', $l->get('action'));
+        self::assertSame(['foo' => 'bar'], $l->get('request_diff'));
     }
 
     public function testCustomDescr()
@@ -151,6 +151,6 @@ class CustomTest extends TestCase
 
         $l = $entity->ref('AuditLog')->loadLast();
 
-        $this->assertSame('2 fields magically change', $l->get('descr'));
+        self::assertSame('2 fields magically change', $l->get('descr'));
     }
 }

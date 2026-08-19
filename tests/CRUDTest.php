@@ -66,9 +66,9 @@ class CRUDTest extends TestCase
 
         // more audit record for Vinny
         $l = $m->ref('AuditLog')->loadLast();
-        $this->assertSame(1, $m->ref('AuditLog')->action('count')->getOne());
-        $this->assertSame('update Ken: name=Ken', $l['descr']);
-        $this->assertSame(['name' => ['Vinny', 'Ken']], $l['request_diff']);
+        self::assertSame(1, $m->ref('AuditLog')->action('count')->getOne());
+        self::assertSame('update Ken: name=Ken', $l['descr']);
+        self::assertSame(['name' => ['Vinny', 'Ken']], $l['request_diff']);
 
         $m->load(2); // Zoe
         $m['name'] = 'Brett';
@@ -77,11 +77,11 @@ class CRUDTest extends TestCase
         $m->save();
 
         // two audit records for Zoe
-        $this->assertSame(2, $m->ref('AuditLog')->action('count')->getOne());
+        self::assertSame(2, $m->ref('AuditLog')->action('count')->getOne());
 
         // three audit records in total (ref when model is not loaded)
         $m->unload();
-        $this->assertSame(3, $m->ref('AuditLog')->action('count')->getOne());
+        self::assertSame(3, $m->ref('AuditLog')->action('count')->getOne());
     }
 
     public function testUndo()
@@ -107,16 +107,16 @@ class CRUDTest extends TestCase
 
 
         $m->reload();
-        $this->assertSame('Jawshua', $m['name']);
-        $this->assertSame(2, $m->ref('AuditLog')->action('count')->getOne());
+        self::assertSame('Jawshua', $m['name']);
+        self::assertSame(2, $m->ref('AuditLog')->action('count')->getOne());
 
         $l = $m->ref('AuditLog')->loadLast();
 
-        $this->assertSame(1, $l['revert_audit_log_id']);
-        $this->assertSame(false, $l['is_reverted']);
+        self::assertSame(1, $l['revert_audit_log_id']);
+        self::assertSame(false, $l['is_reverted']);
 
         // table is back to how it was
-        $this->assertSame($zz, $this->getDb('user'));
+        self::assertSame($zz, $this->getDb('user'));
     }
 
     public function testAddDelete()
@@ -144,7 +144,7 @@ class CRUDTest extends TestCase
         $log->each('undo');
 
         // table is back to how it was
-        $this->assertSame($zz, $this->getDb('user'));
+        self::assertSame($zz, $this->getDb('user'));
     }
     */
 
@@ -166,10 +166,10 @@ class CRUDTest extends TestCase
         $user->save();
 
         // should be no audit records for Vinny because there were no actual changes
-        //$this->assertSame(0, $user->ref('AuditLog')->action('count')->getOne());
+        // self::assertSame(0, $user->ref('AuditLog')->action('count')->getOne());
 
         // but in reality because of https://github.com/atk4/audit/issues/17#issuecomment-453544884
         // it's one empty audit record:
-        $this->assertSame('1', $user->ref('AuditLog')->action('count')->getOne());
+        self::assertSame('1', $user->ref('AuditLog')->action('count')->getOne());
     }
 }

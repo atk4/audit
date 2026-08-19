@@ -101,9 +101,9 @@ class CommonTest extends TestCase
 
         $after_undo = $m->load(1)->get();
 
-        $this->assertNotSame($initial_state, $after_save);
+        self::assertNotSame($initial_state, $after_save);
         // need to serialize because of DateTime objects
-        $this->assertSame(serialize($initial_state), serialize($after_undo));
+        self::assertSame(serialize($initial_state), serialize($after_undo));
     }
 
     public function testUndoCreate()
@@ -155,7 +155,7 @@ class CommonTest extends TestCase
         $audit->undo_create($entity);
 
         $entity = $m->tryLoad(1);
-        $this->assertFalse($entity->loaded());
+        self::assertFalse($entity->loaded());
     }
 
     public function testUndoDelete()
@@ -206,7 +206,7 @@ class CommonTest extends TestCase
         $e2->delete();
 
         $e3 = (clone $m)->tryLoad(1);
-        $this->assertFalse($e3->loaded());
+        self::assertFalse($e3->loaded());
 
         $audit = $m->ref('AuditLog')->newInstance();
         $audit->addCondition('model', TestModel::class);
@@ -218,9 +218,9 @@ class CommonTest extends TestCase
 
         $m3 = new TestModel($this->db);
         $e4 = $m5->tryLoad(1);
-        $this->assertTrue($e4->loaded());
+        self::assertTrue($e4->loaded());
 
         // need to serialize because of DateTime objects
-        $this->assertSame(json_encode($before_delete_data), json_encode($e4->get()));
+        self::assertSame(json_encode($before_delete_data), json_encode($e4->get()));
     }
 }

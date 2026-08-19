@@ -133,14 +133,14 @@ class MultiModelTest extends TestCase
         $m = new Invoice($this->db);
         $entity = $m->getEntity();
         $entity->save(['ref' => 'inv1']);
-        $this->assertSame(0.0, $entity->get('total'));
+        self::assertSame(0.0, $entity->get('total'));
 
         $entity->ref('Lines')->insert(['item' => 'Chair', 'price' => 2.50, 'qty' => 3]);
         $entity->ref('Lines')->insert(['item' => 'Desk', 'price' => 10.20, 'qty' => 1]);
 
-        $this->assertSame(5, count($this->getDb()['audit_log'])); // invoice + line + adjust + line + adjust
-        $this->assertSame(2, count($this->getDb()['line']));
-        $this->assertSame(1, count($this->getDb()['invoice']));
+        self::assertSame(5, count($this->getDb()['audit_log'])); // invoice + line + adjust + line + adjust
+        self::assertSame(2, count($this->getDb()['line']));
+        self::assertSame(1, count($this->getDb()['invoice']));
 
         //$m->ref('Lines')->ref('AuditLog')->loadLast()->undo();
 
@@ -150,22 +150,22 @@ class MultiModelTest extends TestCase
         $entity->undo(); // undo invoice creation - should undo all other nested changes too
 
 /*
-        $this->assertSame(8, count($this->getDb()['audit_log']));
-        $this->assertSame(0, count($this->getDb()['line']));
-        $this->assertSame(0, count($this->getDb()['invoice']));
+        self::assertSame(8, count($this->getDb()['audit_log']));
+        self::assertSame(0, count($this->getDb()['line']));
+        self::assertSame(0, count($this->getDb()['invoice']));
 
         // test audit log relations
-        $this->assertNull($a->load(1)->get('initiator_audit_log_id')); // create invoice
-        $this->assertNull($a->load(2)->get('initiator_audit_log_id')); // create line
-        $this->assertSame('2', $a->load(3)->get('initiator_audit_log_id')); // adjust invoice
-        $this->assertNull($a->load(4)->get('initiator_audit_log_id')); // create line
-        $this->assertSame('4', $a->load(5)->get('initiator_audit_log_id')); // adjust invoice
-        $this->assertNull($a->load(6)->get('initiator_audit_log_id')); // delete invoice
-        $this->assertSame('6', $a->load(7)->get('initiator_audit_log_id')); // delete line
-        $this->assertSame('6', $a->load(8)->get('initiator_audit_log_id')); // delete line
+        self::assertNull($a->load(1)->get('initiator_audit_log_id')); // create invoice
+        self::assertNull($a->load(2)->get('initiator_audit_log_id')); // create line
+        self::assertSame('2', $a->load(3)->get('initiator_audit_log_id')); // adjust invoice
+        self::assertNull($a->load(4)->get('initiator_audit_log_id')); // create line
+        self::assertSame('4', $a->load(5)->get('initiator_audit_log_id')); // adjust invoice
+        self::assertNull($a->load(6)->get('initiator_audit_log_id')); // delete invoice
+        self::assertSame('6', $a->load(7)->get('initiator_audit_log_id')); // delete line
+        self::assertSame('6', $a->load(8)->get('initiator_audit_log_id')); // delete line
 
         // test revert audit log id
-        $this->assertSame('1', $a->load(6)->get('revert_audit_log_id')); // undo invoice creation
+        self::assertSame('1', $a->load(6)->get('revert_audit_log_id')); // undo invoice creation
 */
     }
 }
