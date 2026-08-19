@@ -77,11 +77,11 @@ class CustomTest extends TestCase
 
         $m = new AuditableGenderUser($this->db);
 
-        $m->load(1); // load Vinny
-        $m->set('gender', 'F');
-        $m->save();
+        $entity = $m->load(1); // load Vinny
+        $entity->set('gender', 'F');
+        $entity->save();
 
-        $l = $m->ref('AuditLog')->loadLast();
+        $l = $entity->ref('AuditLog')->loadLast();
 
         $this->assertSame('genderbending', $l->get('action'));
     }
@@ -99,12 +99,12 @@ class CustomTest extends TestCase
 
         $m = new AuditableGenderUser($this->db);
 
-        $m->load(2); // load Zoe
-        $m->auditController->custom_action = 'married';
-        $m->set('surname', 'Shira');
-        $m->save();
+        $entity = $m->load(2); // load Zoe
+        $entity->auditController->custom_action = 'married';
+        $entity->set('surname', 'Shira');
+        $entity->save();
 
-        $l = $m->ref('AuditLog')->loadLast();
+        $l = $entity->ref('AuditLog')->loadLast();
 
         $this->assertSame('married', $l->get('action'));
     }
@@ -122,10 +122,10 @@ class CustomTest extends TestCase
 
         $m = new AuditableGenderUser($this->db);
 
-        $m->load(2); // load Zoe
-        $m->log('load', 'Testing', ['request_diff' => ['foo' => 'bar']]);
+        $entity = $m->load(2); // load Zoe
+        $entity->log('load', 'Testing', ['request_diff' => ['foo' => 'bar']]);
 
-        $l = $m->ref('AuditLog')->loadLast();
+        $l = $entity->ref('AuditLog')->loadLast();
 
         $this->assertSame('load', $l->get('action'));
         $this->assertSame(['foo' => 'bar'], $l->get('request_diff'));
@@ -144,12 +144,12 @@ class CustomTest extends TestCase
 
         $m = new AuditableGenderUser($this->db, ['audit_model' => new CustomLog()]);
 
-        $m->load(2); // load Zoe
-        $m->set('name', 'Joe');
-        $m->set('surname', 'XX');
-        $m->save();
+        $entity = $m->load(2); // load Zoe
+        $entity->set('name', 'Joe');
+        $entity->set('surname', 'XX');
+        $entity->save();
 
-        $l = $m->ref('AuditLog')->loadLast();
+        $l = $entity->ref('AuditLog')->loadLast();
 
         $this->assertSame('2 fields magically change', $l->get('descr'));
     }

@@ -131,8 +131,8 @@ class FieldTypeTest extends TestCase
         // load record, change all fields and save
         // this should create audit log record with all field values
         $m = new TestModel($this->db);
-        $m->load(1);
-        $m->setMulti([
+        $entity = $m->load(1);
+        $entity->setMulti([
             'f_string' => 'def',
             'f_text' => 'abc',
             'f_boolean' => true,
@@ -152,9 +152,9 @@ class FieldTypeTest extends TestCase
             'f_security_never_save' => 'change never save',
             //'f_security_read_only' => 'change read only', trigger error on change before
         ]);
-        $m->save();
+        $entity->save();
 
-        $l = $m->ref('AuditLog')->loadLast();
+        $l = $entity->ref('AuditLog')->loadLast();
 
         // validate that all fields are mentioned in change description
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_string=')));
@@ -164,11 +164,11 @@ class FieldTypeTest extends TestCase
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_money=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_float=')));
 
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_date=' . $m->get('f_date')->format('Y-m-d'))));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_date=' . $entity->get('f_date')->format('Y-m-d'))));
 
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_datetime=' . $m->get('f_datetime')->format('Y-m-d H:i:s'))));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_datetime=' . $entity->get('f_datetime')->format('Y-m-d H:i:s'))));
 
-        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_time=' . $m->get('f_time')->format('H:i:s'))));
+        $this->assertTrue(is_int(strpos($l->get('descr'), 'f_time=' . $entity->get('f_time')->format('H:i:s'))));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_array=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_object=')));
         $this->assertTrue(is_int(strpos($l->get('descr'), 'f_object_serialized=foo is foo')));
@@ -180,7 +180,7 @@ class FieldTypeTest extends TestCase
         $this->assertFalse(strpos($l->get('descr'), 'f_security_never_save='));
         $this->assertFalse(strpos($l->get('descr'), 'f_security_read_only='));
 
-        $this->assertSame($m->get('f_expression'), round($m->get('f_float') * $m->get('f_money'), 4)); // need to cast and round because money type does that
+        $this->assertSame($entity->get('f_expression'), round($entity->get('f_float') * $entity->get('f_money'), 4)); // need to cast and round because money type does that
         $this->assertFalse(strpos($l->get('descr'), 'f_expression='));
     }
 }

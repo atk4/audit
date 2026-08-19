@@ -159,17 +159,17 @@ class CRUDTest extends TestCase
         ];
         $this->setDb($q);
 
-        $m = new AuditableUser($this->db);
+        $users = new AuditableUser($this->db);
 
-        $m->load(1); // load Vinny
-        $m->set('name', 'Vinny'); // false change
-        $m->save();
+        $user = $users->load(1); // load Vinny
+        $user->set('name', 'Vinny'); // false change
+        $user->save();
 
         // should be no audit records for Vinny because there were no actual changes
-        //$this->assertSame(0, $m->ref('AuditLog')->action('count')->getOne());
+        //$this->assertSame(0, $user->ref('AuditLog')->action('count')->getOne());
 
         // but in reality because of https://github.com/atk4/audit/issues/17#issuecomment-453544884
         // it's one empty audit record:
-        $this->assertSame('1', $m->ref('AuditLog')->action('count')->getOne());
+        $this->assertSame('1', $user->ref('AuditLog')->action('count')->getOne());
     }
 }

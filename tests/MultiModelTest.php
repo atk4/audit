@@ -131,11 +131,12 @@ class MultiModelTest extends TestCase
         });
 
         $m = new Invoice($this->db);
-        $m->save(['ref' => 'inv1']);
-        $this->assertSame(0.0, $m->get('total'));
+        $entity = $m->getEntity();
+        $entity->save(['ref' => 'inv1']);
+        $this->assertSame(0.0, $entity->get('total'));
 
-        $m->ref('Lines')->insert(['item' => 'Chair', 'price' => 2.50, 'qty' => 3]);
-        $m->ref('Lines')->insert(['item' => 'Desk', 'price' => 10.20, 'qty' => 1]);
+        $entity->ref('Lines')->insert(['item' => 'Chair', 'price' => 2.50, 'qty' => 3]);
+        $entity->ref('Lines')->insert(['item' => 'Desk', 'price' => 10.20, 'qty' => 1]);
 
         $this->assertSame(5, count($this->getDb()['audit_log'])); // invoice + line + adjust + line + adjust
         $this->assertSame(2, count($this->getDb()['line']));
@@ -145,8 +146,8 @@ class MultiModelTest extends TestCase
 
         $m = new Invoice($this->db);
         $a = $m->ref('AuditLog')->newInstance();
-        $a->load(1);
-        $a->undo(); // undo invoice creation - should undo all other nested changes too
+        $entity = $a->load(1);
+        $entity->undo(); // undo invoice creation - should undo all other nested changes too
 
 /*
         $this->assertSame(8, count($this->getDb()['audit_log']));

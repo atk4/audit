@@ -66,11 +66,11 @@ class CommonTest extends TestCase
         // load record, change all fields and save
         // this should create audit log record with all field values
         $m = new TestModel($this->db);
-        $m->load(1);
+        $entity = $m->load(1);
 
-        $initial_state = $m->get();
+        $initial_state = $entity->get();
 
-        $m->setMulti([
+        $entity->setMulti([
             'f_string' => 'def',
             'f_text' => 'abc',
             'f_boolean' => true,
@@ -90,12 +90,12 @@ class CommonTest extends TestCase
             'f_security_never_save' => 'change never save',
             //'f_security_read_only' => 'change read only', trigger error on change before
         ]);
-        $m->save();
+        $entity->save();
 
-        $after_save = $m->get();
+        $after_save = $entity->get();
 
         /** @var AuditLog $audit */
-        $audit = $m->ref('AuditLog');
+        $audit = $entity->ref('AuditLog');
         $audit->loadLast();
         $audit->undo();
 
@@ -148,14 +148,14 @@ class CommonTest extends TestCase
         // load record, change all fields and save
         // this should create audit log record with all field values
         $m = new TestModel($this->db);
-        $m->load(1);
+        $entity = $m->load(1);
 
         /** @var AuditLog $audit */
-        $audit = $m->ref('AuditLog');
-        $audit->undo_create($m);
+        $audit = $entity->ref('AuditLog');
+        $audit->undo_create($entity);
 
-        $m->tryLoad(1);
-        $this->assertFalse($m->loaded());
+        $entity = $m->tryLoad(1);
+        $this->assertFalse($entity->loaded());
     }
 
     public function testUndoDelete()
@@ -197,29 +197,30 @@ class CommonTest extends TestCase
         // load record, change all fields and save
         // this should create audit log record with all field values
         $m = new TestModel($this->db);
-        $m1 = (clone $m)->load(1);
-        $m1->save();
+        
+        $e1 = (clone $m)->load(1);
+        $e1->save();
 
-        $m2 = (clone $m)->load(1);
-        $before_delete_data = $m2->get();
-        $m2->delete();
+        $e2 = (clone $m)->load(1);
+        $before_delete_data = $e2->get();
+        $e2->delete();
 
-        $m3 = (clone $m)->tryLoad(1);
-        $this->assertFalse($m3->loaded());
+        $e3 = (clone $m)->tryLoad(1);
+        $this->assertFalse($e3->loaded());
 
         $audit = $m->ref('AuditLog')->newInstance();
         $audit->addCondition('model', TestModel::class);
         $audit->addCondition('model_id', 1);
         $audit->tryLoadAny();
 
-        $m4 = new TestModel($this->db);
-        $audit->undo_delete($m4);
+        $m2 = new TestModel($this->db);
+        $audit->undo_delete($m2);
 
-        $m5 = new TestModel($this->db);
-        $m5->tryLoad(1);
-        $this->assertTrue($m5->loaded());
+        $m3 = new TestModel($this->db);
+        $e4 = $m5->tryLoad(1);
+        $this->assertTrue($e4->loaded());
 
         // need to serialize because of DateTime objects
-        $this->assertSame(json_encode($before_delete_data), json_encode($m5->get()));
+        $this->assertSame(json_encode($before_delete_data), json_encode($e4->get()));
     }
 }
