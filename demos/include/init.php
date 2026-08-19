@@ -9,7 +9,7 @@ date_default_timezone_set('UTC');
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/MigratorConsole.php';
 
-$app = new \Atk4\Ui\App('Audit Demo');
+$app = new \Atk4\Ui\App(['title' => 'Audit Demo']);
 $app->initLayout([\Atk4\Ui\Layout\Admin::class]);
 
 $app->layout->menuLeft->addItem(['Migration', 'icon' => 'gift'], ['wizard']);
