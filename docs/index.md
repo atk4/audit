@@ -108,11 +108,11 @@ AuditLog extension records fields that were `dirty` before execution of save() o
 Agile Data incorporates rich volume of logic that allow you to make a lot of decision across the system when even a smallest change is requested. For example assuming you have the following structure:
 
 -   Invoice
-    -   `addFields(['total_net', 'total_vat', 'total_gross'], ['type' => 'money']);`
+    -   `addFields(['total_net', 'total_vat', 'total_gross'], ['type' => 'atk4_money']);`
     -   `hasMany('Line')`
         -   `addField('qty', ['type => 'int'])`
         -   `addField('vat_rate', ['type' => 'float'])`
-        -   `addFields(['price', 'vat', 'net', 'gross'], ['type' => 'money']);`
+        -   `addFields(['price', 'vat', 'net', 'gross'], ['type' => 'atk4_money']);`
 
 Your `afterSave` hooks will automatically recalculate and update `Invoice` whenever you change the `Line`. Additionally, changing `qty` will trigger change in `vat`, `net` and `gross`.
 

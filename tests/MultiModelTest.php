@@ -26,9 +26,9 @@ class Line extends Model
         $this->hasOne('invoice_id', ['model' => [Invoice::class]]);
 
         $this->addField('item', ['type' => 'string']);
-        $this->addField('price', ['type' => 'money', 'default' => 0.00]);
+        $this->addField('price', ['type' => 'atk4_money', 'default' => 0.00]);
         $this->addField('qty', ['type' => 'integer', 'default' => 0]);
-        $this->addField('total', ['type' => 'money', 'default' => 0.00]);
+        $this->addField('total', ['type' => 'atk4_money', 'default' => 0.00]);
 
         if ($this->no_adjust) {
             return;
@@ -65,7 +65,7 @@ class Invoice extends Model
 
         $this->hasMany('Lines', ['model' => [Line::class]]);
         $this->addField('ref', ['type' => 'string']);
-        $this->addField('total', ['type' => 'money', 'default' => 0.00]);
+        $this->addField('total', ['type' => 'atk4_money', 'default' => 0.00]);
 
         $this->onHook(Model::HOOK_BEFORE_DELETE, function ($m) {
             $lines = $m->ref('Lines', ['no_adjust' => true]);

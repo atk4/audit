@@ -27,7 +27,7 @@ class TestModel extends Model
         $this->addField('f_text', ['type' => 'text']);
         $this->addField('f_boolean', ['type' => 'boolean']);
         $this->addField('f_integer', ['type' => 'integer']);
-        $this->addField('f_money', ['type' => 'money']);
+        $this->addField('f_money', ['type' => 'atk4_money']);
         $this->addField('f_float', ['type' => 'float']);
         $this->addField('f_date', ['type' => 'date']);
         $this->addField('f_datetime', ['type' => 'datetime']);
@@ -47,7 +47,7 @@ class TestModel extends Model
         $this->addField('f_security_read_only', ['read_only' => true]);
 
         // check expression not stored
-        $this->addExpression('f_expression', ['[f_float]*[f_money]', 'type' => 'money']);
+        $this->addExpression('f_expression', ['[f_float]*[f_money]', 'type' => 'atk4_money']);
 
         $this->add(new Controller());
     }
@@ -180,7 +180,7 @@ class FieldTypeTest extends TestCase
         $this->assertFalse(strpos($l->get('descr'), 'f_security_never_save='));
         $this->assertFalse(strpos($l->get('descr'), 'f_security_read_only='));
 
-        $this->assertSame($entity->get('f_expression'), round($entity->get('f_float') * $entity->get('f_money'), 4)); // need to cast and round because money type does that
+        $this->assertSame($entity->get('f_expression'), round($entity->get('f_float') * $entity->get('f_money'), 4)); // need to cast and round because atk4_money type does that
         $this->assertFalse(strpos($l->get('descr'), 'f_expression='));
     }
 }

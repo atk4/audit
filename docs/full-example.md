@@ -36,7 +36,7 @@ class Invoice extends \Atk4\Data\Model
 
         $this->hasMany('Lines', new Line());
         $this->addField('ref', ['type' => 'string']);
-        $this->addField('total', ['type' => 'money', 'default' => 0.00]);
+        $this->addField('total', ['type' => 'atk4_money', 'default' => 0.00]);
     }
 
     function adjustTotal($change)
@@ -68,9 +68,9 @@ class Line extends \Atk4\Data\Model {
         $this->hasOne('invoice_id', new Invoice());
 
         $this->addField('item', ['type' => 'string']);
-        $this->addField('price', ['type' => 'money', 'default' => 0.00]);
+        $this->addField('price', ['type' => 'atk4_money', 'default' => 0.00]);
         $this->addField('qty', ['type' => 'integer', 'default' => 0]);
-        $this->addField('total', ['type' => 'money', 'default' => 0.00]);
+        $this->addField('total', ['type' => 'atk4_money', 'default' => 0.00]);
 
         $this->addHook('beforeSave', function($m) {
             $m['total'] = $m['price'] * $m['qty'];
@@ -317,9 +317,9 @@ class Line extends \Atk4\Data\Model {
         $this->hasOne('invoice_id', new Invoice());
 
         $this->addField('item', ['type' => 'string']);
-        $this->addField('price', ['type' => 'money', 'default' => 0.00]);
+        $this->addField('price', ['type' => 'atk4_money', 'default' => 0.00]);
         $this->addField('qty', ['type' => 'integer', 'default' => 0]);
-        $this->addField('total', ['type' => 'money', 'default' => 0.00]);
+        $this->addField('total', ['type' => 'atk4_money', 'default' => 0.00]);
 
         // add this line
         if ($this->no_adjust) return;
