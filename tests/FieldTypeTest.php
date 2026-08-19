@@ -22,7 +22,7 @@ class TestModel extends Model
         parent::init();
 
         // all field types
-        $this->getField($this->getIdField())->type = 'integer';
+        $this->getIdField()->type = 'integer';
         $this->addField('f_string', ['type' => 'string']);
         $this->addField('f_text', ['type' => 'text']);
         $this->addField('f_boolean', ['type' => 'boolean']);
