@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Tests;
 
-use Atk4\Core\Phpunit\TestCase;
+use Atk4\Data\Schema\TestCase;
 
 /** @runTestsInSeparateProcesses */
 class ViewTest extends TestCase

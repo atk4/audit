@@ -7,7 +7,7 @@ namespace Atk4\Audit\Tests;
 use Atk4\Audit\Controller;
 use Atk4\Data\Model;
 use Atk4\Data\Persistence;
-use Atk4\Core\Phpunit\TestCase;
+use Atk4\Data\Schema\TestCase;
 
 class Line extends Model
 {
