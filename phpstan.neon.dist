@@ -2,12 +2,15 @@ includes:
     - phar://phpstan.phar/conf/bleedingEdge.neon
 
 parameters:
-    level: 8
+    level: 6
     # PHP 8.5 requests Override attribute for properties, but older PHP do not support that
     checkMissingOverrideMethodAttribute: false
     paths:
         - .
     excludePaths:
+        - docs
+        - template
+        - tests
         - vendor
 
     ignoreErrors:

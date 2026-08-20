@@ -7,6 +7,7 @@ namespace Atk4\Audit\Demo;
 use Atk4\Audit\AuditableModelTrait;
 use Atk4\Audit\Model\AuditLog;
 use Atk4\Data\Model;
+use Atk4\Ui\Button;
 
 class Country extends Model
 {
@@ -36,15 +37,17 @@ class Country extends Model
             'fields' => false,
             'appliesTo' => Model\UserAction::APPLIES_TO_SINGLE_RECORD,
             'callback' => 'undo',
-            'ui' => [
-                'icon' => 'undo',
-                // ???'button' => [null, 'icon' => 'undo'],
-                'execButton' => [Button::class, 'undo', 'blue'],
+            'args' => [
+                'ui' => [
+                    'icon' => 'undo',
+                    // ???'button' => [null, 'icon' => 'undo'],
+                    'execButton' => [Button::class, 'undo', 'blue'],
+                ],
             ],
         ]);
     }
 
-    public function undo()
+    public function undo(): void
     {
         /** @var AuditLog $audit */
         $audit = $this->ref('AuditLog');

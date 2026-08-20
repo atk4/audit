@@ -8,19 +8,22 @@ use Atk4\Audit\Controller;
 use Atk4\Audit\View\History;
 use Atk4\Data\Model;
 use Atk4\Data\Persistence;
+use Atk4\Ui\App;
 use Atk4\Ui\Columns;
 use Atk4\Ui\Crud;
 use Atk4\Ui\Header;
 
-require_once 'include/init.php';
-require_once 'include/database.php';
+require_once __DIR__ . '/include/init.php';
+require_once __DIR__ . '/include/database.php';
+
+/** @var App $app */
+/** @var Persistence $db */
 
 $audit = new Controller();
 
-// @var Persistence $db
 $db->onHook(Persistence::HOOK_AFTER_ADD, static function ($owner, $element) use ($audit) {
     if ($element instanceof Model) {
-        if (isset($element->no_audit) && $element->no_audit) {
+        if (isset($element->no_audit) && $element->no_audit) { // @phpstan-ignore property.notFound
             // Whitelisting this model, won't audit
             return;
         }
@@ -47,7 +50,7 @@ $crud->setIpp(5);
 $crud->menu
     ->addItem(['Delete ALL audit data', 'icon' => 'trash'])
     ->on('click', static function () use ($m, $c2) {
-        $m->ref('AuditLog')->action('delete')->execute();
+        $m->ref('AuditLog')->action('delete')->executeStatement();
 
         return $c2->jsReload();
     });
@@ -62,9 +65,10 @@ $crud->addActionButton('Audit ->', static function ($js, $id) use ($c2) {
 // create model for form
 $m2 = clone $m;
 if ($id = $app->stickyGet('model_id')) {
-    $m2->load($id);
+    $m2->addCondition($m2->idField, $id);
+    $e2 = $m2->tryLoadAny();
 }
 
-Header::addTo($c2)->set($m2->loaded() ? 'History of ' . $m2->getTitle() : 'All History');
+Header::addTo($c2)->set(isset($e2) && $e2->isLoaded() ? 'History of ' . $e2->getTitle() : 'All History');
 $h = History::addTo($c2);
 $h->setModel($m2);

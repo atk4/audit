@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Atk4\Audit\View;
 
 use Atk4\Data\Model;
-use Atk4\Ui\View;
+use Atk4\Ui\ViewWithcontent;
+use Atk4\Ui\View\ModelTrait;
 
 /**
  * History view for audit log records.
@@ -17,8 +18,10 @@ use Atk4\Ui\View;
  *  $v = $view->add(new \Atk4\Audit\View\History(['enable_comments'=>true]));
  *  $v->setModel($m);
  */
-class History extends View
+class History extends ViewWithContent
 {
+    use ModelTrait;
+
     /** @see init() */
     public $defaultTemplate;
 
@@ -59,8 +62,6 @@ class History extends View
      */
     public function setModel(Model $m)
     {
-        parent::setModel($m);
-
         // add form
         if ($this->enable_comments) {
             $this->form = $this->add($this->formClass);

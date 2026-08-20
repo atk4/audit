@@ -16,15 +16,14 @@ class AuditLog extends Model
     /** @var string Table name */
     public $table = 'audit_log';
 
-    /** @var string Title field */
-    public $title_field = 'descr';
+    /** @var ?string Title field */
+    public ?string $titleField = 'descr';
 
     /** @var bool Don't audit audit model itself */
     public $no_audit = true;
 
     /** @var Controller */
     public $auditController;
-
     /** @var string Order records by this field by default */
     public $order_field = 'id';
 
@@ -40,7 +39,6 @@ class AuditLog extends Model
         $this->hasOne('initiator_audit_log_id', ['model' => [$c]]);
 
         $this->addField('ts', ['type' => 'datetime']);
-
         $this->addField('model', ['type' => 'string']); // model class name
         $this->addField('model_id');                    // id of related model record
 
@@ -51,7 +49,6 @@ class AuditLog extends Model
             'caption' => 'Description',
             'type' => 'text',
         ]);
-
         $this->addField('user_info', [
             'type' => 'array',
             'serialize' => 'json',
@@ -69,7 +66,6 @@ class AuditLog extends Model
             'default' => false,
         ]);
         $this->hasOne('revert_audit_log_id', ['model' => [$c]]);
-
         $this->setOrder($this->order_field, 'desc');
     }
 
@@ -90,7 +86,6 @@ class AuditLog extends Model
     {
         return isset($_SERVER['REMOTE_ADDR']) ? ['ip' => $_SERVER['REMOTE_ADDR']] : [];
     }
-
     /**
      * For a specified model record differences.
      *
@@ -98,18 +93,32 @@ class AuditLog extends Model
      */
     public function undo()
     {
-        if (!$this->loaded()) {
+        if (!$this->isEntity() || !$this->isLoaded()) {
             throw new Exception('Load specific AuditLog entry before executing undo()');
         }
 
         $this->atomic(function () {
             $modelfqcn = $this->get('model');
-            $m = new $modelfqcn($this->persistence);
+            if (!is_string($modelfqcn) || !is_a($modelfqcn, Model::class, true)) {
+                throw (new Exception('Invalid model class stored in audit log'))
+                    ->addMoreInfo('model', $modelfqcn);
+            }
+
+            $m = new $modelfqcn($this->getPersistence());
 
             $f = 'undo_' . $this->get('action');
+            if (!method_exists($this, $f)) {
+                throw (new Exception('Unsupported audit action'))
+                    ->addMoreInfo('action', $this->get('action'));
+            }
 
-            $m->auditController->custom_action = 'undo ' . $this->get('action');
-            $m->auditController->custom_fields['revert_audit_log_id'] = $this->getId();
+            $controller = $m->auditController ?? $m->auditcontroller ?? null;
+            if (!$controller instanceof Controller) {
+                throw new Exception('Audited model does not have an audit controller');
+            }
+
+            $controller->custom_action = 'undo ' . $this->get('action');
+            $controller->custom_fields['revert_audit_log_id'] = $this->getId();
 
             $this->{$f}($m);
 
@@ -123,70 +132,43 @@ class AuditLog extends Model
      */
     public function undo_update(Model $m)
     {
-        $m->load($this->get('model_id'));
-
-        foreach ($this->get('request_diff') as $field => [$old, $new]) {
-            if (!$m->hasField($field)) {
+        $entity = $m->load($this->get('model_id'));
+        foreach ($this->get('request_diff') ?? [] as $field => [$old, $new]) {
+            if (!$entity->hasField($field)) {
                 continue;
             }
 
-            $f = $m->getField($field);
-
-            if (is_string($new) && in_array($f->type, [
-                'date',
-                'time',
-                'datetime',
-                'object',
-            ], true)) {
-                $new = unserialize($new);
-            }
-
-            if (json_encode([$m->get($field)]) !== json_encode([$new])) {
+            $f = $entity->getField($field);
+            $new = $this->decodeAuditValue($f, $new);
+            if (!$f->compare($entity->get($field), $new)) {
                 throw (new Exception('New value does not match current. Risky to undo'))
                     ->addMoreInfo('new', $new)
-                    ->addMoreInfo('current', $m->get($field));
+                    ->addMoreInfo('current', $entity->get($field));
             }
 
-            if (is_string($old) && in_array($f->type, [
-                'date',
-                'time',
-                'datetime',
-                'object',
-            ], true)) {
-                $old = unserialize($old);
-            }
-
-            $m->set($field, $old);
+            $old = $this->decodeAuditValue($f, $old);
+            $entity->set($field, $old);
         }
 
-        $m->save();
+        $entity->save();
     }
-
     /**
      * No description.
      */
     public function undo_delete(Model $m)
     {
-        foreach ($this->get('request_diff') as $field => [$old, $new]) {
-            if (!$m->hasField($field)) {
+        $entity = $m->createEntity();
+        foreach ($this->get('request_diff') ?? [] as $field => [$old, $new]) {
+            if (!$entity->hasField($field)) {
                 continue;
             }
 
-            $f = $m->getField($field);
-
-            if (is_string($old) && in_array($f->type, [
-                'date',
-                'time',
-                'datetime',
-                'object',
-            ], true)) {
-                $old = unserialize($old);
-            }
-
-            $m->set($field, $old);
+            $f = $entity->getField($field);
+            $old = $this->decodeAuditValue($f, $old);
+            $entity->set($field, $old);
         }
 
-        $m->save();
+        $entity->save();
     }
 
     /**
@@ -195,5 +177,25 @@ class AuditLog extends Model
     public function undo_create(Model $m)
     {
         $m->delete($this->get('model_id'));
+    }
+
+    protected function decodeAuditValue($field, $value)
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        if (!in_array($field->type, [
+            'date',
+            'time',
+            'datetime',
+            'object',
+        ], true)) {
+            return $value;
+        }
+
+        $decoded = @unserialize($value, ['allowed_classes' => true]);
+
+        return $decoded === false && $value !== 'b:0;' ? $value : $decoded;
     }
 }

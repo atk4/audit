@@ -10,5 +10,5 @@ trait AuditableModelTrait
     public $no_audit = true;
 
     /** @var Controller Audit controller object */
-    public $auditcontroller;
+    public $auditController;
 }

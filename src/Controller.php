@@ -36,7 +36,6 @@ class Controller
 
     /** @var float start time of audit log */
     public $start_mt;
-
     /** @var string name of custom action, for example "comment" */
     public $custom_action;
 
@@ -51,7 +50,6 @@ class Controller
     public function __construct($defaults = [])
     {
         $defaults = is_array($defaults) ? $defaults : ['audit_model' => $defaults];
-
         $this->setDefaults($defaults);
 
         // create audit model object if it's not already there
@@ -69,7 +67,6 @@ class Controller
             $this->setUp($this->getOwner());
         }
     }
-
     /**
      * Will set up specified model to be logged.
      */
@@ -79,7 +76,6 @@ class Controller
         if (isset($m->no_audit) && $m->no_audit) {
             return;
         }
-
         // adds hooks
         $m->onHook(
             Model::HOOK_BEFORE_SAVE,
@@ -93,7 +89,6 @@ class Controller
             [],
             -100
         ); // called as soon as possible
-
         $m->onHook(
             Model::HOOK_AFTER_SAVE,
             \Closure::fromCallable([$this, 'afterSave']),
@@ -106,20 +101,17 @@ class Controller
             [],
             100
         ); // called as late as possible
-
         // adds hasMany reference to audit records
-        $m->addRef('AuditLog', ['model' => function ($m) {
+        $m->addReference('AuditLog', ['model' => function ($m) {
             // get audit model
             $a = isset($m->audit_model) ? clone $m->audit_model : clone $this->audit_model;
 
-            if (!$a->persistence) {
-                $m->persistence->add($a);
+            if (!$a->issetPersistence()) {
+                $a->setPersistence($m->getPersistence());
             }
-
             // ignore records which have empty request_diff, reactive_diff and descr
             // such records are generated because they are pushed in beforeSave hook,
-            // but if there was no actual changes in data model, then afterSave hook
-            // is never called, so we can't delete them automatically :(
+            // but if there was no actual changes in data model, then afterSave hook is never called, so we can't delete them automatically :(
             // AND worst thing about this is that we can't add this condition (below)
             // because then in audit push() save() we can't reload record and all audit
             // system goes down :(
@@ -132,10 +124,9 @@ class Controller
                 ['reactive_diff', 'not', null],
             ]);
             */
-
             // jail
             $a->addCondition('model', get_class($m));
-            if ($m->loaded()) {
+            if ($m->isEntity()) {
                 $a->addCondition('model_id', $m->getId());
             }
 
@@ -147,7 +138,6 @@ class Controller
         if (!$m->hasMethod('log')) {
             $m->addMethod('log', \Closure::fromCallable([$this, 'customLog']));
         }
-
         if (!$m->hasMethod('auditLog')) {
             $m->addMethod('auditLog', \Closure::fromCallable([$this, 'customLog']));
         }
@@ -162,9 +152,14 @@ class Controller
     public function push(Model $m, string $action): AuditLog
     {
         /** @var AuditLog $a */
-        $a = $m->ref('AuditLog');
+        $auditModel = $m->ref('AuditLog');
+        $a = $auditModel->createEntity();
 
         // set audit record values
+        $a->set('model', get_class($m->getModel()));
+        if ($m->isEntity() && $m->getId() !== null) {
+            $a->set('model_id', $m->getId());
+        }
         $a->set('ts', new \DateTime());
 
         // sometimes we already have conditions set on model, but there are strange cases,
@@ -172,7 +167,6 @@ class Controller
         // BUT hopefully don't need them anymore - let's see.
         // $a->set('model', get_class($m));
         // $a->set('model_id', $m->getId());
-
         if ($this->custom_action) {
             $action = $this->custom_action;
             $this->custom_action = null;
@@ -189,13 +183,12 @@ class Controller
             // link to previous audit record
             $a->set('initiator_audit_log_id', $this->audit_log_stack[0]->getId());
         }
-
         // save the initial action
         $a->save();
 
         // memorize start time
         if ($this->record_time_taken) {
-            $a->start_mt = (float) microtime();
+            $a->start_mt = microtime(true);
         }
 
         // Imants: deprecated - use $m->auditController->audit_log_stack[0] instead
@@ -204,7 +197,6 @@ class Controller
 
         // save audit record in beginning of stack
         array_unshift($this->audit_log_stack, $a);
-
         return $a;
     }
 
@@ -216,6 +208,9 @@ class Controller
     public function pull()
     {
         $a = array_shift($this->audit_log_stack);
+        if (!$a instanceof AuditLog) {
+            throw new Exception('Audit log stack is empty');
+        }
 
         if ($this->custom_action) {
             $a->set('action', $this->custom_action);
@@ -226,10 +221,9 @@ class Controller
             $a->setMulti($this->custom_fields);
             $this->custom_fields = [];
         }
-
         // save time taken
         if ($this->record_time_taken) {
-            $a->set('time_taken', (float) microtime() - $a->start_mt);
+            $a->set('time_taken', microtime(true) - (float) $a->start_mt);
         }
 
         return $a;
@@ -241,17 +235,16 @@ class Controller
     public function getDiffs(Model $m): array
     {
         $diff = [];
-        foreach ($m->dirty as $key => $original) {
+        foreach ($m->getDirtyRef() as $key => $original) {
             if (!$this->isDiffFieldAuditable($m, $key)) {
                 continue;
             }
-
             $value = $m->get($key);
 
             // object need to be serialized before save in audit
             // if not it will pass in json_encode and became an array
-            $original = is_object($original) ? serialize($original) : $original;
-            $value = is_object($value) ? serialize($value) : $value;
+            $original = $this->encodeAuditValue($m, $key, $original);
+            $value = $this->encodeAuditValue($m, $key, $value);
 
             // key = [old value, new value]
             $diff[$key] = [$original, $value];
@@ -259,11 +252,10 @@ class Controller
 
         return $diff;
     }
-
     /**
      * Executes before model record is saved.
      */
-    public function beforeSave(Model $m, bool $is_update)
+    public function beforeSave(Model $m, bool $is_update): void
     {
         $action = $is_update ? 'update' : 'create';
         $a = $this->push($m, $action);
@@ -274,11 +266,10 @@ class Controller
             $this->setDescr($a, $m, $action);
         }
     }
-
     /**
      * Executes after model record is saved.
      */
-    public function afterSave(Model $m, bool $is_update)
+    public function afterSave(Model $m, bool $is_update): void
     {
         // pull from audit stack
         $a = $this->pull();
@@ -287,33 +278,34 @@ class Controller
             // new record
             $a->set('reactive_diff', $m->get());
             $a->set('model_id', $m->getId());
-
             // fill missing description for new record
             $action = 'save';
-            if (empty($a->get('descr')) && $is_update) {
+            if (!$a->get('descr') && $is_update) {
                 $this->setDescr($a, $m, $action);
             }
         } else {
             // updated record
             $d = $this->getDiffs($m);
+            $requestDiff = $a->get('request_diff') ?? [];
             foreach ($d as $f => [$f0, $f1]) {
                 // if not set don't purge
-                if (!isset($a->get('request_diff')[$f][1])) {
+                if (!isset($requestDiff[$f][1])) {
                     continue;
                 }
 
-                if (json_encode([$a->get('request_diff')[$f][1]]) === json_encode([$f1])) {
+                $requested = $this->decodeAuditValue($m, $f, $requestDiff[$f][1]);
+                $reactive = $this->decodeAuditValue($m, $f, $f1);
+                if ($m->getField($f)->compare($requested, $reactive)) {
                     unset($d[$f]);
                 }
             }
 
             $a->set('reactive_diff', $d);
 
-            if (count($d) > 0 && empty($a->get('descr'))) {
+            if (count($d) > 0 && !$a->get('descr')) {
                 $a->set('descr', '(resulted in ' . $this->getDescr($a->get('reactive_diff'), $m) . ')');
             }
         }
-
         if (!empty($a->get('request_diff')) || !empty($a->get('reactive_diff'))) {
             // there was changes - let's update audit record
             $a->save();
@@ -322,7 +314,6 @@ class Controller
             $a->delete();
         }
     }
-
     /**
      * Set description.
      *
@@ -336,49 +327,43 @@ class Controller
             $descr = $a->getDescr();
         } else {
             // could use $m->getTitle() here, but we don't want to see IDs in log descriptions
-            if ($m->hasField($m->title_field)) {
+            if ($m->hasField($m->titleField)) {
                 $descr = $action . ' ' . $m->getTitle() . ': ' . $this->getDescr($a->get('request_diff'), $m);
             } else {
                 $descr = $action . ': ' . $this->getDescr($a->get('request_diff'), $m);
             }
         }
-
         $a->set('descr', $descr);
     }
 
     /**
      * Executes before model record is deleted.
-     *
-     * @param mixed $model_id
      */
-    public function beforeDelete(Model $m, $model_id)
+    public function beforeDelete(Model $m): void
     {
         $a = $this->push($m, 'delete');
-        if ($m->only_fields) {
-            $m = $m->newInstance()->load($model_id); // we need all fields
+        if ($m->getModel()->onlyFields) {
+            $m = $m->getModel()->createEntity()->load($m->getId()); // we need all fields
         }
-
         $diff = [];
-        foreach ($m->data as $key => $original) {
+        foreach ($m->getDataRef() as $key => $original) {
             if (!$this->isDiffFieldAuditable($m, $key)) {
                 continue;
             }
 
             // object need to be serialized before save in audit
             // if not it will pass in json_encode and became an array
-            if (is_object($original)) {
-                $original = serialize($original);
-            }
+            $original = $this->encodeAuditValue($m, $key, $original);
 
             // key = [old value, new value]
             $diff[$key] = [$original, null];
         }
-
         $a->set('request_diff', $diff);
 
+        $model_id = $m->getId();
         $descr = 'delete id=' . $model_id;
 
-        if ($m->title_field && $m->hasField($m->title_field)) {
+        if ($m->titleField && $m->hasField($m->titleField)) {
             $descr .= ' (' . $m->getTitle() . ')';
         }
 
@@ -387,14 +372,11 @@ class Controller
 
     /**
      * Executes after model record is deleted.
-     *
-     * @param mixed $model_id
      */
-    public function afterDelete(Model $m, $model_id)
+    public function afterDelete(Model $m): void
     {
         $this->pull()->save();
     }
-
     /**
      * Credit to open: http://stackoverflow.com/a/27368848/204819.
      *
@@ -415,7 +397,6 @@ class Controller
         if (!$diff) {
             return 'no changes';
         }
-
         $t = [];
         foreach ($diff as $key => [$from, $to]) {
             $from = $this->getDescrFieldValue($m, $key, $from);
@@ -427,8 +408,7 @@ class Controller
                     ->addMoreInfo('from', $from)
                     ->addMoreInfo('to', $to);
             }
-
-            $t[] = $key . '=' . (string) $to;
+            $t[] = $key . '=' . $to;
         }
 
         return implode(', ', $t);
@@ -440,10 +420,9 @@ class Controller
     public function customLog(Model $m, string $action, ?string $descr = null, array $fields = [])
     {
         $a = $this->push($m, $action);
-
         if ($descr === null) {
-            if ($m->hasField($m->title_field)) {
-                $descr = $action . ' ' . $m->get($m->title_field) . ': ';
+            if ($m->hasField($m->titleField)) {
+                $descr = $action . ' ' . $m->get($m->titleField) . ': ';
             } else {
                 $descr = $action;
             }
@@ -457,7 +436,6 @@ class Controller
 
         $this->pull()->save();
     }
-
     /**
      * @param mixed $value
      */
@@ -474,22 +452,40 @@ class Controller
                 ],
                 true
             );
-
             if (is_string($value) && $field_must_be_object) {
-                $value = unserialize($value);
+                $value = @unserialize($value, ['allowed_classes' => true]);
 
                 if ($this->canBeString($value)) {
                     return (string) $value;
                 }
             }
-
             // should use typecastSaveRow not typecastSaveField because we can have fields with serialize property set too
             // don't typecast value if it's empty anyway: https://github.com/atk4/data/issues/439
-            $value = current($m->persistence->typecastSaveRow($m, [$fieldname => $value]));
+            $value = current($m->getPersistence()->typecastSaveRow($m, [$fieldname => $value]));
         } catch (\Throwable $t) {
         }
 
         return (string) $value;
+    }
+
+    protected function encodeAuditValue(Model $m, string $fieldname, $value)
+    {
+        return is_object($value) ? serialize($value) : $value;
+    }
+
+    protected function decodeAuditValue(Model $m, string $fieldname, $value)
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        if (!in_array($m->getField($fieldname)->type, ['date', 'datetime', 'time', 'object'], true)) {
+            return $value;
+        }
+
+        $decoded = @unserialize($value, ['allowed_classes' => true]);
+
+        return $decoded === false && $value !== 'b:0;' ? $value : $decoded;
     }
 
     protected function isDiffFieldAuditable(Model $m, string $key): bool
@@ -506,10 +502,9 @@ class Controller
         }
 
         // security fix : https://github.com/atk4/audit/pull/30
-        if ($f->never_persist || $f->never_save || $f->read_only) {
+        if ($f->neverPersist || $f->neverSave || $f->readOnly) {
             return false;
         }
-
         return true;
     }
 }

@@ -23,9 +23,8 @@ class Lister extends \Atk4\Ui\Lister
 
     /** @see init() */
     public $defaultTemplate;
-
     /** @var Template Template chunk for one changed field */
-    public $t_row_change;
+    public $tRowChange;
 
     /** @var Model */
     protected $linkedModel;
@@ -42,35 +41,31 @@ class Lister extends \Atk4\Ui\Lister
 
         parent::init();
     }
-
     /**
-     * From the current template will extract {change} into $this->t_row_change.
+     * From the current template will extract {change} into $this->tRowChange.
      */
-    public function initChunks()
+    protected function initChunks(): void
     {
         if ($this->template->hasTag('change')) {
-            $this->t_row_change = $this->template->cloneRegion('change');
-            $this->template->del('changes');
+            $this->tRowChange = $this->template->cloneRegion('change');
+            $this->template->del('change');
         }
 
-        return parent::initChunks();
+        parent::initChunks();
     }
-
     /**
      * Render individual row.
      *
      * Adds rendering of field value changes section.
      */
-    public function renderRow()
+    public function renderRow(): void
     {
-        if ($this->model->hasRef('updated_by_user_id')) {
-            $this->t_row->trySet('user', $this->model->ref('updated_by_user_id')->getTitle());
-        }
+        // Let UI Lister prepare the standard row values and links first.
+        $this->renderTRow();
 
-        $diff = $this->model->get('request_diff') ?? [];
-
-        if ($this->t_row->hasTag('changes') && count($diff) > 0) {
-            $t_change = clone $this->t_row_change;
+        $diff = $this->currentRow->get('request_diff') ?? [];
+        if ($this->tRow->hasTag('changes') && count($diff) > 0 && $this->tRowChange !== null) {
+            $t_change = clone $this->tRowChange;
             $html = '';
             foreach ($diff as $field => [$old_value, $new_value]) {
                 if ($field === 'id') {
@@ -81,26 +76,29 @@ class Lister extends \Atk4\Ui\Lister
                 if (!$this->linkedModel->hasField($field)) {
                     continue;
                 }
-
                 if ($this->isEmptyOrNull($old_value) && $this->isEmptyOrNull($new_value)) {
                     continue;
                 }
 
-                if ($this->linkedModel->getField($field) instanceof Field_SQL_Expression) {
+                if ($this->linkedModel->getField($field)->type === 'expression') {
                     continue;
                 }
-
                 $t_change->trySet('field', $this->linkedModel->getField($field)->getCaption());
                 $t_change->trySet('old_value', $this->normalizeValue($field, $old_value), false);
                 $t_change->trySet('new_value', $this->normalizeValue($field, $new_value), false);
                 $html .= $t_change->render();
             }
-            $this->t_row->setHTML('changes', $html);
+            $this->tRow->setHTML('changes', $html);
         } else {
-            $this->t_row->del('changes');
+            $this->tRow->del('changes');
         }
 
-        return parent::renderRow();
+        $html = $this->tRow->renderToHtml();
+        if ($this->template->hasTag('rows')) {
+            $this->template->dangerouslyAppendHtml('rows', $html);
+        } else {
+            $this->template->dangerouslyAppendHtml('_top', $html);
+        }
     }
 
     public function isEmptyOrNull($val): bool
@@ -119,19 +117,19 @@ class Lister extends \Atk4\Ui\Lister
         if (empty($value)) {
             return ' --- ';
         }
-
-        if ($this->linkedModel->hasRef($field)) {
-            $refModel = clone $this->linkedModel->refModel($field);
+        if ($this->linkedModel->hasReference($field)) {
+            $refModel = clone $this->linkedModel->ref($field);
             $refModel->tryLoad((int) $value);
 
             return $refModel->getTitle();
         }
 
         try {
-            if (isset($value['date'])) {
-                $value = new \DateTime($value['date']);
-
-                return $value->format($this->getApp()->ui_persistence->datetime_format);
+            if (is_string($value) && in_array($this->linkedModel->getField($field)->type, ['date', 'datetime', 'time'], true)) {
+                $value = @unserialize($value, ['allowed_classes' => true]);
+                if ($value instanceof \DateTimeInterface) {
+                    return $value->format($this->getApp()->uiPersistence->datetime_format);
+                }
             }
         } catch (\Throwable $e) {
         }
@@ -139,13 +137,16 @@ class Lister extends \Atk4\Ui\Lister
         return $value;
     }
 
-    public function setModel(Model $m)
+    public function setModel(Model $m): void
     {
         parent::setModel($m);
 
         $class = $this->model->get('model');
-        $this->linkedModel = new $class($this->getApp()->db);
+        if (!is_string($class) || !is_a($class, Model::class, true)) {
+            throw new \InvalidArgumentException('Audit log contains an invalid model class');
+        }
 
+        $this->linkedModel = new $class($this->model->getPersistence());
         // this conditions can be added here not in AuditLog Model
         // i hope, here are harmless - to hide empty rows
         //        $this->model->addCondition([
@@ -153,6 +154,5 @@ class Lister extends \Atk4\Ui\Lister
         //            ['request_diff', 'not', null],
         //            ['reactive_diff', 'not', null],
         //        ]);
-        return $this->model;
     }
 }
