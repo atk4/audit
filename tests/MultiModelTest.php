@@ -5,53 +5,9 @@ declare(strict_types=1);
 namespace Atk4\Audit\Tests;
 
 use Atk4\Audit\AuditableModelTrait;
-use Atk4\Audit\Controller;
+use Atk4\Audit\AuditController;
 use Atk4\Data\Model;
-use Atk4\Data\Persistence;
-use Atk4\Data\Schema\TestCase;
-
-class Line extends Model
-{
-    use AuditableModelTrait;
-
-    public $table = 'line';
-
-    public $no_adjust = false;
-    protected $old_total;
-
-    protected function init(): void
-    {
-        parent::init();
-
-        $this->hasOne('invoice_id', ['model' => [Invoice::class]]);
-
-        $this->addField('item', ['type' => 'string']);
-        $this->addField('price', ['type' => 'atk4_money', 'default' => 0.00]);
-        $this->addField('qty', ['type' => 'integer', 'default' => 0]);
-        $this->addField('total', ['type' => 'atk4_money', 'default' => 0.00]);
-
-        if ($this->no_adjust) {
-            return;
-        }
-
-        $this->onHook(Model::HOOK_BEFORE_SAVE, static function ($m) {
-            $m->set('total', $m->get('price') * $m->get('qty'));
-            $m->old_total = $m->isDirty('total') ? $m->dirty['total'] : null;
-        });
-
-        $this->onHook(Model::HOOK_AFTER_SAVE, static function ($m) {
-            if ($m->old_total !== null) {
-                $change = $m->get('total') - $m->old_total;
-                $this->ref('invoice_id')->adjustTotal($change);
-                $m->old_total = null;
-            }
-        });
-
-        $this->onHook(Model::HOOK_AFTER_DELETE, function ($m) {
-            $this->ref('invoice_id')->adjustTotal(-$m->get('total'));
-        });
-    }
-}
+use Atk4\Data\Type\Types;
 
 class Invoice extends Model
 {
@@ -63,109 +19,264 @@ class Invoice extends Model
     {
         parent::init();
 
-        $this->hasMany('Lines', ['model' => [Line::class]]);
         $this->addField('ref', ['type' => 'string']);
-        $this->addField('total', ['type' => 'atk4_money', 'default' => 0.00]);
+        $this->addField('doc_date', ['type' => 'date']);
+        $this->addField('total', ['type' => Types::MONEY, 'default' => 0.00]);
+
+        $this->hasMany('Lines', ['model' => [Line::class]]);
 
         $this->onHook(Model::HOOK_BEFORE_DELETE, static function ($m) {
-            $lines = $m->ref('Lines', ['no_adjust' => true]);
-            $lines->each(static function ($m) {
-                $m->delete();
-            });
+            $lines = $m->ref('Lines', ['no_adjust' => true]); // need to avoid infinite loops
+            foreach ($lines as $line) {
+                $line->delete();
+            }
         });
     }
 
-    public function adjustTotal($change)
+    public function adjustTotal(float $change): void
     {
+        /*
         $this->ref('AuditLog')->custom_fields = [
             'action' => 'total_adjusted',
             'descr' => 'Changing total by ' . $change,
         ];
+        */
 
         $this->set('total', $this->get('total') + $change);
         $this->save();
     }
 }
 
-/**
- * Tests basic create, update and delete operatiotns.
- */
-class MultiModelTest extends TestCase
+class Line extends Model
 {
-    protected $audit_db = [[
-        'initiator_audit_log_id' => 1,
-        'ts' => '',
-        'model' => '',
-        'model_id' => 1,
-        'action' => '',
-        'user_info' => '',
-        'time_taken' => 1.1,
-        'request_diff' => '',
-        'reactive_diff' => '',
-        'descr' => '',
-        'is_reverted' => '',
-        'revert_audit_log_id' => 1,
-    ]];
+    use AuditableModelTrait;
 
-    public function testTotals()
+    public $table = 'line';
+
+    /** @var bool */
+    protected $no_adjust = false;
+
+    /** @var float */
+    private $old_total;
+
+    protected function init(): void
     {
-        $q = [
-            'invoice' => ['_' => ['ref' => '', 'total' => 0.1]],
-            'line' => ['_' => ['invoice_id' => 0, 'item' => '', 'price' => 0.01, 'qty' => 0, 'total' => 0.1]],
-            'audit_log' => $this->audit_db,
-        ];
-        $this->setDb($q);
+        parent::init();
 
-        $audit = new Controller();
-        $audit->audit_model->addMethod('undo_total_adjusted', static function () {});
+        $this->hasOne('invoice_id', ['model' => [Invoice::class]]);
 
-        $this->db->onHook(Persistence::HOOK_AFTER_ADD, static function ($owner, $model) use ($audit) {
-            if ($model instanceof Model) {
-                if (isset($model->no_audit) && $model->no_audit) {
-                    // Whitelisting this model, won't audit
-                    return;
-                }
+        $this->addField('item', ['type' => 'string']);
+        $this->addField('price', ['type' => Types::MONEY, 'default' => 0.00]);
+        $this->addField('qty', ['type' => 'float', 'default' => 0.00]);
+        $this->addField('total', ['type' => Types::MONEY, 'default' => 0.00]);
 
-                $audit->setUp($model);
+        $this->onHook(Model::HOOK_BEFORE_SAVE, static function (Line $m) {
+            $m->set('total', $m->get('price') * $m->get('qty'));
+            $m->old_total = $m->isDirty('total') ? $m->getDirtyRef()['total'] : null;
+        });
+
+        $this->onHook(Model::HOOK_AFTER_SAVE, static function (Line $m) {
+            if ($m->old_total !== null) {
+                $change = $m->get('total') - $m->old_total;
+                $m->ref('invoice_id')->adjustTotal($change);
+                $m->old_total = null;
             }
         });
 
-        $m = new Invoice($this->db);
-        $entity = $m->getEntity();
-        $entity->save(['ref' => 'inv1']);
-        self::assertSame(0.0, $entity->get('total'));
+        $this->onHook(Model::HOOK_AFTER_DELETE, static function (Line $m) {
+            if (!$m->no_adjust) {
+                $m->ref('invoice_id')->adjustTotal(-$m->get('total'));
+            }
+        });
+    }
+}
 
-        $entity->ref('Lines')->insert(['item' => 'Chair', 'price' => 2.50, 'qty' => 3]);
-        $entity->ref('Lines')->insert(['item' => 'Desk', 'price' => 10.20, 'qty' => 1]);
+/**
+ * Tests multi-model auditing.
+ */
+class MultiModelTest extends TestCase
+{
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
 
-        self::assertSame(5, count($this->getDb()['audit_log'])); // invoice + line + adjust + line + adjust
-        self::assertSame(2, count($this->getDb()['line']));
-        self::assertSame(1, count($this->getDb()['invoice']));
+        // test models
+        $this->createMigrator(new Invoice($this->db))->create();
+        $this->createMigrator(new Line($this->db))->create();
 
-        // $m->ref('Lines')->ref('AuditLog')->loadLast()->undo();
+        // audit persistence as we want to audit all models
+        $this->audit->observePersistence($this->db);
+    }
 
-        $m = new Invoice($this->db);
-        $a = $m->ref('AuditLog')->newInstance();
-        $entity = $a->load(1);
-        $entity->undo(); // undo invoice creation - should undo all other nested changes too
+    public function testTotals()
+    {
+        // invoice model
+        $invoices = new Invoice($this->db);
 
-        /*
-        self::assertSame(8, count($this->getDb()['audit_log']));
-        self::assertSame(0, count($this->getDb()['line']));
-        self::assertSame(0, count($this->getDb()['invoice']));
+        // create invoice
+        $invoice = $invoices->createEntity();
+        $invoice->save([
+            'ref' => '#123',
+            'doc_date' => new \DateTime('2026-09-01'),
+        ]);
 
-        // test audit log relations
-        self::assertNull($a->load(1)->get('initiator_audit_log_id')); // create invoice
-        self::assertNull($a->load(2)->get('initiator_audit_log_id')); // create line
-        self::assertSame('2', $a->load(3)->get('initiator_audit_log_id')); // adjust invoice
-        self::assertNull($a->load(4)->get('initiator_audit_log_id')); // create line
-        self::assertSame('4', $a->load(5)->get('initiator_audit_log_id')); // adjust invoice
-        self::assertNull($a->load(6)->get('initiator_audit_log_id')); // delete invoice
-        self::assertSame('6', $a->load(7)->get('initiator_audit_log_id')); // delete line
-        self::assertSame('6', $a->load(8)->get('initiator_audit_log_id')); // delete line
+        // create invoice line
+        $lines = $invoice->ref('Lines');
+        $lines->import([
+            ['item' => 'Laptop', 'price' => 100, 'qty' => 2],
+            ['item' => 'Monitor', 'price' => 120, 'qty' => 3],
+        ]);
 
-        // test revert audit log id
-        self::assertSame('1', $a->load(6)->get('revert_audit_log_id')); // undo invoice creation
-        */
+        // change invoice line
+        $lines->loadBy('item','Monitor')->set('qty',2)->save();
+
+        // delete invoice line
+        $lines->loadBy('item','Monitor')->delete();
+
+
+        // test audit log
+        $data = $this->audit->auditModel->export(['id','model','model_id','action','request_diff','reactive_diff','initiator_audit_log_id']);
+        // print_r($data);
+
+        self::assertEquals([
+            // create invoice
+            [
+                'id' => 1,
+                'model' => 'Atk4\\Audit\\Tests\\Invoice',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'ref' => [null, '#123'],
+                    'doc_date' => [null, serialize(new \DateTime('2026-09-01'))],
+                ],
+                'reactive_diff' => [
+                    'id' => 1,
+                    'total' => 0,
+                ],
+                'initiator_audit_log_id' => null,
+            ],
+            // create line #1
+            [
+                'id' => 2,
+                'model' => 'Atk4\\Audit\\Tests\\Line',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'item' => [null, 'Laptop'],
+                    'price' => [null, 100],
+                    'qty' => [null, 2],
+                ],
+                'reactive_diff' => [
+                    'id' => 1,
+                    'invoice_id' => 1,
+                    'total' => 200,
+                ],
+                'initiator_audit_log_id' => null,
+            ],
+            // automatically updates invoice, linked to previous audit record
+            [
+                'id' => 3,
+                'model' => 'Atk4\\Audit\\Tests\\Invoice',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'total' => [0, 200],
+                ],
+                'reactive_diff' => [
+                ],
+                'initiator_audit_log_id' => 2,
+            ],
+            // create line #2
+            [
+                'id' => 4,
+                'model' => 'Atk4\\Audit\\Tests\\Line',
+                'model_id' => 2,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'item' => [null, 'Monitor'],
+                    'price' => [null, 120],
+                    'qty' => [null, 3],
+                ],
+                'reactive_diff' => [
+                    'id' => 2,
+                    'invoice_id' => 1,
+                    'total' => 360,
+                ],
+                'initiator_audit_log_id' => null,
+            ],
+            // automatically updates invoice, linked to previous audit record
+            [
+                'id' => 5,
+                'model' => 'Atk4\\Audit\\Tests\\Invoice',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'total' => [200, 560],
+                ],
+                'reactive_diff' => [
+                ],
+                'initiator_audit_log_id' => 4,
+            ],
+            // update line #2 quantity
+            [
+                'id' => 6,
+                'model' => 'Atk4\\Audit\\Tests\\Line',
+                'model_id' => 2,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'qty' => [3, 2],
+                ],
+                'reactive_diff' => [
+                    'total' => 240,
+                ],
+                'initiator_audit_log_id' => null,
+            ],
+            // automatically updates invoice, linked to previous audit record
+            [
+                'id' => 7,
+                'model' => 'Atk4\\Audit\\Tests\\Invoice',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'total' => [560, 440],
+                ],
+                'reactive_diff' => [
+                ],
+                'initiator_audit_log_id' => 6,
+            ],
+            // delete line #2
+            [
+                'id' => 8,
+                'model' => 'Atk4\\Audit\\Tests\\Line',
+                'model_id' => 2,
+                'action' => AuditController::ACTION_DELETE,
+                'request_diff' => [
+                    'id' => [2, null],
+                    'invoice_id' => [1, null],
+                    'item' => ['Monitor', null],
+                    'price' => [120, null],
+                    'qty' => [2, null],
+                    'total' => [240, null],
+                ],
+                'reactive_diff' => [
+                ],
+                'initiator_audit_log_id' => null,
+            ],
+            // automatically updates invoice, linked to previous audit record
+            [
+                'id' => 9,
+                'model' => 'Atk4\\Audit\\Tests\\Invoice',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'total' => [440, 200],
+                ],
+                'reactive_diff' => [
+                ],
+                'initiator_audit_log_id' => 8,
+            ],
+        ], $data);
+
     }
 }

@@ -6,9 +6,9 @@ namespace Atk4\Audit;
 
 trait AuditableModelTrait
 {
-    /** @var bool Should we audit this model */
-    public $no_audit = true;
+    /** @var bool Should we audit this model? */
+    public $noAudit = false;
 
-    /** @var Controller Audit controller object */
-    public $auditController;
+    /** @var array<mixed,mixed>|AuditPolicy Optional audit policy definition */
+    public $auditPolicy;
 }

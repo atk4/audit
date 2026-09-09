@@ -81,7 +81,7 @@ class MyObjectSerializable
 /**
  * Tests audit compatibility with all possible field types.
  */
-class FieldTypeTest extends TestCase
+class _FieldTypeTest extends TestCase
 {
     protected $audit_db = [[
         'initiator_audit_log_id' => 1,

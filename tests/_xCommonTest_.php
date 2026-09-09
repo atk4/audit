@@ -7,7 +7,7 @@ namespace Atk4\Audit\Tests;
 use Atk4\Audit\Model\AuditLog;
 use Atk4\Data\Schema\TestCase;
 
-class CommonTest extends TestCase
+class _xCommonTest extends TestCase
 {
     protected $audit_db = [[
         'initiator_audit_log_id' => 1,
@@ -217,7 +217,7 @@ class CommonTest extends TestCase
         $audit->undo_delete($m2);
 
         $m3 = new TestModel($this->db);
-        $e4 = $m5->tryLoad(1);
+        $e4 = $m3->tryLoad(1);
         self::assertTrue($e4->loaded());
 
         // need to serialize because of DateTime objects

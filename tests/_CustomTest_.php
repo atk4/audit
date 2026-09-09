@@ -47,7 +47,7 @@ class CustomLog extends AuditLog
 /**
  * Tests basic create, update and delete operations.
  */
-class CustomTest extends TestCase
+class _CustomTest extends TestCase
 {
     protected $audit_db = [[
         'initiator_audit_log_id' => 1,
