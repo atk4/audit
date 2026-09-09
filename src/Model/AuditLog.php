@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Model;
 
-use Atk4\Audit\AuditableModelTrait;
-//use Atk4\Data\Exception;
 use Atk4\Data\Model;
 //use Atk4\Data\Type\Types;
 
 class AuditLog extends Model
 {
-    use AuditableModelTrait;
-
     /** @var Model|string|false Table name */
     public $table = 'audit_log';
 
@@ -29,14 +25,11 @@ class AuditLog extends Model
     {
         parent::init();
 
-        // don't audit audit model itself
-        $this->noAudit = true;
-
         $this->addField('model', ['required' => true, 'type' => 'string']); // model class name
         $this->addField('model_id', ['type' => 'integer']); // id of related model record
 
-        $this->addField('start_time_ms', ['required' => true, 'type' => 'float']);
-        $this->addField('duration_ms', ['type' => 'float']);
+        $this->addField('start_time_ms', ['required' => true, 'type' => 'integer']);
+        $this->addField('duration_ms', ['type' => 'integer']);
 
         $this->addField('action', ['required' => true]);
         $this->addField('request_diff', ['type' => 'json']); // requested changes

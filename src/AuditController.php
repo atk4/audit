@@ -34,19 +34,17 @@ class AuditController
      */
     public $auditModel = [AuditLog::class];
 
-    /**
-     * Default audit policy.
-     *
-     * @var array<mixed,mixed>
-     */
-    protected $defaultPolicy = [AuditPolicy::class];
+    /** @var AuditPolicy|null */
+    private ?AuditPolicy $defaultPolicy;
 
+    /** @var AuditPolicy[] */
+    private array $policies = [];
+
+    /** @var AuditModel[] */
+    private array $models = [];
 
     /** @var Stack audit log stack */
-    protected Stack $stack;
-
-    /** @var array<string, AuditPolicy> */
-    private array $policies = [];
+    private Stack $stack;
 
     /** @var Persistence Persistence to observe */
     private ?Persistence $persistence = null;
@@ -73,16 +71,44 @@ class AuditController
         $this->stack = new Stack();
     }
 
-    /**
-     * Initialize.
-     */
     protected function init(): void
     {
         $this->_init();
     }
 
     /**
-     * Monitor persistence, so any model which you add to it later will be also monitored.
+     * @return $this
+     */
+    public function setDefaultPolicy(?AuditPolicy $policy)
+    {
+        $this->defaultPolicy = $policy;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setModelPolicy(string $modelClass, AuditPolicy $policy)
+    {
+        $this->policies[$modelClass] = $policy;
+
+        return $this;
+    }
+
+    protected function getPolicyForModel(Model $model): AuditPolicy
+    {
+        $class = get_class($model);
+
+        if (isset($this->policies[$class])) {
+            return $this->policies[$class];
+        }
+
+        return $this->defaultPolicy ?? new AuditPolicy();
+    }
+
+    /**
+     * Monitor persistence, so models added later are automatically monitored.
      */
     public function observePersistence(Persistence $persistence): void
     {
@@ -91,14 +117,18 @@ class AuditController
         }
 
         $this->persistence = $persistence;
-        $this->persistenceHookIndex = $persistence->onHook(Persistence::HOOK_AFTER_ADD, function(Persistence $p, Model $m) {
-            $this->addModel($m);
-        });
+
+        $this->persistenceHookIndex = $persistence->onHook(
+            Persistence::HOOK_AFTER_ADD,
+            function (Persistence $p, Model $m) {
+                $this->addModel($m);
+            }
+        );
     }
 
     /**
      * Stop monitoring persistence.
-     * Models which were already added to persistence will still be observed.
+     * Models which were already added to persistence will still be monitored.
      */
     public function stopObservingPersistence(): void
     {
@@ -114,7 +144,9 @@ class AuditController
     /**
      * Add multiple models to observe.
      *
-     * @param list<Model> $models
+     * Note: You can not set policies when using this method, so use setModelPolicy() to set up policies in advance.
+     *
+     * @param Model[] $models
      *
      * @return $this
      */
@@ -134,12 +166,23 @@ class AuditController
      */
     public function addModel(Model $model, ?AuditPolicy $policy = null)
     {
-        // don't set up audit if model has $noAudit=true
-        if (isset($model->noAudit) && $model->noAudit) { // @phpstan-ignore property.notFound
+        // store model and policy
+        $policy ??= $this->getPolicyForModel($model);
+
+        if ($policy->getModelMode($model) === AuditPolicy::MODEL_IGNORE) {
             return $this;
         }
 
-        // adds hooks
+        $id = spl_object_id($model);
+        if (isset($this->models[$id])) {
+            throw new Exception('Audit is already enabled for this model');
+        }
+        $this->models[spl_object_id($model)] = new AuditModel(
+            $model,
+            $policy
+        );
+
+        // add model hooks
         $model->onHook(
             Model::HOOK_BEFORE_SAVE,
             \Closure::fromCallable([$this, 'beforeSave']),
@@ -198,10 +241,6 @@ class AuditController
             $model->addMethod('auditLog', \Closure::fromCallable([$this, 'customLog']));
         }
         */
-
-        // add policy in our registry
-        $policy = Factory::factory($policy ?? $model->auditPolicy ?? $this->defaultPolicy); // @phpstan-ignore property.notFound
-        $this->policies[spl_object_id($model)] = $policy;
 
         return $this;
     }
@@ -264,9 +303,9 @@ class AuditController
         return $a;
     }
 
-    private static function getMs(): float
+    private static function getMs(): int
     {
-        return microtime(true) * 1_000;
+        return (int) round(microtime(true) * 1_000);
     }
 
     /**
@@ -295,20 +334,31 @@ class AuditController
         return $diff;
     }
 
+    private function getModelAuditPolicy(Model $model): ?AuditPolicy
+    {
+        return $this->models[spl_object_id($model)]->policy ?? null;
+    }
+
     private function isFieldAuditable(Model $m, string $fieldName): bool
     {
         if (!$m->hasField($fieldName)) {
             return false;
         }
 
+        $policy = $this->getModelAuditPolicy($m);
+
+
+
+
+
         $f = $m->getField($fieldName);
 
-        if ($f->neverPersist || $f->neverSave || $f->readOnly) {
-            return false;
-        }
+        // this duplicates, moved to AuditPolicy getFieldMode()
+        //if ($f->neverPersist || $f->neverSave || $f->readOnly) {
+        //    return false;
+        //}
 
-        // don't log fields if noAudit=true is set
-        if (property_exists($f, 'noAudit') && $f->noAudit === true) {
+        if ($policy->getFieldMode($f) === AuditPolicy::FIELD_IGNORE) {
             return false;
         }
 

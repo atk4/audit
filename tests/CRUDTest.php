@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Tests;
 
-use Atk4\Audit\AuditableModelTrait;
 use Atk4\Audit\AuditController;
 use Atk4\Data\Model;
 
 class User extends Model
 {
-    use AuditableModelTrait;
-
     public $table = 'user';
 
     protected function init(): void

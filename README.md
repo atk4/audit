@@ -5,7 +5,7 @@ Event Sourcing.
 
 ## Installation and Usage
 
-This package have been re-released under MIT license, so you are welcome to use it!
+This package is released under MIT license, so you are welcome to use it!
 
 ``` bash
 composer require atk4/audit
@@ -24,3 +24,18 @@ https://github.com/atk4/audit/blob/develop/docs/full-example.md
 ## Current Status
 
 Audit add-on is implemented and used in some projects. Some clean-ups may be needed.
+
+
+
+
+----------
+
+Policy
+  = rules/configuration
+
+AuditModel
+  = model instance + policy reference
+
+AuditController
+  = manages everything
+

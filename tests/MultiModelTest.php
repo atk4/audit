@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Tests;
 
-use Atk4\Audit\AuditableModelTrait;
 use Atk4\Audit\AuditController;
 use Atk4\Data\Model;
 use Atk4\Data\Type\Types;
 
 class Invoice extends Model
 {
-    use AuditableModelTrait;
-
     public $table = 'invoice';
 
     protected function init(): void
@@ -49,8 +46,6 @@ class Invoice extends Model
 
 class Line extends Model
 {
-    use AuditableModelTrait;
-
     public $table = 'line';
 
     /** @var bool */
