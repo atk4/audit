@@ -155,5 +155,12 @@ class CrudTest extends TestCase
                 ],
             ],
         ], $data);
+
+
+
+
+        //$users = new User($this->db);
+        //$this->audit->addModel($users);
+        //var_dump(count($users->load(2)->ref('AuditLog')->export())); // gives 4, but should give 1
     }
 }

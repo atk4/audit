@@ -34,13 +34,13 @@ class AuditController
      */
     public $auditModel = [AuditLog::class];
 
-    /** @var AuditPolicy|null */
-    private ?AuditPolicy $defaultPolicy;
+    /** @var AuditPolicy */
+    private AuditPolicy $defaultPolicy;
 
     /** @var array<string,AuditPolicy> */
     private array $policies = [];
 
-    /** @var AuditModel[] */
+    /** @var array<int,AuditPolicy> */
     private array $models = [];
 
     /** @var Stack audit log stack */
@@ -60,6 +60,8 @@ class AuditController
      */
     public function __construct(?Persistence $persistence = null, array $defaults = [])
     {
+        $this->defaultPolicy = new AuditPolicy();
+
         $this->setDefaults($defaults);
 
         // create audit model object if it's not already there
@@ -98,13 +100,9 @@ class AuditController
 
     protected function getPolicyForModel(Model $model): AuditPolicy
     {
-        $class = get_class($model);
+        $model = $this->getBaseModel($model);
 
-        if (isset($this->policies[$class])) {
-            return $this->policies[$class];
-        }
-
-        return $this->defaultPolicy ?? new AuditPolicy();
+        return $this->policies[get_class($model)] ?? $this->defaultPolicy;
     }
 
     /**
@@ -128,7 +126,8 @@ class AuditController
 
     /**
      * Stop monitoring persistence.
-     * Models which were already added to persistence will still be monitored.
+     *
+     * Note: Models which were already added to persistence will still be monitored.
      */
     public function stopObservingPersistence(): void
     {
@@ -159,6 +158,13 @@ class AuditController
         return $this;
     }
 
+    private function getBaseModel(Model $model): Model
+    {
+        return $model->isEntity()
+            ? $model->getModel()
+            : $model;
+    }
+
     /**
      * Add model to observe.
      *
@@ -166,6 +172,19 @@ class AuditController
      */
     public function addModel(Model $model, ?AuditPolicy $policy = null)
     {
+        $model = $this->getBaseModel($model);
+
+        // if already added, then just ignore and do nothing
+        $obj_id = spl_object_id($model);
+        if (isset($this->models[$obj_id])) {
+            return $this;
+        }
+
+        // avoid auditing audit model itself
+        if ($this->auditModel instanceof AuditLog && $model instanceof $this->auditModel) {
+            return $this;
+        }
+
         // store model and policy
         $policy ??= $this->getPolicyForModel($model);
 
@@ -173,14 +192,8 @@ class AuditController
             return $this;
         }
 
-        $id = spl_object_id($model);
-        if (isset($this->models[$id])) {
-            throw new Exception('Audit is already enabled for this model');
-        }
-        $this->models[spl_object_id($model)] = new AuditModel(
-            $model,
-            $policy
-        );
+        //var_dump('Store policy: '.get_class($model).' '.$obj_id);
+        $this->models[$obj_id] = $policy;
 
         // add model hooks
         $model->onHook(
@@ -222,18 +235,23 @@ class AuditController
 
         // adds hasMany reference to audit records
         $self = $this;
-        $model->addReference('AuditLog', ['model' => static function (Persistence $p) use ($model, $self) {
+        $model->addReference('AuditLog', [
+            'model' => static function (Persistence $p) use ($model, $self) {
+                // get audit model
+                $a = (clone $self->auditModel)->addCondition('model', get_class($model));
 
-            // get audit model
-            $a = clone $self->auditModel;
+                /* ourField and theirField should do this
+                if ($model->isEntity()) {
+                    $a->addCondition('model_id', $model->getId());
+                }
+                */
 
-            $a->addCondition('model', get_class($model));
-            if ($model->isEntity()) {
-                $a->addCondition('model_id', $model->getId());
-            }
-
-            return $a;
-        }]);
+                return $a;
+            },
+            // @todo looks like these do not work :(
+            'ourField' => $model->idField,
+            'theirField' => 'model_id',
+        ]);
 
         /*
         // adds custom log method in model
@@ -308,6 +326,14 @@ class AuditController
         return (int) round(microtime(true) * 1_000);
     }
 
+    private function getModelAuditPolicy(Model $model): AuditPolicy
+    {
+        $model = $this->getBaseModel($model);
+
+        //var_dump('Request policy: '.get_class($model).' '.spl_object_id($model));
+        return $this->models[spl_object_id($model)] ?? $this->defaultPolicy;
+    }
+
     /**
      * Calculates and returns array of all changed fields and their values.
      *
@@ -315,12 +341,28 @@ class AuditController
      */
     private function getDirtyDiff(Model $m): array
     {
+        $policy = $this->getModelAuditPolicy($m);
+
         $diff = [];
         foreach ($m->getDirtyRef() as $fieldName => $oldValue) {
-            if (!$this->isFieldAuditable($m, $fieldName)) {
-                continue;
-            }
+            $f = $m->getField($fieldName);
             $newValue = $m->get($fieldName);
+
+            $mode = $policy->getFieldMode($f);
+            switch ($mode) {
+                case AuditPolicy::FIELD_IGNORE:
+                    continue 2;
+
+                case AuditPolicy::FIELD_REDACT:
+                    // use redacted representation
+                    $oldValue = '[REDACTED]';
+                    $newValue = '[REDACTED]';
+                    break;
+
+                case AuditPolicy::FIELD_AUDIT:
+                    // actual value
+                    break;
+            }
 
             // object need to be serialized before save in audit
             // if not it will pass in json_encode and became an array
@@ -332,37 +374,6 @@ class AuditController
         }
 
         return $diff;
-    }
-
-    private function getModelAuditPolicy(Model $model): ?AuditPolicy
-    {
-        return $this->models[spl_object_id($model)]->policy ?? null;
-    }
-
-    private function isFieldAuditable(Model $m, string $fieldName): bool
-    {
-        if (!$m->hasField($fieldName)) {
-            return false;
-        }
-
-        $policy = $this->getModelAuditPolicy($m);
-
-
-
-
-
-        $f = $m->getField($fieldName);
-
-        // this duplicates, moved to AuditPolicy getFieldMode()
-        //if ($f->neverPersist || $f->neverSave || $f->readOnly) {
-        //    return false;
-        //}
-
-        if ($policy->getFieldMode($f) === AuditPolicy::FIELD_IGNORE) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -574,10 +585,25 @@ class AuditController
             $m = $m->getModel()->setOnlyFields(null)->load($m->getId());
         }
 
+        $policy = $this->getModelAuditPolicy($m);
+
         $requestDiff = [];
         foreach ($m->getDataRef() as $fieldName => $value) {
-            if (!$this->isFieldAuditable($m, $fieldName)) {
-                continue;
+            $f = $m->getField($fieldName);
+
+            $mode = $policy->getFieldMode($f);
+            switch ($mode) {
+                case AuditPolicy::FIELD_IGNORE:
+                    continue 2;
+
+                case AuditPolicy::FIELD_REDACT:
+                    // use redacted representation
+                    $value = '[REDACTED]';
+                    break;
+
+                case AuditPolicy::FIELD_AUDIT:
+                    // actual value
+                    break;
             }
 
             // object need to be serialized before save in audit
@@ -588,7 +614,7 @@ class AuditController
             $requestDiff[$fieldName] = [$value, null];
         }
 
-        $a = $this->push($m, 'delete', $requestDiff);
+        $a = $this->push($m, self::ACTION_DELETE, $requestDiff);
 
         /*
         $descr = 'delete id=' . $m->getId();

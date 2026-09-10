@@ -26,9 +26,9 @@ class AuditLog extends Model
         parent::init();
 
         $this->addField('model', ['required' => true, 'type' => 'string']); // model class name
-        $this->addField('model_id', ['type' => 'integer']); // id of related model record
+        $this->addField('model_id', ['type' => 'bigint']); // id of related model record
 
-        $this->addField('start_time_ms', ['required' => true, 'type' => 'integer']);
+        $this->addField('start_time_ms', ['required' => true, 'type' => 'bigint']);
         $this->addField('duration_ms', ['type' => 'integer']);
 
         $this->addField('action', ['required' => true]);
