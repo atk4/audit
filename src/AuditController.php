@@ -37,7 +37,7 @@ class AuditController
     /** @var AuditPolicy|null */
     private ?AuditPolicy $defaultPolicy;
 
-    /** @var AuditPolicy[] */
+    /** @var array<string,AuditPolicy> */
     private array $policies = [];
 
     /** @var AuditModel[] */
@@ -79,7 +79,7 @@ class AuditController
     /**
      * @return $this
      */
-    public function setDefaultPolicy(?AuditPolicy $policy)
+    public function setDefaultPolicy(AuditPolicy $policy)
     {
         $this->defaultPolicy = $policy;
 
