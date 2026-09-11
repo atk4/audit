@@ -219,7 +219,7 @@ class CrudTest extends TestCase
             ->ignoreField('id')
             ->ignoreField('fullname')
             ->redactField('password')
-            ;
+        ;
         $this->audit->addModel($users, $policy);
 
         // create 2 records
