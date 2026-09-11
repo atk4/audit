@@ -22,9 +22,9 @@ class AuditController
     }
     use TrackableTrait;
 
-    public const ACTION_CREATE = 'create';
-    public const ACTION_UPDATE = 'update';
-    public const ACTION_DELETE = 'delete';
+    const ACTION_CREATE = 'create';
+    const ACTION_UPDATE = 'update';
+    const ACTION_DELETE = 'delete';
 
     /**
      * Audit data model.
@@ -34,22 +34,22 @@ class AuditController
      */
     public $auditModel = [AuditLog::class];
 
-    // @var AuditPolicy
+    /** @var AuditPolicy */
     private AuditPolicy $defaultPolicy;
 
-    // @var array<string,AuditPolicy>
+    /** @var array<string,AuditPolicy> */
     private array $policies = [];
 
-    // @var array<int,AuditPolicy>
+    /** @var array<int,AuditPolicy> */
     private array $models = [];
 
-    // @var Stack audit log stack
+    /** @var Stack audit log stack */
     private Stack $stack;
 
-    // @var Persistence Persistence to observe
+    /** @var Persistence Persistence to observe */
     private ?Persistence $persistence = null;
 
-    // @var int Observed persistence hook index
+    /** @var int Observed persistence hook index */
     private ?int $persistenceHookIndex = null;
 
 
@@ -232,19 +232,39 @@ class AuditController
         );
 
         // adds hasMany reference to audit records
-        // NOTE: that in case you navigate from not loaded model it'll select only records which reference at least one record
-        // in $model, so it'll not show audit records of deleted $model records or audit records with model_id is null.
         $self = $this;
+
         $model->hasMany('AuditLog', [
             'model' => static function (Persistence $p) use ($model, $self) {
                 // get audit model
                 $a = (clone $self->auditModel)->addCondition('model', get_class($model));
 
+                // ourField and theirField should do this
+                //if ($model->isEntity()) {
+                //    $a->addCondition('model_id', $model->getId());
+                //}
+
                 return $a;
             },
+            // @todo looks like these do not work :(
             'ourField' => $model->idField,
             'theirField' => 'model_id',
         ]);
+
+
+        /*
+        $model->addReference('AuditLog', [
+            'model' => static function (Persistence $p) use ($model, $self) {
+                $a = (clone $self->auditModel)->addCondition('model', get_class($model));
+
+                if ($model->isLoaded()) {
+                    $a->addCondition('model_id', $model->getId());
+                }
+
+                return $a;
+            },
+        ]);
+        */
 
         /*
         // adds custom log method in model
@@ -347,12 +367,13 @@ class AuditController
             switch ($mode) {
                 case AuditPolicy::FIELD_IGNORE:
                     continue 2;
+
                 case AuditPolicy::FIELD_REDACT:
                     // use redacted representation
                     $oldValue = '[REDACTED]';
                     $newValue = '[REDACTED]';
-
                     break;
+
                 case AuditPolicy::FIELD_AUDIT:
                     // actual value
                     break;
@@ -589,11 +610,12 @@ class AuditController
             switch ($mode) {
                 case AuditPolicy::FIELD_IGNORE:
                     continue 2;
+
                 case AuditPolicy::FIELD_REDACT:
                     // use redacted representation
                     $value = '[REDACTED]';
-
                     break;
+
                 case AuditPolicy::FIELD_AUDIT:
                     // actual value
                     break;
@@ -627,4 +649,5 @@ class AuditController
     {
         $this->pull()->save();
     }
+
 }

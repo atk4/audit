@@ -12,7 +12,7 @@ use Atk4\Audit\Model\AuditLog;
  */
 class Stack
 {
-    // @var list<AuditLog>
+    /** @var list<AuditLog> */
     protected array $stack = [];
 
     protected int $limit;

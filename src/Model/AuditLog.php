@@ -9,13 +9,13 @@ use Atk4\Data\Model;
 
 class AuditLog extends Model
 {
-    // @var Model|string|false Table name
+    /** @var Model|string|false Table name */
     public $table = 'audit_log';
 
-    // @var ?string Title field
+    /** @var ?string Title field */
     public ?string $titleField = 'descr';
 
-    // @var string Order records by this field by default
+    /** @var string Order records by this field by default */
     public $orderField = 'id';
 
     /**
