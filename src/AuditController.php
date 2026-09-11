@@ -12,7 +12,6 @@ use Atk4\Core\InitializerTrait;
 use Atk4\Core\TrackableTrait;
 use Atk4\Data\Model;
 use Atk4\Data\Persistence;
-use Atk4\Data\Type\Types;
 
 class AuditController
 {
