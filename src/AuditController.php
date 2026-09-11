@@ -26,6 +26,9 @@ class AuditController
     public const ACTION_UPDATE = 'update';
     public const ACTION_DELETE = 'delete';
 
+    public const VALUE_REDACTED = '[REDACTED]';
+    public const VALUE_UNSUPPORTED = '[UNSUPPORTED]';
+
     /**
      * Audit data model.
      * Pass this property in constructor seed to change it.
@@ -266,7 +269,7 @@ class AuditController
 
         // set audit record values
         $a->setMulti([
-            'model' => get_class($m), // @todo theoretically this condition should be already set and not needed here
+            'model' => get_class($m),
             'model_id' => $m->isLoaded() ? $m->getId() : null,
             'start_time_ms' => self::getMs(),
             'action' => $action,
@@ -317,6 +320,22 @@ class AuditController
     }
 
     /**
+     * Returns array of user info.
+     *
+     * @return array<string,string>
+     */
+    protected function getUserInfo(): array
+    {
+        $info = [];
+
+        if (isset($_SERVER['REMOTE_ADDR'])) {
+            $info['ip'] = $_SERVER['REMOTE_ADDR'];
+        }
+
+        return $info;
+    }
+
+    /**
      * Calculates and returns array of all changed fields and their values.
      *
      * @return array<string,list<mixed>>
@@ -336,8 +355,8 @@ class AuditController
                     continue 2;
                 case AuditPolicy::FIELD_REDACT:
                     // use redacted representation
-                    $oldValue = '[REDACTED]';
-                    $newValue = '[REDACTED]';
+                    $oldValue = ($oldValue === null ? null : self::VALUE_REDACTED);
+                    $newValue = ($newValue === null ? null : self::VALUE_REDACTED);
 
                     break;
                 case AuditPolicy::FIELD_AUDIT:
@@ -358,22 +377,6 @@ class AuditController
     }
 
     /**
-     * Returns array of user info.
-     *
-     * @return array<string,string>
-     */
-    protected function getUserInfo(): array
-    {
-        $info = [];
-
-        if (isset($_SERVER['REMOTE_ADDR'])) {
-            $info['ip'] = $_SERVER['REMOTE_ADDR'];
-        }
-
-        return $info;
-    }
-
-    /**
      * Remove records from reactive diff if they are already found in request diff.
      *
      * @param array<string,mixed>            $reactiveDiff
@@ -383,24 +386,40 @@ class AuditController
      */
     private function cleanupReactiveDiff(Model $m, array $reactiveDiff, array $requestDiff): array
     {
+        $policy = $this->getModelAuditPolicy($m);
+
+        $diff = [];
         foreach ($reactiveDiff as $fieldName => $newValue) {
-            // if this change was not requested, then leave it in reactive list
-            if (!array_key_exists($fieldName, $requestDiff)) {
-                continue;
+            $f = $m->getField($fieldName);
+
+            $mode = $policy->getFieldMode($f);
+            switch ($mode) {
+                case AuditPolicy::FIELD_IGNORE:
+                    continue 2;
+                case AuditPolicy::FIELD_REDACT:
+                    // use redacted representation
+                    $newValue = ($newValue === null ? null : self::VALUE_REDACTED);
+
+                    break;
+                case AuditPolicy::FIELD_AUDIT:
+                    // actual value
+                    break;
             }
 
-            // if this change was requested, and it's the same in request list, then remove it from reactive list
-            // $requested = $requestDiff[$fieldName][1];
-            // $reactive = $newValue;
-            $requested = $this->decodeAuditValue($m, $fieldName, $requestDiff[$fieldName][1]);
-            $reactive = $this->decodeAuditValue($m, $fieldName, $newValue);
+            // if change was requested and value matches the one requested, then skip
+            if (array_key_exists($fieldName, $requestDiff)) {
+                $requested = $this->decodeAuditValue($m, $fieldName, $requestDiff[$fieldName][1]);
+                $reactive = $this->decodeAuditValue($m, $fieldName, $newValue);
 
-            if ($m->getField($fieldName)->compare($requested, $reactive)) {
-                unset($reactiveDiff[$fieldName]);
+                if ($m->getField($fieldName)->compare($requested, $reactive)) {
+                    continue;
+                }
             }
+
+            $diff[$fieldName] = $newValue;
         }
 
-        return $reactiveDiff;
+        return $diff;
     }
 
     /**
@@ -555,7 +574,8 @@ class AuditController
     public function beforeDelete(Model $m): void
     {
         // we need access to all fields
-        if ($m->getModel()->onlyFields) {
+        $onlyFields = $m->getModel()->onlyFields;
+        if ($onlyFields) {
             // $m = $m->getModel()->createEntity()->load($m->getId());
             $m = $m->getModel()->setOnlyFields(null)->load($m->getId());
         }
@@ -572,7 +592,7 @@ class AuditController
                     continue 2;
                 case AuditPolicy::FIELD_REDACT:
                     // use redacted representation
-                    $value = '[REDACTED]';
+                    $value = ($value === null ? null : self::VALUE_REDACTED);
 
                     break;
                 case AuditPolicy::FIELD_AUDIT:
@@ -599,6 +619,9 @@ class AuditController
 
         $a->set('descr', $descr);
         */
+
+        // restore onlyFields
+        $m->getModel()->setOnlyFields($onlyFields);
     }
 
     /**

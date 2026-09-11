@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Atk4\Audit\Tests;
 
 use Atk4\Audit\AuditController;
+use Atk4\Audit\AuditPolicy;
 use Atk4\Data\Model;
 
 class User extends Model
@@ -208,5 +209,79 @@ class CrudTest extends TestCase
         self::assertSame([
             3, 7,
         ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
+    }
+
+    public function testPolicy()
+    {
+        // auditable User model
+        $users = new User($this->db);
+        $policy = (new AuditPolicy())
+                    ->ignoreField('id')
+                    ->ignoreField('fullname')
+                    ->redactField('password')
+                    ;
+        $this->audit->addModel($users, $policy);
+
+        // create 2 records
+        $import_data = [
+            [
+                'name' => 'John',
+                'surname' => 'Doe',
+                'password' => 'john123',
+            ],
+            [
+                'name' => 'Peter',
+                'surname' => 'Pen',
+                'fullname' => 'Peter Pen',
+            ],
+        ];
+        $users->import($import_data);
+
+        // change password of user #1
+        $users->load(1)->save(['password' => 'newpass']);
+
+        // test audit log
+        $data = $this->audit->auditModel->export(['id', 'action', 'request_diff', 'reactive_diff']);
+        //print_r($data);
+
+        self::assertSame([
+            // 2 import records
+            [
+                'id' => 1,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'name' => [null, 'John'],
+                    'surname' => [null, 'Doe'],
+                    'password' => [null, AuditController::VALUE_REDACTED],
+                ],
+                'reactive_diff' => [
+                    // 'id' => 1, // ignored
+                    // 'fullname' => 'John Doe', // ignored
+                    // 'password' => 'john123', // redacted and not changed
+                ],
+            ],
+            [
+                'id' => 2,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'name' => [null, 'Peter'],
+                    'surname' => [null, 'Pen'],
+                    // 'fullname' => [null, 'Peter Pen'], // ignored
+                ],
+                'reactive_diff' => [
+                    // 'id' => 2, // ignored
+                    // 'fullname' => 'Peter Pen', // ignored
+                    'password' => null,
+                ],
+            ],
+            [
+                'id' => 3,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'password' => [AuditController::VALUE_REDACTED, AuditController::VALUE_REDACTED],
+                ],
+                'reactive_diff' => [],
+            ],
+        ], $data);
     }
 }

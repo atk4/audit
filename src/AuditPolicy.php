@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Atk4\Audit;
 
 use Atk4\Data\Field;
+use Atk4\Data\Field\PasswordField;
 use Atk4\Data\Model;
 
 class AuditPolicy
@@ -82,6 +83,10 @@ class AuditPolicy
     {
         if ($field->neverPersist || $field->neverSave || $field->readOnly) {
             return self::FIELD_IGNORE;
+        }
+
+        if ($field instanceof PasswordField) {
+            return self::FIELD_REDACT;
         }
 
         $name = $field->shortName;
