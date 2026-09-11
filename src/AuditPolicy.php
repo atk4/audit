@@ -9,20 +9,20 @@ use Atk4\Data\Model;
 
 class AuditPolicy
 {
-    const MODEL_AUDIT = 10;
-    const MODEL_IGNORE = 11;
+    public const MODEL_AUDIT = 10;
+    public const MODEL_IGNORE = 11;
 
-    const FIELD_AUDIT = 20;
-    const FIELD_IGNORE = 21;
-    const FIELD_REDACT = 22;
+    public const FIELD_AUDIT = 20;
+    public const FIELD_IGNORE = 21;
+    public const FIELD_REDACT = 22;
 
-    /** @var array<string,bool> */
+    // @var array<string,bool>
     protected $ignoredModels = [];
 
-    /** @var array<string,bool> */
+    // @var array<string,bool>
     protected $ignoredFields = [];
 
-    /** @var array<string,bool> */
+    // @var array<string,bool>
     protected $redactedFields = [];
 
     /**
