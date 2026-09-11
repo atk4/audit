@@ -430,7 +430,6 @@ class AuditController
 
                 $diff[$fieldName] = $newValue;
             }
-
         }
 
         return $diff;
@@ -599,7 +598,6 @@ class AuditController
 
             $a->set('descr', $descr);
             */
-
         } finally {
             // restore onlyFields
             $m->getModel()->setOnlyFields($onlyFields);
