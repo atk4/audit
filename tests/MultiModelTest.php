@@ -142,7 +142,7 @@ class MultiModelTest extends TestCase
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
                     'ref' => [null, '#123'],
-                    'doc_date' => [null, serialize(new \DateTime('2026-09-01'))],
+                    'doc_date' => [null, '2026-09-01'],
                 ],
                 'reactive_diff' => [
                     'id' => 1,

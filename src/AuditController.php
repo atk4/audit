@@ -391,6 +391,7 @@ class AuditController
         $diff = [];
         foreach ($reactiveDiff as $fieldName => $newValue) {
             $f = $m->getField($fieldName);
+            $newValue = $this->encodeAuditValue($m, $fieldName, $newValue);
 
             $mode = $policy->getFieldMode($f);
             switch ($mode) {
@@ -429,13 +430,17 @@ class AuditController
      *
      * @return mixed
      */
-    /*
-    private function encodeAuditValue(Model $m, string $fieldName, $value)
+    protected function encodeAuditValue(Model $m, string $fieldName, $value)
     {
+        // for autocomplete ID fields
+        if ($value === null) {
+            return null;
+        }
+
         $f = $m->getField($fieldName);
         return $m->getModel()->getPersistence()->typecastSaveField($f, $value);
+
     }
-    */
 
     /**
      * Decode value when loading.
@@ -444,42 +449,10 @@ class AuditController
      *
      * @return mixed
      */
-    /*
-    private function decodeAuditValue(Model $m, string $fieldName, $value)
+    protected function decodeAuditValue(Model $m, string $fieldName, $value)
     {
         $f = $m->getField($fieldName);
         return $m->getModel()->getPersistence()->typecastLoadField($f, $value);
-    }
-    */
-
-    /**
-     * @param mixed $value
-     *
-     * @return mixed
-     */
-    protected function encodeAuditValue(Model $m, string $fieldName, $value)
-    {
-        return is_object($value) ? serialize($value) : $value;
-    }
-
-    /**
-     * @param mixed $value
-     *
-     * @return mixed
-     */
-    protected function decodeAuditValue(Model $m, string $fieldName, $value)
-    {
-        if (!is_string($value)) {
-            return $value;
-        }
-
-        if (!in_array($m->getField($fieldName)->type, ['date', 'datetime', 'time', Types::LOCAL_OBJECT], true)) {
-            return $value;
-        }
-
-        $decoded = @unserialize($value, ['allowed_classes' => true]);
-
-        return $decoded === false && $value !== 'b:0;' ? $value : $decoded;
     }
 
     /**
