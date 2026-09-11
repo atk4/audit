@@ -62,6 +62,10 @@ class CrudTest extends TestCase
                     //'fullname' => 'Zoe Shatwell', // will be calculated (reactive_diff)
                     'password' => 'qwerty123',
                 ],
+                [
+                    'name' => 'Peter',
+                    'surname' => 'Pen',
+                ],
             ];
         $users->import($import_data);
 
@@ -76,12 +80,17 @@ class CrudTest extends TestCase
         // delete user #1
         $user->delete();
 
+        // update user #3
+        $users->load(3)->save(['surname' => 'Pencil']);
+
+
+
         // test audit log
         $data = $this->audit->auditModel->export(['id','model','model_id','action','request_diff','reactive_diff']);
         // print_r($data);
 
         self::assertEquals([
-            // 2 import records
+            // 3 import records
             [
                 'id' => 1,
                 'model' => 'Atk4\\Audit\\Tests\\User',
@@ -112,9 +121,24 @@ class CrudTest extends TestCase
                     'fullname' => 'Zoe Shatwell',
                 ],
             ],
-            // update name of #1 record
             [
                 'id' => 3,
+                'model' => 'Atk4\\Audit\\Tests\\User',
+                'model_id' => 3,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'name' => [null, 'Peter'],
+                    'surname' => [null, 'Pen'],
+                ],
+                'reactive_diff' => [
+                    'id' => 3,
+                    'fullname' => 'Peter Pen',
+                    'password' => null,
+                ],
+            ],
+            // update name of #1 record
+            [
+                'id' => 4,
                 'model' => 'Atk4\\Audit\\Tests\\User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
@@ -128,7 +152,7 @@ class CrudTest extends TestCase
             // update nothing - such records are created and then removed from audit as they are almost useless, but we can't know that in advance
             /*
             [
-                'id' => 4,
+                'id' => 5,
                 'model' => 'Atk4\\Audit\\Tests\\User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
@@ -140,7 +164,7 @@ class CrudTest extends TestCase
             */
             // delete user #1
             [
-                'id' => 5,
+                'id' => 6,
                 'model' => 'Atk4\\Audit\\Tests\\User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_DELETE,
@@ -154,13 +178,43 @@ class CrudTest extends TestCase
                 'reactive_diff' => [
                 ],
             ],
+            // update name of #1 record
+            [
+                'id' => 7,
+                'model' => 'Atk4\\Audit\\Tests\\User',
+                'model_id' => 3,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'surname' => ['Pen', 'Pencil'],
+                ],
+                'reactive_diff' => [
+                    'fullname' => 'Peter Pencil',
+                ],
+            ],
         ], $data);
 
 
 
+        // test reference traversal
+        $users = new User($this->db);
+        $this->audit->addModel($users);
 
-        //$users = new User($this->db);
-        //$this->audit->addModel($users);
-        //var_dump(count($users->load(2)->ref('AuditLog')->export())); // gives 4, but should give 1
+        // all audit records except user #1 records because such user is already deleted
+        // audit records are still in database, but can't be accessed by traversing from user model
+        self::assertEquals([
+            2, 3, 7
+        ], array_keys($users->ref('AuditLog')->export(['id'],'id')));
+
+        // only user #2 records
+        $user = $users->load(2);
+        self::assertEquals([
+            2
+        ], array_keys($user->ref('AuditLog')->export(['id'],'id')));
+
+        // only user #3 records
+        $user = $users->load(3);
+        self::assertEquals([
+            3, 7
+        ], array_keys($user->ref('AuditLog')->export(['id'],'id')));
     }
 }

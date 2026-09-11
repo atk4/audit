@@ -160,9 +160,7 @@ class AuditController
 
     private function getBaseModel(Model $model): Model
     {
-        return $model->isEntity()
-            ? $model->getModel()
-            : $model;
+        return $model->getModel(true);
     }
 
     /**
@@ -192,7 +190,7 @@ class AuditController
             return $this;
         }
 
-        //var_dump('Store policy: '.get_class($model).' '.$obj_id);
+        // var_dump('Store policy: '.get_class($model).' '.$obj_id);
         $this->models[$obj_id] = $policy;
 
         // add model hooks
@@ -235,16 +233,16 @@ class AuditController
 
         // adds hasMany reference to audit records
         $self = $this;
-        $model->addReference('AuditLog', [
+
+        $model->hasMany('AuditLog', [
             'model' => static function (Persistence $p) use ($model, $self) {
                 // get audit model
                 $a = (clone $self->auditModel)->addCondition('model', get_class($model));
 
-                /* ourField and theirField should do this
-                if ($model->isEntity()) {
-                    $a->addCondition('model_id', $model->getId());
-                }
-                */
+                // ourField and theirField should do this
+                //if ($model->isEntity()) {
+                //    $a->addCondition('model_id', $model->getId());
+                //}
 
                 return $a;
             },
@@ -252,6 +250,21 @@ class AuditController
             'ourField' => $model->idField,
             'theirField' => 'model_id',
         ]);
+
+
+        /*
+        $model->addReference('AuditLog', [
+            'model' => static function (Persistence $p) use ($model, $self) {
+                $a = (clone $self->auditModel)->addCondition('model', get_class($model));
+
+                if ($model->isLoaded()) {
+                    $a->addCondition('model_id', $model->getId());
+                }
+
+                return $a;
+            },
+        ]);
+        */
 
         /*
         // adds custom log method in model
@@ -277,15 +290,17 @@ class AuditController
      */
     private function push(Model $m, string $action, array $request_diff = []): AuditLog
     {
+        $m->assertIsEntity();
+
         // var_dump(['push'=>get_class($m)]);
 
         /** @var AuditLog $a */
-        $a = $m->ref('AuditLog')->createEntity();
+        $a = $this->auditModel->createEntity();
 
         // set audit record values
         $a->setMulti([
-            'model' => get_class($m->getModel()), // @todo theoretically this condition should be already set and not needed here
-            'model_id' => $m->isEntity() ? $m->getId() : null,
+            'model' => get_class($m), // @todo theoretically this condition should be already set and not needed here
+            'model_id' => $m->isLoaded() ? $m->getId() : null,
             'start_time_ms' => self::getMs(),
             'action' => $action,
             'request_diff' => $request_diff,
@@ -330,7 +345,7 @@ class AuditController
     {
         $model = $this->getBaseModel($model);
 
-        //var_dump('Request policy: '.get_class($model).' '.spl_object_id($model));
+        // var_dump('Request policy: '.get_class($model).' '.spl_object_id($model));
         return $this->models[spl_object_id($model)] ?? $this->defaultPolicy;
     }
 
@@ -410,8 +425,8 @@ class AuditController
             }
 
             // if this change was requested, and it's the same in request list, then remove it from reactive list
-            //$requested = $requestDiff[$fieldName][1];
-            //$reactive = $newValue;
+            // $requested = $requestDiff[$fieldName][1];
+            // $reactive = $newValue;
             $requested = $this->decodeAuditValue($m, $fieldName, $requestDiff[$fieldName][1]);
             $reactive = $this->decodeAuditValue($m, $fieldName, $newValue);
 
@@ -581,7 +596,7 @@ class AuditController
     {
         // we need access to all fields
         if ($m->getModel()->onlyFields) {
-            //$m = $m->getModel()->createEntity()->load($m->getId());
+            // $m = $m->getModel()->createEntity()->load($m->getId());
             $m = $m->getModel()->setOnlyFields(null)->load($m->getId());
         }
 

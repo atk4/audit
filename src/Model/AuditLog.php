@@ -38,6 +38,7 @@ class AuditLog extends Model
         // JSON containing keys for browser etc
         $this->addField('user_info', ['type' => 'json']);
 
+        // link to audit log entry which generated this event (parent event)
         $this->hasOne('initiator_audit_log_id', ['model' => [static::class]]);
 
         $this->addField('descr', [
