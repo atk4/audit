@@ -85,14 +85,14 @@ class AuditPolicy
             return self::FIELD_IGNORE;
         }
 
-        if ($field instanceof PasswordField) {
-            return self::FIELD_REDACT;
-        }
-
         $name = $field->shortName;
 
         if (isset($this->ignoredFields[$name])) {
             return self::FIELD_IGNORE;
+        }
+
+        if ($field instanceof PasswordField) {
+            return self::FIELD_REDACT;
         }
 
         if (isset($this->redactedFields[$name])) {

@@ -271,7 +271,7 @@ class CrudTest extends TestCase
                 'reactive_diff' => [
                     // 'id' => 2, // ignored
                     // 'fullname' => 'Peter Pen', // ignored
-                    'password' => null,
+                    // 'password' => null, // redacted fields can't be reactive
                 ],
             ],
             [

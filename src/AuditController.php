@@ -26,7 +26,7 @@ class AuditController
     public const ACTION_DELETE = 'delete';
 
     public const VALUE_REDACTED = '[REDACTED]';
-    public const VALUE_UNSUPPORTED = '[UNSUPPORTED]';
+    // public const VALUE_UNSUPPORTED = '[UNSUPPORTED]';
 
     /**
      * Audit data model.
@@ -314,8 +314,16 @@ class AuditController
     {
         $model = $this->getBaseModel($model);
 
-        // var_dump('Request policy: '.get_class($model).' '.spl_object_id($model));
-        return $this->models[spl_object_id($model)] ?? $this->defaultPolicy;
+        $obj_id = spl_object_id($model);
+        // var_dump('Request policy: ' . get_class($model) . ' ' . $obj_id);
+
+        if (!isset($this->models[$obj_id])) {
+            throw new Exception(
+                'Model is not registered for auditing: ' . get_class($model)
+            );
+        }
+
+        return $this->models[$obj_id];
     }
 
     /**
@@ -360,13 +368,13 @@ class AuditController
                     break;
                 case AuditPolicy::FIELD_AUDIT:
                     // actual value
-                    break;
-            }
+                    $oldValue = $this->encodeAuditValue($m, $fieldName, $oldValue);
+                    $newValue = $this->encodeAuditValue($m, $fieldName, $newValue);
 
-            // object need to be serialized before save in audit
-            // if not it will pass in json_encode and became an array
-            $oldValue = $this->encodeAuditValue($m, $fieldName, $oldValue);
-            $newValue = $this->encodeAuditValue($m, $fieldName, $newValue);
+                    break;
+                default:
+                    throw new Exception('Unknown audit field mode: ' . $mode);
+            }
 
             // fieldName = [old value, new value]
             $diff[$fieldName] = [$oldValue, $newValue];
@@ -390,7 +398,6 @@ class AuditController
         $diff = [];
         foreach ($reactiveDiff as $fieldName => $newValue) {
             $f = $m->getField($fieldName);
-            $newValue = $this->encodeAuditValue($m, $fieldName, $newValue);
 
             $mode = $policy->getFieldMode($f);
             switch ($mode) {
@@ -403,20 +410,27 @@ class AuditController
                     break;
                 case AuditPolicy::FIELD_AUDIT:
                     // actual value
+                    $newValue = $this->encodeAuditValue($m, $fieldName, $newValue);
+
                     break;
+                default:
+                    throw new Exception('Unknown audit field mode: ' . $mode);
             }
 
             // if change was requested and value matches the one requested, then skip
-            if (array_key_exists($fieldName, $requestDiff)) {
-                $requested = $this->decodeAuditValue($m, $fieldName, $requestDiff[$fieldName][1]);
-                $reactive = $this->decodeAuditValue($m, $fieldName, $newValue);
+            if ($mode === AuditPolicy::FIELD_AUDIT) {
+                if (array_key_exists($fieldName, $requestDiff)) {
+                    $requested = $this->decodeAuditValue($m, $fieldName, $requestDiff[$fieldName][1]);
+                    $reactive = $this->decodeAuditValue($m, $fieldName, $newValue);
 
-                if ($m->getField($fieldName)->compare($requested, $reactive)) {
-                    continue;
+                    if ($m->getField($fieldName)->compare($requested, $reactive)) {
+                        continue;
+                    }
                 }
+
+                $diff[$fieldName] = $newValue;
             }
 
-            $diff[$fieldName] = $newValue;
         }
 
         return $diff;
@@ -539,53 +553,57 @@ class AuditController
     {
         // we need access to all fields
         $onlyFields = $m->getModel()->onlyFields;
-        if ($onlyFields) {
-            // $m = $m->getModel()->createEntity()->load($m->getId());
-            $m = $m->getModel()->setOnlyFields(null)->load($m->getId());
-        }
 
-        $policy = $this->getModelAuditPolicy($m);
-
-        $requestDiff = [];
-        foreach ($m->getDataRef() as $fieldName => $value) {
-            $f = $m->getField($fieldName);
-
-            $mode = $policy->getFieldMode($f);
-            switch ($mode) {
-                case AuditPolicy::FIELD_IGNORE:
-                    continue 2;
-                case AuditPolicy::FIELD_REDACT:
-                    // use redacted representation
-                    $value = ($value === null ? null : self::VALUE_REDACTED);
-
-                    break;
-                case AuditPolicy::FIELD_AUDIT:
-                    // actual value
-                    break;
+        try {
+            if ($onlyFields) {
+                // $m = $m->getModel()->createEntity()->load($m->getId());
+                $m = $m->getModel()->setOnlyFields(null)->load($m->getId());
             }
 
-            // object need to be serialized before save in audit
-            // if not it will pass in json_encode and became an array
-            $value = $this->encodeAuditValue($m, $fieldName, $value);
+            $policy = $this->getModelAuditPolicy($m);
 
-            // key = [old value, new value]
-            $requestDiff[$fieldName] = [$value, null];
+            $requestDiff = [];
+            foreach ($m->getDataRef() as $fieldName => $value) {
+                $f = $m->getField($fieldName);
+
+                $mode = $policy->getFieldMode($f);
+                switch ($mode) {
+                    case AuditPolicy::FIELD_IGNORE:
+                        continue 2;
+                    case AuditPolicy::FIELD_REDACT:
+                        // use redacted representation
+                        $value = ($value === null ? null : self::VALUE_REDACTED);
+
+                        break;
+                    case AuditPolicy::FIELD_AUDIT:
+                        // actual value
+                        $value = $this->encodeAuditValue($m, $fieldName, $value);
+
+                        break;
+                    default:
+                        throw new Exception('Unknown audit field mode: ' . $mode);
+                }
+
+                // key = [old value, new value]
+                $requestDiff[$fieldName] = [$value, null];
+            }
+
+            $a = $this->push($m, self::ACTION_DELETE, $requestDiff);
+
+            /*
+            $descr = 'delete id=' . $m->getId();
+
+            if ($m->titleField && $m->hasField($m->titleField)) {
+                $descr .= ' (' . $m->getTitle() . ')';
+            }
+
+            $a->set('descr', $descr);
+            */
+
+        } finally {
+            // restore onlyFields
+            $m->getModel()->setOnlyFields($onlyFields);
         }
-
-        $a = $this->push($m, self::ACTION_DELETE, $requestDiff);
-
-        /*
-        $descr = 'delete id=' . $m->getId();
-
-        if ($m->titleField && $m->hasField($m->titleField)) {
-            $descr .= ' (' . $m->getTitle() . ')';
-        }
-
-        $a->set('descr', $descr);
-        */
-
-        // restore onlyFields
-        $m->getModel()->setOnlyFields($onlyFields);
     }
 
     /**
