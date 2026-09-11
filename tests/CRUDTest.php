@@ -216,10 +216,10 @@ class CrudTest extends TestCase
         // auditable User model
         $users = new User($this->db);
         $policy = (new AuditPolicy())
-                    ->ignoreField('id')
-                    ->ignoreField('fullname')
-                    ->redactField('password')
-                    ;
+            ->ignoreField('id')
+            ->ignoreField('fullname')
+            ->redactField('password')
+            ;
         $this->audit->addModel($users, $policy);
 
         // create 2 records
@@ -242,7 +242,7 @@ class CrudTest extends TestCase
 
         // test audit log
         $data = $this->audit->auditModel->export(['id', 'action', 'request_diff', 'reactive_diff']);
-        //print_r($data);
+        // print_r($data);
 
         self::assertSame([
             // 2 import records
