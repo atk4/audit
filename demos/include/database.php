@@ -21,8 +21,8 @@ try {
         ->addMoreInfo('PDO error', $e->getMessage());
 }
 
-/** @var App $app */
-/** @var Persistence $db */
+// @var App $app
+// @var Persistence $db
 
 $app->db = $db;
 

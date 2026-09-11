@@ -384,7 +384,6 @@ class AuditController
     private function cleanupReactiveDiff(Model $m, array $reactiveDiff, array $requestDiff): array
     {
         foreach ($reactiveDiff as $fieldName => $newValue) {
-
             // if this change was not requested, then leave it in reactive list
             if (!array_key_exists($fieldName, $requestDiff)) {
                 continue;
@@ -463,11 +462,6 @@ class AuditController
 
         return $decoded === false && $value !== 'b:0;' ? $value : $decoded;
     }
-
-
-
-
-
 
     /**
      * Executes before model record is saved as soon as possible.
@@ -614,5 +608,4 @@ class AuditController
     {
         $this->pull()->save();
     }
-
 }

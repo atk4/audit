@@ -16,9 +16,8 @@ use Atk4\Ui\Header;
 require_once __DIR__ . '/include/init.php';
 require_once __DIR__ . '/include/database.php';
 
-/** @var App $app */
-/** @var Persistence $db */
-
+// @var App $app
+// @var Persistence $db
 $audit = new Controller();
 
 $db->onHook(Persistence::HOOK_AFTER_ADD, static function ($owner, $element) use ($audit) {

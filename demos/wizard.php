@@ -12,8 +12,8 @@ use Atk4\Ui\Header;
 require_once __DIR__ . '/include/init.php';
 require_once __DIR__ . '/include/database.php';
 
-/** @var App $app */
-/** @var Persistence $db */
+// @var App $app
+// @var Persistence $db
 
 Header::addTo($app, ['Quickly checking if database is OK']);
 $console = MigratorConsole::addTo($app);

@@ -56,10 +56,10 @@ class CrudTest extends TestCase
                 'password' => 'vinny123',
             ],
             [
-                //'id' => 2, // autoincrement (reactive_diff)
+                // 'id' => 2, // autoincrement (reactive_diff)
                 'name' => 'Zoe',
                 'surname' => 'Shatwell',
-                //'fullname' => 'Zoe Shatwell', // will be calculated (reactive_diff)
+                // 'fullname' => 'Zoe Shatwell', // will be calculated (reactive_diff)
                 'password' => 'qwerty123',
             ],
             [
@@ -194,19 +194,19 @@ class CrudTest extends TestCase
         // all audit records except user #1 records because such user is already deleted
         // audit records are still in database, but can't be accessed by traversing from user model
         self::assertSame([
-            2, 3, 7
+            2, 3, 7,
         ], array_keys($users->ref('AuditLog')->export(['id'], 'id')));
 
         // only user #2 records
         $user = $users->load(2);
         self::assertSame([
-            2
+            2,
         ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
 
         // only user #3 records
         $user = $users->load(3);
         self::assertSame([
-            3, 7
+            3, 7,
         ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
     }
 }

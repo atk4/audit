@@ -9,6 +9,6 @@ use Atk4\Ui\Header;
 
 require_once __DIR__ . '/include/init.php';
 
-/** @var App $app */
+// @var App $app
 
 Header::addTo($app, ['Welcome to Audit Add-on demo app']);

@@ -15,6 +15,6 @@ require_once __DIR__ . '/MigratorConsole.php';
 $app = new App(['title' => 'Audit Demo']);
 $app->initLayout([Admin::class]);
 
-/** @var Admin $app->layout */
+// @var Admin $app->layout
 $app->layout->menuLeft->addItem(['Migration', 'icon' => 'gift'], ['wizard']);
 $app->layout->menuLeft->addItem(['Audit Demo', 'icon' => 'list'], ['demo']);
