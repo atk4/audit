@@ -22,9 +22,9 @@ class AuditController
     }
     use TrackableTrait;
 
-    const ACTION_CREATE = 'create';
-    const ACTION_UPDATE = 'update';
-    const ACTION_DELETE = 'delete';
+    public const ACTION_CREATE = 'create';
+    public const ACTION_UPDATE = 'update';
+    public const ACTION_DELETE = 'delete';
 
     /**
      * Audit data model.

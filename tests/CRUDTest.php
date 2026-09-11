@@ -86,14 +86,14 @@ class CrudTest extends TestCase
 
 
         // test audit log
-        $data = $this->audit->auditModel->export(['id','model','model_id','action','request_diff','reactive_diff']);
+        $data = $this->audit->auditModel->export(['id', 'model', 'model_id', 'action', 'request_diff', 'reactive_diff']);
         // print_r($data);
 
         self::assertEquals([
             // 3 import records
             [
                 'id' => 1,
-                'model' => 'Atk4\\Audit\\Tests\\User',
+                'model' => 'Atk4\Audit\Tests\User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
@@ -108,7 +108,7 @@ class CrudTest extends TestCase
             ],
             [
                 'id' => 2,
-                'model' => 'Atk4\\Audit\\Tests\\User',
+                'model' => 'Atk4\Audit\Tests\User',
                 'model_id' => 2,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
@@ -123,7 +123,7 @@ class CrudTest extends TestCase
             ],
             [
                 'id' => 3,
-                'model' => 'Atk4\\Audit\\Tests\\User',
+                'model' => 'Atk4\Audit\Tests\User',
                 'model_id' => 3,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
@@ -139,7 +139,7 @@ class CrudTest extends TestCase
             // update name of #1 record
             [
                 'id' => 4,
-                'model' => 'Atk4\\Audit\\Tests\\User',
+                'model' => 'Atk4\Audit\Tests\User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
@@ -153,7 +153,7 @@ class CrudTest extends TestCase
             /*
             [
                 'id' => 5,
-                'model' => 'Atk4\\Audit\\Tests\\User',
+                'model' => 'Atk4\Audit\Tests\User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
@@ -165,7 +165,7 @@ class CrudTest extends TestCase
             // delete user #1
             [
                 'id' => 6,
-                'model' => 'Atk4\\Audit\\Tests\\User',
+                'model' => 'Atk4\Audit\Tests\User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_DELETE,
                 'request_diff' => [
@@ -181,7 +181,7 @@ class CrudTest extends TestCase
             // update name of #1 record
             [
                 'id' => 7,
-                'model' => 'Atk4\\Audit\\Tests\\User',
+                'model' => 'Atk4\Audit\Tests\User',
                 'model_id' => 3,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
@@ -203,18 +203,18 @@ class CrudTest extends TestCase
         // audit records are still in database, but can't be accessed by traversing from user model
         self::assertEquals([
             2, 3, 7
-        ], array_keys($users->ref('AuditLog')->export(['id'],'id')));
+        ], array_keys($users->ref('AuditLog')->export(['id'], 'id')));
 
         // only user #2 records
         $user = $users->load(2);
         self::assertEquals([
             2
-        ], array_keys($user->ref('AuditLog')->export(['id'],'id')));
+        ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
 
         // only user #3 records
         $user = $users->load(3);
         self::assertEquals([
             3, 7
-        ], array_keys($user->ref('AuditLog')->export(['id'],'id')));
+        ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
     }
 }
