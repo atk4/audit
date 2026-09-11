@@ -432,14 +432,7 @@ class AuditController
      */
     protected function encodeAuditValue(Model $m, string $fieldName, $value)
     {
-        // for autocomplete ID fields
-        if ($value === null) {
-            return null;
-        }
-
-        $f = $m->getField($fieldName);
-        return $m->getModel()->getPersistence()->typecastSaveField($f, $value);
-
+        return $value === null ? null : $m->getModel()->getPersistence()->typecastSaveField($m->getField($fieldName), $value);
     }
 
     /**
@@ -451,8 +444,7 @@ class AuditController
      */
     protected function decodeAuditValue(Model $m, string $fieldName, $value)
     {
-        $f = $m->getField($fieldName);
-        return $m->getModel()->getPersistence()->typecastLoadField($f, $value);
+        return $value === null ? null : $m->getModel()->getPersistence()->typecastLoadField($m->getField($fieldName), $value);
     }
 
     /**
