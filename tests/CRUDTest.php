@@ -20,7 +20,7 @@ class User extends Model
         $this->addField('fullname');
         $this->addField('password');
 
-        $this->onHook(Model::HOOK_BEFORE_SAVE, static function($m) {
+        $this->onHook(Model::HOOK_BEFORE_SAVE, static function ($m) {
             $m->set('fullname', trim($m->get('name') . ' ' . $m->get('surname')));
         }, [], -100);
     }
