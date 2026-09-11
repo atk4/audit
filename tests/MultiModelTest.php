@@ -129,7 +129,6 @@ class MultiModelTest extends TestCase
         // delete invoice line
         $lines->loadBy('item', 'Monitor')->delete();
 
-
         // test audit log
         $data = $this->audit->auditModel->export(['id', 'model', 'model_id', 'action', 'request_diff', 'reactive_diff', 'initiator_audit_log_id']);
         // print_r($data);
@@ -147,7 +146,7 @@ class MultiModelTest extends TestCase
                 ],
                 'reactive_diff' => [
                     'id' => 1,
-                    'total' => 0,
+                    'total' => 0.0,
                 ],
                 'initiator_audit_log_id' => null,
             ],
@@ -159,13 +158,13 @@ class MultiModelTest extends TestCase
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
                     'item' => [null, 'Laptop'],
-                    'price' => [null, 100],
-                    'qty' => [null, 2],
+                    'price' => [0.0, 100.0], // 0.0 because it's default value
+                    'qty' => [0.0, 2.0], // 0.0 because it's default value
                 ],
                 'reactive_diff' => [
                     'id' => 1,
                     'invoice_id' => 1,
-                    'total' => 200,
+                    'total' => 200.0,
                 ],
                 'initiator_audit_log_id' => null,
             ],
@@ -176,10 +175,9 @@ class MultiModelTest extends TestCase
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
-                    'total' => [0, 200],
+                    'total' => [0.0, 200.0],
                 ],
-                'reactive_diff' => [
-                ],
+                'reactive_diff' => [],
                 'initiator_audit_log_id' => 2,
             ],
             // create line #2
@@ -190,13 +188,13 @@ class MultiModelTest extends TestCase
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
                     'item' => [null, 'Monitor'],
-                    'price' => [null, 120],
-                    'qty' => [null, 3],
+                    'price' => [0.0, 120.0], // 0.0 because it's default value
+                    'qty' => [0.0, 3.0], // 0.0 because it's default value
                 ],
                 'reactive_diff' => [
                     'id' => 2,
                     'invoice_id' => 1,
-                    'total' => 360,
+                    'total' => 360.0,
                 ],
                 'initiator_audit_log_id' => null,
             ],
@@ -207,10 +205,9 @@ class MultiModelTest extends TestCase
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
-                    'total' => [200, 560],
+                    'total' => [200.0, 560.0],
                 ],
-                'reactive_diff' => [
-                ],
+                'reactive_diff' => [],
                 'initiator_audit_log_id' => 4,
             ],
             // update line #2 quantity
@@ -220,10 +217,10 @@ class MultiModelTest extends TestCase
                 'model_id' => 2,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
-                    'qty' => [3, 2],
+                    'qty' => [3.0, 2.0],
                 ],
                 'reactive_diff' => [
-                    'total' => 240,
+                    'total' => 240.0,
                 ],
                 'initiator_audit_log_id' => null,
             ],
@@ -234,10 +231,9 @@ class MultiModelTest extends TestCase
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
-                    'total' => [560, 440],
+                    'total' => [560.0, 440.0],
                 ],
-                'reactive_diff' => [
-                ],
+                'reactive_diff' => [],
                 'initiator_audit_log_id' => 6,
             ],
             // delete line #2
@@ -250,12 +246,11 @@ class MultiModelTest extends TestCase
                     'id' => [2, null],
                     'invoice_id' => [1, null],
                     'item' => ['Monitor', null],
-                    'price' => [120, null],
-                    'qty' => [2, null],
-                    'total' => [240, null],
+                    'price' => [120.0, null],
+                    'qty' => [2.0, null],
+                    'total' => [240.0, null],
                 ],
-                'reactive_diff' => [
-                ],
+                'reactive_diff' => [],
                 'initiator_audit_log_id' => null,
             ],
             // automatically updates invoice, linked to previous audit record
@@ -265,13 +260,11 @@ class MultiModelTest extends TestCase
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
-                    'total' => [440, 200],
+                    'total' => [440.0, 200.0],
                 ],
-                'reactive_diff' => [
-                ],
+                'reactive_diff' => [],
                 'initiator_audit_log_id' => 8,
             ],
         ], $data);
-
     }
 }

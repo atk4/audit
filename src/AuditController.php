@@ -34,7 +34,6 @@ class AuditController
      */
     public $auditModel = [AuditLog::class];
 
-    /** @var AuditPolicy */
     private AuditPolicy $defaultPolicy;
 
     /** @var array<string,AuditPolicy> */
@@ -51,7 +50,6 @@ class AuditController
 
     /** @var int Observed persistence hook index */
     private ?int $persistenceHookIndex = null;
-
 
     /**
      * Creates audit controller object.
@@ -236,35 +234,11 @@ class AuditController
 
         $model->hasMany('AuditLog', [
             'model' => static function (Persistence $p) use ($model, $self) {
-                // get audit model
-                $a = (clone $self->auditModel)->addCondition('model', get_class($model));
-
-                // ourField and theirField should do this
-                //if ($model->isEntity()) {
-                //    $a->addCondition('model_id', $model->getId());
-                //}
-
-                return $a;
+                return (clone $self->auditModel)->addCondition('model', get_class($model));
             },
-            // @todo looks like these do not work :(
             'ourField' => $model->idField,
             'theirField' => 'model_id',
         ]);
-
-
-        /*
-        $model->addReference('AuditLog', [
-            'model' => static function (Persistence $p) use ($model, $self) {
-                $a = (clone $self->auditModel)->addCondition('model', get_class($model));
-
-                if ($model->isLoaded()) {
-                    $a->addCondition('model_id', $model->getId());
-                }
-
-                return $a;
-            },
-        ]);
-        */
 
         /*
         // adds custom log method in model
@@ -275,13 +249,6 @@ class AuditController
 
         return $this;
     }
-
-
-
-
-
-
-
 
     /**
      * Create new audit log record and push change into audit log table (and audit log stack).
@@ -367,13 +334,12 @@ class AuditController
             switch ($mode) {
                 case AuditPolicy::FIELD_IGNORE:
                     continue 2;
-
                 case AuditPolicy::FIELD_REDACT:
                     // use redacted representation
                     $oldValue = '[REDACTED]';
                     $newValue = '[REDACTED]';
-                    break;
 
+                    break;
                 case AuditPolicy::FIELD_AUDIT:
                     // actual value
                     break;
@@ -610,12 +576,11 @@ class AuditController
             switch ($mode) {
                 case AuditPolicy::FIELD_IGNORE:
                     continue 2;
-
                 case AuditPolicy::FIELD_REDACT:
                     // use redacted representation
                     $value = '[REDACTED]';
-                    break;
 
+                    break;
                 case AuditPolicy::FIELD_AUDIT:
                     // actual value
                     break;

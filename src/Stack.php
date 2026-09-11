@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Atk4\Audit;
 
-use RuntimeException;
 use Atk4\Audit\Model\AuditLog;
 
 /**
@@ -29,7 +28,7 @@ class Stack
     public function push(AuditLog $item): void
     {
         if (count($this->stack) >= $this->limit) {
-            throw new RuntimeException('Stack is full!');
+            throw new \RuntimeException('Stack is full!');
         }
         $this->stack[] = $item;
     }
@@ -40,8 +39,9 @@ class Stack
     public function pop(): AuditLog
     {
         if ($this->isEmpty()) {
-            throw new RuntimeException('Stack is empty!');
+            throw new \RuntimeException('Stack is empty!');
         }
+
         return array_pop($this->stack);
     }
 
@@ -51,8 +51,9 @@ class Stack
     public function top(): AuditLog
     {
         if ($this->isEmpty()) {
-            throw new RuntimeException('Stack is empty!');
+            throw new \RuntimeException('Stack is empty!');
         }
+
         // replace with array_last($this->stack) when we drop PHP 7.4 support
         return $this->stack[array_key_last($this->stack)];
     }

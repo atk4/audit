@@ -20,9 +20,9 @@ class User extends Model
         $this->addField('fullname');
         $this->addField('password');
 
-        $this->onHook(Model::HOOK_BEFORE_SAVE, function($m){
-            $m->set('fullname', trim($m->get('name').' '.$m->get('surname')));
-        },[],-100);
+        $this->onHook(Model::HOOK_BEFORE_SAVE, static function($m) {
+            $m->set('fullname', trim($m->get('name') . ' ' . $m->get('surname')));
+        }, [], -100);
     }
 }
 
@@ -48,25 +48,25 @@ class CrudTest extends TestCase
 
         // create 2 records
         $import_data = [
-                [
-                    'id' => 1, // manually set (request_diff)
-                    'name' => 'Vinny',
-                    'surname' => 'Shira',
-                    'fullname' => 'Vinny Shira', // manually set (request_diff)
-                    'password' => 'vinny123',
-                ],
-                [
-                    //'id' => 2, // autoincrement (reactive_diff)
-                    'name' => 'Zoe',
-                    'surname' => 'Shatwell',
-                    //'fullname' => 'Zoe Shatwell', // will be calculated (reactive_diff)
-                    'password' => 'qwerty123',
-                ],
-                [
-                    'name' => 'Peter',
-                    'surname' => 'Pen',
-                ],
-            ];
+            [
+                'id' => 1, // manually set (request_diff)
+                'name' => 'Vinny',
+                'surname' => 'Shira',
+                'fullname' => 'Vinny Shira', // manually set (request_diff)
+                'password' => 'vinny123',
+            ],
+            [
+                //'id' => 2, // autoincrement (reactive_diff)
+                'name' => 'Zoe',
+                'surname' => 'Shatwell',
+                //'fullname' => 'Zoe Shatwell', // will be calculated (reactive_diff)
+                'password' => 'qwerty123',
+            ],
+            [
+                'name' => 'Peter',
+                'surname' => 'Pen',
+            ],
+        ];
         $users->import($import_data);
 
         // update name of 1 record
@@ -83,13 +83,11 @@ class CrudTest extends TestCase
         // update user #3
         $users->load(3)->save(['surname' => 'Pencil']);
 
-
-
         // test audit log
         $data = $this->audit->auditModel->export(['id', 'model', 'model_id', 'action', 'request_diff', 'reactive_diff']);
         // print_r($data);
 
-        self::assertEquals([
+        self::assertSame([
             // 3 import records
             [
                 'id' => 1,
@@ -103,8 +101,7 @@ class CrudTest extends TestCase
                     'fullname' => [null, 'Vinny Shira'],
                     'password' => [null, 'vinny123'],
                 ],
-                'reactive_diff' => [
-                ],
+                'reactive_diff' => [],
             ],
             [
                 'id' => 2,
@@ -156,10 +153,8 @@ class CrudTest extends TestCase
                 'model' => 'Atk4\Audit\Tests\User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
-                'request_diff' => [
-                ],
-                'reactive_diff' => [
-                ],
+                'request_diff' => [],
+                'reactive_diff' => [],
             ],
             */
             // delete user #1
@@ -175,8 +170,7 @@ class CrudTest extends TestCase
                     'fullname' => ['John Shira', null],
                     'password' => ['vinny123', null],
                 ],
-                'reactive_diff' => [
-                ],
+                'reactive_diff' => [],
             ],
             // update name of #1 record
             [
@@ -193,27 +187,25 @@ class CrudTest extends TestCase
             ],
         ], $data);
 
-
-
         // test reference traversal
         $users = new User($this->db);
         $this->audit->addModel($users);
 
         // all audit records except user #1 records because such user is already deleted
         // audit records are still in database, but can't be accessed by traversing from user model
-        self::assertEquals([
+        self::assertSame([
             2, 3, 7
         ], array_keys($users->ref('AuditLog')->export(['id'], 'id')));
 
         // only user #2 records
         $user = $users->load(2);
-        self::assertEquals([
+        self::assertSame([
             2
         ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
 
         // only user #3 records
         $user = $users->load(3);
-        self::assertEquals([
+        self::assertSame([
             3, 7
         ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
     }

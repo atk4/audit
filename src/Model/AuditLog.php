@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Atk4\Audit\Model;
 
 use Atk4\Data\Model;
-//use Atk4\Data\Type\Types;
+
+// use Atk4\Data\Type\Types;
 
 class AuditLog extends Model
 {
