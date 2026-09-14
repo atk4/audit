@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Atk4\Audit\Demos;
 
 use Atk4\Audit\Model\AuditLog;
-use Atk4\Data\Model;
 use Atk4\Data\Persistence;
 use Atk4\Data\Schema\Migrator;
 
