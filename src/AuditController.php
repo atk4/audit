@@ -660,7 +660,6 @@ class AuditController
         switch ($action) {
             case self::ACTION_DELETE:
                 return self::ACTION_DELETE . $title;
-
             case self::ACTION_CREATE:
             case self::ACTION_UPDATE:
                 return
