@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Atk4\Audit\Demos;
 
 use Atk4\Audit\Demos\Model\Invoice;
-use Atk4\Audit\Demos\Model\InvoiceLine;
 use Atk4\Ui\Crud;
 use Atk4\Ui\Header;
 

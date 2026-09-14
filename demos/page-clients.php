@@ -13,7 +13,6 @@ require_once __DIR__ . '/init-app.php';
 
 Header::addTo($app)->set('Clients');
 
-
 $model = new Client($app->db);
 
 Crud::addTo($app)->setModel($model);

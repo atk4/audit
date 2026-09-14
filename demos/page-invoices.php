@@ -14,18 +14,13 @@ require_once __DIR__ . '/init-app.php';
 
 Header::addTo($app)->set('Invoices');
 
-
 $model = new Invoice($app->db);
 
 $crud = Crud::addTo($app);
 $crud->setModel($model);
-
 
 $crud->addDecorator($model->titleField, [
     Column\Link::class,
     ['page-invoicelines'],
     ['_id' => $model->fieldName()->id],
 ]);
-
-//$buttons = $crud->table->addColumn(null, [Column\ActionButtons::class, 'caption' => '']);
-

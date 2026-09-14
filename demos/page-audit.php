@@ -13,7 +13,6 @@ require_once __DIR__ . '/init-app.php';
 
 Header::addTo($app)->set('AuditLog');
 
-
 $model = new AuditLog($app->db);
 $model->removeUserAction('add');
 $model->removeUserAction('delete');

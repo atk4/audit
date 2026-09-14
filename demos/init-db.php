@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Demos;
 
-use Atk4\Ui\Exception;
 use Atk4\Audit\AuditController;
 use Atk4\Data\Persistence;
+use Atk4\Ui\Exception;
 
 try {
     require_once file_exists(__DIR__ . '/db.php')
