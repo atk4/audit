@@ -6,8 +6,6 @@ namespace Atk4\Audit\Model;
 
 use Atk4\Data\Model;
 
-// use Atk4\Data\Type\Types;
-
 class AuditLog extends Model
 {
     /** @var Model|string|false Table name */

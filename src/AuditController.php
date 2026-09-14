@@ -257,8 +257,6 @@ class AuditController
      * Call this by using $model->auditLog($message,$data) dynamic method.
      *
      * @param array<mixed,mixed> $data
-     *
-     * @return AuditLog
      */
     protected function customLog(Model $m, string $message, ?array $data = null): AuditLog
     {
@@ -316,7 +314,7 @@ class AuditController
     /**
      * Pull most recent AuditLog entity from audit log stack.
      *
-     * @param self::ACTION_*      $action
+     * @param self::ACTION_* $action
      */
     private function pull(Model $m, string $action): AuditLog
     {
@@ -595,8 +593,7 @@ class AuditController
                 $requestDiff[$fieldName] = [$value, null];
             }
 
-            $a = $this->push($m, self::ACTION_DELETE, $requestDiff);
-
+            $this->push($m, self::ACTION_DELETE, $requestDiff);
         } finally {
             // restore onlyFields
             $m->getModel()->setOnlyFields($onlyFields);
@@ -651,26 +648,25 @@ class AuditController
 
         // " #id (title)"
         // could use $m->getTitle() here, but we don't want to see IDs in log descriptions
-        $title =
-            ' #' . $m->getId() .
-            ($m->titleField && $m->hasField($m->titleField)
+        $title
+            = ' #' . $m->getId()
+            . (
+                $m->titleField && $m->hasField($m->titleField)
                 ? ' (' . $this->wrapText($m->getTitle()) . ')'
                 : ''
             );
 
         // generate description
         switch ($action) {
-            // on delete
             case self::ACTION_DELETE:
-                return
-                    self::ACTION_DELETE . $title;
+                return self::ACTION_DELETE . $title;
 
-            // on insert or update
             case self::ACTION_CREATE:
             case self::ACTION_UPDATE:
                 return
-                    $action . $title .
-                    ($a->get('request_diff')
+                    $action . $title
+                    . (
+                        $a->get('request_diff')
                         ? ': ' . $this->getDescrValues($a->get('request_diff'), $m)
                         : ''
                     );
