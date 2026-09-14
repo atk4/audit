@@ -33,9 +33,5 @@ Audit add-on is implemented and used in some projects. Some clean-ups may be nee
 Policy
   = rules/configuration
 
-AuditModel
-  = model instance + policy reference
-
 AuditController
   = manages everything
-
