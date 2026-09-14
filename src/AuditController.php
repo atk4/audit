@@ -24,6 +24,7 @@ class AuditController
     public const ACTION_CREATE = 'create';
     public const ACTION_UPDATE = 'update';
     public const ACTION_DELETE = 'delete';
+    public const ACTION_LOG = 'log';
 
     public const VALUE_REDACTED = '[REDACTED]';
     // public const VALUE_UNSUPPORTED = '[UNSUPPORTED]';
@@ -242,19 +243,40 @@ class AuditController
             'theirField' => 'model_id',
         ]);
 
-        /*
         // adds custom log method in model
         if (!$model->hasMethod('auditLog')) {
             $model->addMethod('auditLog', \Closure::fromCallable([$this, 'customLog']));
         }
-        */
 
         return $this;
     }
 
     /**
+     * Create custom audit log message.
+     *
+     * Call this by using $model->auditLog($message,$data) dynamic method.
+     *
+     * @param array<mixed,mixed> $data
+     *
+     * @return AuditLog
+     */
+    protected function customLog(Model $m, string $message, ?array $data = null): AuditLog
+    {
+        return $this->auditModel->createEntity()->save([
+            'model' => get_class($m),
+            'model_id' => $m->isLoaded() ? $m->getId() : null,
+            'start_time_ms' => self::getMs(),
+            'action' => self::ACTION_LOG,
+            'request_diff' => $data,
+            'user_info' => $this->getUserInfo(),
+            'descr' => $message,
+        ]);
+    }
+
+    /**
      * Create new audit log record and push change into audit log table (and audit log stack).
      *
+     * @param self::ACTION_*      $action
      * @param array<string,mixed> $request_diff
      */
     private function push(Model $m, string $action, array $request_diff = []): AuditLog
@@ -293,14 +315,19 @@ class AuditController
 
     /**
      * Pull most recent AuditLog entity from audit log stack.
+     *
+     * @param self::ACTION_*      $action
      */
-    private function pull(): AuditLog
+    private function pull(Model $m, string $action): AuditLog
     {
         $a = $this->stack->pop();
         // var_dump(['pull'=>$a->get('model')]);
 
         // save time taken
         $a->set('duration_ms', self::getMs() - $a->get('start_time_ms'));
+
+        // generate description
+        $a->set('descr', $this->getDescr($a, $m, $action));
 
         return $a;
     }
@@ -467,12 +494,6 @@ class AuditController
         $action = $is_update ? self::ACTION_UPDATE : self::ACTION_CREATE;
         $requestDiff = $this->getDirtyDiff($m);
         $a = $this->push($m, $action, $requestDiff);
-
-        /*
-        if (!$a->get('descr') && $is_update) {
-            $this->setDescr($a, $m, $action);
-        }
-        */
     }
 
     /**
@@ -491,14 +512,6 @@ class AuditController
             'model_id' => $m->getId(),
             'reactive_diff' => $reactiveDiff,
         ]);
-
-        /*
-        // fill missing description for new record
-        $action = 'save';
-        if (!$a->get('descr') && $is_update) {
-            $this->setDescr($a, $m, $action);
-        }
-        */
 
         $a->save();
     }
@@ -520,12 +533,6 @@ class AuditController
 
         $a->set('reactive_diff', $reactiveDiff);
 
-        /*
-        if (count($d) > 0 && !$a->get('descr')) {
-            $a->set('descr', '(resulted in ' . $this->getDescr($a->get('reactive_diff'), $m) . ')');
-        }
-        */
-
         $a->save();
     }
 
@@ -536,7 +543,8 @@ class AuditController
      */
     public function afterSave(Model $m, bool $is_update, bool $noChanges): void
     {
-        $a = $this->pull();
+        $action = $is_update ? self::ACTION_UPDATE : self::ACTION_CREATE;
+        $a = $this->pull($m, $action);
 
         if ($is_update && $noChanges) {
             $a->delete();
@@ -589,15 +597,6 @@ class AuditController
 
             $a = $this->push($m, self::ACTION_DELETE, $requestDiff);
 
-            /*
-            $descr = 'delete id=' . $m->getId();
-
-            if ($m->titleField && $m->hasField($m->titleField)) {
-                $descr .= ' (' . $m->getTitle() . ')';
-            }
-
-            $a->set('descr', $descr);
-            */
         } finally {
             // restore onlyFields
             $m->getModel()->setOnlyFields($onlyFields);
@@ -609,6 +608,74 @@ class AuditController
      */
     public function afterDelete(Model $m): void
     {
-        $this->pull()->save();
+        $this->pull($m, self::ACTION_DELETE)->save();
+    }
+
+    /**
+     * Simple text wrapper.
+     */
+    protected function wrapText(string $text, int $length = 30): string
+    {
+        return strlen($text) > $length
+            ? substr($text, 0, strrpos(substr($text, 0, $length), ' ')) . '...'
+            : $text;
+    }
+
+    /**
+     * Create CSV of values from array.
+     *
+     * @param array<string,list<mixed>> $values
+     */
+    private function getDescrValues(array $values, Model $m): string
+    {
+        $t = [];
+        foreach ($values as $fieldName => $v) {
+            $t[] = $fieldName . '=' . $this->wrapText((string) $v[1]);
+        }
+
+        return implode(', ', $t);
+    }
+
+    /**
+     * Generate description for AuditLog entry.
+     *
+     * You can overwrite this method by adding getDescr() method in your AuditLog model class.
+     *
+     * @param self::ACTION_* $action
+     */
+    protected function getDescr(AuditLog $a, Model $m, string $action): ?string
+    {
+        if ($a->hasMethod('getDescr')) {
+            return $a->getDescr($m, $action); // @phpstan-ignore method.notFound
+        }
+
+        // " #id (title)"
+        // could use $m->getTitle() here, but we don't want to see IDs in log descriptions
+        $title =
+            ' #' . $m->getId() .
+            ($m->titleField && $m->hasField($m->titleField)
+                ? ' (' . $this->wrapText($m->getTitle()) . ')'
+                : ''
+            );
+
+        // generate description
+        switch ($action) {
+            // on delete
+            case self::ACTION_DELETE:
+                return
+                    self::ACTION_DELETE . $title;
+
+            // on insert or update
+            case self::ACTION_CREATE:
+            case self::ACTION_UPDATE:
+                return
+                    $action . $title .
+                    ($a->get('request_diff')
+                        ? ': ' . $this->getDescrValues($a->get('request_diff'), $m)
+                        : ''
+                    );
+        }
+
+        return null;
     }
 }

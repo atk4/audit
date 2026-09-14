@@ -85,7 +85,7 @@ class CrudTest extends TestCase
         $users->load(3)->save(['surname' => 'Pencil']);
 
         // test audit log
-        $data = $this->audit->auditModel->export(['id', 'model', 'model_id', 'action', 'request_diff', 'reactive_diff']);
+        $data = $this->audit->auditModel->export(['id', 'model', 'model_id', 'action', 'request_diff', 'reactive_diff', 'descr']);
         // print_r($data);
 
         self::assertSame([
@@ -103,6 +103,7 @@ class CrudTest extends TestCase
                     'password' => [null, 'vinny123'],
                 ],
                 'reactive_diff' => [],
+                'descr' => 'create #1 (Vinny): id=1, name=Vinny, surname=Shira, fullname=Vinny Shira, password=vinny123',
             ],
             [
                 'id' => 2,
@@ -118,6 +119,7 @@ class CrudTest extends TestCase
                     'id' => 2,
                     'fullname' => 'Zoe Shatwell',
                 ],
+                'descr' => 'create #2 (Zoe): name=Zoe, surname=Shatwell, password=qwerty123',
             ],
             [
                 'id' => 3,
@@ -133,6 +135,7 @@ class CrudTest extends TestCase
                     'fullname' => 'Peter Pen',
                     'password' => null,
                 ],
+                'descr' => 'create #3 (Peter): name=Peter, surname=Pen',
             ],
             // update name of #1 record
             [
@@ -146,6 +149,7 @@ class CrudTest extends TestCase
                 'reactive_diff' => [
                     'fullname' => 'John Shira',
                 ],
+                'descr' => 'update #1 (John): name=John',
             ],
             // update nothing - such records are created and then removed from audit as they are almost useless, but we can't know that in advance
             /*
@@ -172,6 +176,7 @@ class CrudTest extends TestCase
                     'password' => ['vinny123', null],
                 ],
                 'reactive_diff' => [],
+                'descr' => 'delete #1 (John)',
             ],
             // update name of #1 record
             [
@@ -185,6 +190,7 @@ class CrudTest extends TestCase
                 'reactive_diff' => [
                     'fullname' => 'Peter Pencil',
                 ],
+                'descr' => 'update #3 (Peter): surname=Pencil',
             ],
         ], $data);
 
@@ -211,7 +217,7 @@ class CrudTest extends TestCase
         ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
     }
 
-    public function testPolicy()
+    public function testPolicyAndCustomAuditLogMessage()
     {
         // auditable User model
         $users = new User($this->db);
@@ -240,14 +246,21 @@ class CrudTest extends TestCase
         // change password of user #1
         $users->load(1)->save(['password' => 'newpass']);
 
+        // add custom audit message to user #2
+        $users->load(2)->auditLog('Custom message for Peter');
+
+        // add custom audit message to user #1
+        $users->load(1)->auditLog('Custom message for John with data', ['foo' => 'bar', 'salary' => 999.53]);
+
         // test audit log
-        $data = $this->audit->auditModel->export(['id', 'action', 'request_diff', 'reactive_diff']);
+        $data = $this->audit->auditModel->export(['id', 'model_id', 'action', 'request_diff', 'reactive_diff', 'descr']);
         // print_r($data);
 
         self::assertSame([
             // 2 import records
             [
                 'id' => 1,
+                'model_id' => 1,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
                     'name' => [null, 'John'],
@@ -259,9 +272,11 @@ class CrudTest extends TestCase
                     // 'fullname' => 'John Doe', // ignored
                     // 'password' => 'john123', // redacted and not changed
                 ],
+                'descr' => 'create #1 (John): name=John, surname=Doe, password=' . AuditController::VALUE_REDACTED,
             ],
             [
                 'id' => 2,
+                'model_id' => 2,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
                     'name' => [null, 'Peter'],
@@ -273,14 +288,36 @@ class CrudTest extends TestCase
                     // 'fullname' => 'Peter Pen', // ignored
                     // 'password' => null, // redacted fields can't be reactive
                 ],
+                'descr' => 'create #2 (Peter): name=Peter, surname=Pen',
             ],
             [
                 'id' => 3,
+                'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
                     'password' => [AuditController::VALUE_REDACTED, AuditController::VALUE_REDACTED],
                 ],
                 'reactive_diff' => [],
+                'descr' => 'update #1 (John): password=' . AuditController::VALUE_REDACTED,
+            ],
+            [
+                'id' => 4,
+                'model_id' => 2,
+                'action' => AuditController::ACTION_LOG,
+                'request_diff' => null,
+                'reactive_diff' => null,
+                'descr' => 'Custom message for Peter',
+            ],
+            [
+                'id' => 5,
+                'model_id' => 1,
+                'action' => AuditController::ACTION_LOG,
+                'request_diff' => [
+                    'foo' => 'bar',
+                    'salary' => 999.53,
+                ],
+                'reactive_diff' => null,
+            'descr' => 'Custom message for John with data',
             ],
         ], $data);
     }
