@@ -41,7 +41,7 @@ class CrudTest extends TestCase
         $this->createMigrator(new User($this->db))->create();
     }
 
-    public function testCRUD()
+    public function testCRUD(): void
     {
         // auditable User model
         $users = new User($this->db);
@@ -217,7 +217,7 @@ class CrudTest extends TestCase
         ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
     }
 
-    public function testPolicyAndCustomAuditLogMessage()
+    public function testPolicyAndCustomAuditLogMessage(): void
     {
         // auditable User model
         $users = new User($this->db);
@@ -247,10 +247,10 @@ class CrudTest extends TestCase
         $users->load(1)->save(['password' => 'newpass']);
 
         // add custom audit message to user #2
-        $users->load(2)->auditLog('Custom message for Peter');
+        $users->load(2)->auditLog('Custom message for Peter'); // @phpstan-ignore method.notFound
 
         // add custom audit message to user #1
-        $users->load(1)->auditLog('Custom message for John with data', ['foo' => 'bar', 'salary' => 999.53]);
+        $users->load(1)->auditLog('Custom message for John with data', ['foo' => 'bar', 'salary' => 999.53]); // @phpstan-ignore method.notFound
 
         // test audit log
         $data = $this->audit->auditModel->export(['id', 'model_id', 'action', 'request_diff', 'reactive_diff', 'descr']);

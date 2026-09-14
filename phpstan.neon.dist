@@ -7,11 +7,12 @@ parameters:
     checkMissingOverrideMethodAttribute: false
     paths:
         #- .
+        - demos
         - src
+        - tests
     excludePaths:
         - docs
         - template
-        - tests
         - vendor
 
     ignoreErrors:

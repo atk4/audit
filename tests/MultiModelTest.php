@@ -51,7 +51,7 @@ class Line extends Model
     /** @var bool */
     protected $no_adjust = false;
 
-    /** @var float */
+    /** @var ?float */
     private $old_total;
 
     protected function init(): void
@@ -73,14 +73,18 @@ class Line extends Model
         $this->onHook(Model::HOOK_AFTER_SAVE, static function (Line $m) {
             if ($m->old_total !== null) {
                 $change = $m->get('total') - $m->old_total;
-                $m->ref('invoice_id')->adjustTotal($change);
+                /** @var Invoice $invoice */
+                $invoice = $m->ref('invoice_id');
+                $invoice->adjustTotal($change);
                 $m->old_total = null;
             }
         });
 
         $this->onHook(Model::HOOK_AFTER_DELETE, static function (Line $m) {
             if (!$m->no_adjust) {
-                $m->ref('invoice_id')->adjustTotal(-$m->get('total'));
+                /** @var Invoice $invoice */
+                $invoice = $m->ref('invoice_id');
+                $invoice->adjustTotal(-$m->get('total'));
             }
         });
     }
@@ -104,7 +108,7 @@ class MultiModelTest extends TestCase
         $this->audit->observePersistence($this->db);
     }
 
-    public function testTotals()
+    public function testTotals(): void
     {
         // invoice model
         $invoices = new Invoice($this->db);
