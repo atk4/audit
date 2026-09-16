@@ -20,18 +20,3 @@ https://github.com/atk4/audit/blob/develop/docs/index.md
 ## Real Usage Example
 
 https://github.com/atk4/audit/blob/develop/docs/full-example.md
-
-## Current Status
-
-Audit add-on is implemented and used in some projects. Some clean-ups may be needed.
-
-
-
-
-----------
-
-Policy
-  = rules/configuration
-
-AuditController
-  = manages everything

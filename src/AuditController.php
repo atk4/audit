@@ -243,6 +243,11 @@ class AuditController
             'theirField' => 'model_id',
         ]);
 
+        // adds ability to access audit controller from model
+        if (!$model->hasMethod('getAuditController')) {
+            $model->addMethod('getAuditController', function() {return $this;});
+        }
+
         // adds custom log method in model
         if (!$model->hasMethod('auditLog')) {
             $model->addMethod('auditLog', \Closure::fromCallable([$this, 'customLog']));
