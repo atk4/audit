@@ -17,4 +17,5 @@ cache
 
 /phpunit.xml
 
+demos/_demo-data/db.sqlite
 demos/include/db.php
