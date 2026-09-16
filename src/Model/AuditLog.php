@@ -65,7 +65,7 @@ class AuditLog extends Model
 
         $this->setOrder($this->orderField, 'desc');
 
-        $this->onHook(Model::HOOK_BEFORE_SAVE, function (Model $m, bool $is_update) {
+        $this->onHook(Model::HOOK_BEFORE_SAVE, static function (Model $m, bool $is_update) {
             if ($m->isDirty('start_time_ms')) {
                 $m->set('start_time', \DateTime::createFromFormat(
                     'U.v',

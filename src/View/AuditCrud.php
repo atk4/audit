@@ -6,7 +6,4 @@ namespace Atk4\Audit\View;
 
 use Atk4\Ui\Crud;
 
-class AuditCrud extends Crud
-{
-
-}
+class AuditCrud extends Crud {}
