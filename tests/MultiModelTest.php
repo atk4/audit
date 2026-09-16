@@ -141,7 +141,7 @@ class MultiModelTest extends TestCase
             // create invoice
             [
                 'id' => 1,
-                'model' => 'Atk4\Audit\Tests\Invoice',
+                'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
@@ -158,7 +158,7 @@ class MultiModelTest extends TestCase
             // create line #1
             [
                 'id' => 2,
-                'model' => 'Atk4\Audit\Tests\Line',
+                'model' => 'Line',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
@@ -177,7 +177,7 @@ class MultiModelTest extends TestCase
             // automatically updates invoice, linked to previous audit record
             [
                 'id' => 3,
-                'model' => 'Atk4\Audit\Tests\Invoice',
+                'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
@@ -190,7 +190,7 @@ class MultiModelTest extends TestCase
             // create line #2
             [
                 'id' => 4,
-                'model' => 'Atk4\Audit\Tests\Line',
+                'model' => 'Line',
                 'model_id' => 2,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
@@ -209,7 +209,7 @@ class MultiModelTest extends TestCase
             // automatically updates invoice, linked to previous audit record
             [
                 'id' => 5,
-                'model' => 'Atk4\Audit\Tests\Invoice',
+                'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
@@ -222,7 +222,7 @@ class MultiModelTest extends TestCase
             // update line #2 quantity
             [
                 'id' => 6,
-                'model' => 'Atk4\Audit\Tests\Line',
+                'model' => 'Line',
                 'model_id' => 2,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
@@ -237,7 +237,7 @@ class MultiModelTest extends TestCase
             // automatically updates invoice, linked to previous audit record
             [
                 'id' => 7,
-                'model' => 'Atk4\Audit\Tests\Invoice',
+                'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
@@ -250,7 +250,7 @@ class MultiModelTest extends TestCase
             // delete line #2
             [
                 'id' => 8,
-                'model' => 'Atk4\Audit\Tests\Line',
+                'model' => 'Line',
                 'model_id' => 2,
                 'action' => AuditController::ACTION_DELETE,
                 'request_diff' => [
@@ -268,7 +268,7 @@ class MultiModelTest extends TestCase
             // automatically updates invoice, linked to previous audit record
             [
                 'id' => 9,
-                'model' => 'Atk4\Audit\Tests\Invoice',
+                'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [

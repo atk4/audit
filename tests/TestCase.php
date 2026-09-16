@@ -21,6 +21,7 @@ abstract class TestCase extends Atk4TestCase
         parent::setUp();
 
         $this->audit = new AuditController($this->db);
+        $this->audit->setRootNamespace('Atk4\Audit\Tests');
         $this->createMigrator($this->audit->auditModel)->create();
 
         // force ascending order to ease testing

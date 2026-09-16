@@ -92,7 +92,7 @@ class CrudTest extends TestCase
             // 3 import records
             [
                 'id' => 1,
-                'model' => 'Atk4\Audit\Tests\User',
+                'model' => 'User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
@@ -107,7 +107,7 @@ class CrudTest extends TestCase
             ],
             [
                 'id' => 2,
-                'model' => 'Atk4\Audit\Tests\User',
+                'model' => 'User',
                 'model_id' => 2,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
@@ -123,7 +123,7 @@ class CrudTest extends TestCase
             ],
             [
                 'id' => 3,
-                'model' => 'Atk4\Audit\Tests\User',
+                'model' => 'User',
                 'model_id' => 3,
                 'action' => AuditController::ACTION_CREATE,
                 'request_diff' => [
@@ -140,7 +140,7 @@ class CrudTest extends TestCase
             // update name of #1 record
             [
                 'id' => 4,
-                'model' => 'Atk4\Audit\Tests\User',
+                'model' => 'User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [
@@ -155,7 +155,7 @@ class CrudTest extends TestCase
             /*
             [
                 'id' => 5,
-                'model' => 'Atk4\Audit\Tests\User',
+                'model' => 'User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [],
@@ -165,7 +165,7 @@ class CrudTest extends TestCase
             // delete user #1
             [
                 'id' => 6,
-                'model' => 'Atk4\Audit\Tests\User',
+                'model' => 'User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_DELETE,
                 'request_diff' => [
@@ -181,7 +181,7 @@ class CrudTest extends TestCase
             // update name of #1 record
             [
                 'id' => 7,
-                'model' => 'Atk4\Audit\Tests\User',
+                'model' => 'User',
                 'model_id' => 3,
                 'action' => AuditController::ACTION_UPDATE,
                 'request_diff' => [

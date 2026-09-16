@@ -37,7 +37,10 @@ class AuditController
      */
     public $auditModel = [AuditLog::class];
 
-    private AuditPolicy $defaultPolicy;
+    protected AuditPolicy $defaultPolicy;
+
+    /** @var ?string Namespace of models - will be removed from class names */
+    protected $rootNamespace;
 
     /** @var array<string,AuditPolicy> */
     private array $policies = [];
@@ -95,6 +98,16 @@ class AuditController
     public function setModelPolicy(string $modelClass, AuditPolicy $policy)
     {
         $this->policies[$modelClass] = $policy;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setRootNamespace(string $namespace)
+    {
+        $this->rootNamespace = $namespace;
 
         return $this;
     }
@@ -234,10 +247,9 @@ class AuditController
 
         // adds hasMany reference to audit records
         $self = $this;
-
         $model->hasMany('AuditLog', [
             'model' => static function (Persistence $p) use ($model, $self) {
-                return (clone $self->auditModel)->addCondition('model', get_class($model));
+                return (clone $self->auditModel)->addCondition('model', $self->normalizeNamespace(get_class($model)));
             },
             'ourField' => $model->idField,
             'theirField' => 'model_id',
@@ -266,7 +278,7 @@ class AuditController
     protected function customLog(Model $m, string $message, ?array $data = null): AuditLog
     {
         return $this->auditModel->createEntity()->save([
-            'model' => get_class($m),
+            'model' => $this->normalizeNamespace(get_class($m)),
             'model_id' => $m->isLoaded() ? $m->getId() : null,
             'start_time_ms' => self::getMs(),
             'action' => self::ACTION_LOG,
@@ -293,7 +305,7 @@ class AuditController
 
         // set audit record values
         $a->setMulti([
-            'model' => get_class($m),
+            'model' => $this->normalizeNamespace(get_class($m)),
             'model_id' => $m->isLoaded() ? $m->getId() : null,
             'start_time_ms' => self::getMs(),
             'action' => $action,
@@ -327,7 +339,7 @@ class AuditController
         // var_dump(['pull'=>$a->get('model')]);
 
         // save time taken
-        $a->set('duration_ms', self::getMs() - $a->get('start_time_ms'));
+        $a->set('duration', (self::getMs() - $a->get('start_time_ms')) / 1000);
 
         // generate description
         $a->set('descr', $this->getDescr($a, $m, $action));
@@ -338,6 +350,11 @@ class AuditController
     private static function getMs(): int
     {
         return (int) round(microtime(true) * 1_000);
+    }
+
+    private function normalizeNamespace(string $s): string
+    {
+        return ltrim(str_replace($this->rootNamespace ?? '', '', $s), '\\');
     }
 
     private function getModelAuditPolicy(Model $model): AuditPolicy

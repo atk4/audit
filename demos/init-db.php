@@ -22,4 +22,5 @@ try {
 
 // enable audit on all persistence
 $audit = new AuditController($db);
+$audit->setRootNamespace('Atk4\Audit\Demos\Model');
 $audit->observePersistence($db);
