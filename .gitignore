@@ -15,7 +15,7 @@ cache
 *.cache.*
 *.cmd
 
+/demos/db.php
+/demos/_demo-data/db.sqlite
+/demos/_demo-data/db.sqlite-journal
 /phpunit.xml
-
-demos/_demo-data/db.sqlite
-demos/include/db.php
