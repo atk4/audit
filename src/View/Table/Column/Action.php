@@ -45,7 +45,7 @@ class Action extends Table\Column
         $color = $this->actions[$action] ?? 'gray';
 
         return [
-            $field->shortName => $this->getApp()->getTag('span', ['class' => 'ui label ' . $color], $action)
+            $field->shortName => $this->getApp()->getTag('span', ['class' => 'ui label ' . $color], $action),
         ];
     }
 }
