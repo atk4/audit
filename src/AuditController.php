@@ -245,7 +245,7 @@ class AuditController
 
         // adds ability to access audit controller from model
         if (!$model->hasMethod('getAuditController')) {
-            $model->addMethod('getAuditController', function() {return $this;});
+            $model->addMethod('getAuditController', function () {return $this; });
         }
 
         // adds custom log method in model
