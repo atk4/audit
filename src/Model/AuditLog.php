@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Model;
 
+use Atk4\Audit\AuditController;
 use Atk4\Audit\View\Table\Column;
 use Atk4\Data\Model;
 
@@ -25,9 +26,32 @@ class AuditLog extends Model
     {
         parent::init();
 
-        $this->addField('model', ['required' => true, 'type' => 'string']); // model class name
-        $this->addField('model_id', ['type' => 'bigint']); // id of related model record
+        // link to audit log entry which generated this event (parent event)
+        $this->hasOne('initiator_audit_log_id', [
+            'model' => [static::class],
+            'caption' => 'Caused By',
+        ]);
 
+        // request action
+        $this->addField('action', [
+            'required' => true,
+            'enum' => [
+                AuditController::ACTION_CREATE,
+                AuditController::ACTION_UPDATE,
+                AuditController::ACTION_DELETE,
+                AuditController::ACTION_LOG,
+            ],
+            'ui' => ['table' => [Column\Action::class]],
+        ]);
+
+        // model class and ID of model record
+        $this->addField('model', [
+            'required' => true,
+            //'ui' => ['table' => [\Atk4\Ui\Table\Column\Labels::class]],
+        ]);
+        $this->addField('model_id', ['type' => 'bigint']);
+
+        // request time and duration
         $this->addField('start_time_ms', [
             'required' => true,
             'type' => 'bigint',
@@ -42,22 +66,16 @@ class AuditLog extends Model
             'type' => 'float',
         ]);
 
-        $this->addField('action', [
-            'required' => true,
-            'ui' => ['table' => [Column\Action::class]],
-        ]);
         $this->addField('request_diff', ['type' => 'json']); // requested changes
         $this->addField('reactive_diff', ['type' => 'json']); // reactive changes
 
-        // JSON containing keys for browser etc
-        $this->addField('user_info', ['type' => 'json']);
+        // optional user_id
+        $this->addField('user_id', ['type' => 'integer']);
 
-        // link to audit log entry which generated this event (parent event)
-        $this->hasOne('initiator_audit_log_id', [
-            'model' => [static::class],
-            'caption' => 'Caused By',
-        ]);
+        // additional session info, for example, browser config, ip address etc.
+        $this->addField('session_info', ['type' => 'json']);
 
+        // generated description
         $this->addField('descr', [
             'caption' => 'Description',
             'type' => 'text',

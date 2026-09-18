@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\View;
 
-use Atk4\Ui\Crud;
+use Atk4\Ui\Grid;
 
-class AuditCrud extends Crud {}
+class AuditGrid extends Grid {}

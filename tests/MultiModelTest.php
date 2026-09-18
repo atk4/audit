@@ -134,13 +134,14 @@ class MultiModelTest extends TestCase
         $lines->loadBy('item', 'Monitor')->delete();
 
         // test audit log
-        $data = $this->audit->auditModel->export(['id', 'model', 'model_id', 'action', 'request_diff', 'reactive_diff', 'descr', 'initiator_audit_log_id']);
+        $data = $this->audit->auditModel->export(['id', 'initiator_audit_log_id', 'model', 'model_id', 'action', 'request_diff', 'reactive_diff', 'descr']);
         // print_r($data);
 
         self::assertSame([
             // create invoice
             [
                 'id' => 1,
+                'initiator_audit_log_id' => null,
                 'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_CREATE,
@@ -153,11 +154,11 @@ class MultiModelTest extends TestCase
                     'total' => 0.0,
                 ],
                 'descr' => 'create #1: ref=#123, doc_date=2026-09-01',
-                'initiator_audit_log_id' => null,
             ],
             // create line #1
             [
                 'id' => 2,
+                'initiator_audit_log_id' => null,
                 'model' => 'Line',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_CREATE,
@@ -172,11 +173,11 @@ class MultiModelTest extends TestCase
                     'total' => 200.0,
                 ],
                 'descr' => 'create #1: item=Laptop, price=100, qty=2',
-                'initiator_audit_log_id' => null,
             ],
             // automatically updates invoice, linked to previous audit record
             [
                 'id' => 3,
+                'initiator_audit_log_id' => 2,
                 'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
@@ -185,11 +186,11 @@ class MultiModelTest extends TestCase
                 ],
                 'reactive_diff' => [],
                 'descr' => 'update #1: total=200',
-                'initiator_audit_log_id' => 2,
             ],
             // create line #2
             [
                 'id' => 4,
+                'initiator_audit_log_id' => null,
                 'model' => 'Line',
                 'model_id' => 2,
                 'action' => AuditController::ACTION_CREATE,
@@ -204,11 +205,11 @@ class MultiModelTest extends TestCase
                     'total' => 360.0,
                 ],
                 'descr' => 'create #2: item=Monitor, price=120, qty=3',
-                'initiator_audit_log_id' => null,
             ],
             // automatically updates invoice, linked to previous audit record
             [
                 'id' => 5,
+                'initiator_audit_log_id' => 4,
                 'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
@@ -217,11 +218,11 @@ class MultiModelTest extends TestCase
                 ],
                 'reactive_diff' => [],
                 'descr' => 'update #1: total=560',
-                'initiator_audit_log_id' => 4,
             ],
             // update line #2 quantity
             [
                 'id' => 6,
+                'initiator_audit_log_id' => null,
                 'model' => 'Line',
                 'model_id' => 2,
                 'action' => AuditController::ACTION_UPDATE,
@@ -232,11 +233,11 @@ class MultiModelTest extends TestCase
                     'total' => 240.0,
                 ],
                 'descr' => 'update #2: qty=2',
-                'initiator_audit_log_id' => null,
             ],
             // automatically updates invoice, linked to previous audit record
             [
                 'id' => 7,
+                'initiator_audit_log_id' => 6,
                 'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
@@ -245,11 +246,11 @@ class MultiModelTest extends TestCase
                 ],
                 'reactive_diff' => [],
                 'descr' => 'update #1: total=440',
-                'initiator_audit_log_id' => 6,
             ],
             // delete line #2
             [
                 'id' => 8,
+                'initiator_audit_log_id' => null,
                 'model' => 'Line',
                 'model_id' => 2,
                 'action' => AuditController::ACTION_DELETE,
@@ -263,11 +264,11 @@ class MultiModelTest extends TestCase
                 ],
                 'reactive_diff' => [],
                 'descr' => 'delete #2',
-                'initiator_audit_log_id' => null,
             ],
             // automatically updates invoice, linked to previous audit record
             [
                 'id' => 9,
+                'initiator_audit_log_id' => 8,
                 'model' => 'Invoice',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_UPDATE,
@@ -276,7 +277,6 @@ class MultiModelTest extends TestCase
                 ],
                 'reactive_diff' => [],
                 'descr' => 'update #1: total=200',
-                'initiator_audit_log_id' => 8,
             ],
         ], $data);
     }

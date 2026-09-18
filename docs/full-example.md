@@ -150,14 +150,15 @@ $m->save(['ref'=>'inv1']);
 | Field                  | Value                           | Description                              |
 | ---------------------- | ------------------------------- | ---------------------------------------- |
 | id                     | 1                               | If you use relational database for storing Audit Log, the ID will increment, but that's not a requirement. |
+| initiator_audit_log_id | NULL                            | This action was triggered directly.      |
+| action                 | create                          | New record was created                   |
 | model                  | Invoice                         |                                          |
 | model_id               | 1                               |                                          |
 | start_time_ms          | 1789549702238                   | Timestamp in miliseconds |
+| start_time             | 2026-09-16 09:08:22.238         | Date time                                |
 | duration_ms            | 35                              | AuditLog actually tracks how long many miliseconds this operation took. |
-| action                 | create                          | New record was created                   |
 | request_diff           | {"ref":[null,"inv1"]}           | SQL stores value in JSON but it's converted into PHP array on load/save. |
 | reactive_diff          | {"id":1,"ref":"inv1",total":0}  | For create operations contains all fields. |
-| initiator_audit_log_id | NULL                            | This action was triggered directly.      |
 | descr                  | create #1: ref=inv1             | Human-readable field                     |
 
 This record corresponds to us creating initial model. Next we were adding invoice line, which was reflected in the audit_log.
@@ -169,30 +170,32 @@ $m->ref('Lines')->insert(['item'=>'Chair', 'price'=>2.50, 'qty'=>3]);
 | Field                  | Value                                    | Description                              |
 | ---------------------- | ---------------------------------------- | ---------------------------------------- |
 | id                     | 2                                        |                                          |
+| initiator_audit_log_id | NULL                                     | Also a manually created record           |
+| action                 | create                                   | New line added through insert()          |
 | model                  | Line                                     |                                          |
 | model_id               | 1                                        |                                          |
 | start_time_ms          | 1789549702250                            |                                          |
+| start_time             | 2026-09-16 09:08:22.666                  | Date time                                |
 | duration_ms            | 50                                       | This action took longer (because of related operation) |
-| action                 | create                                   | New line added through insert()          |
 | request_diff           | {"item":[null,"Chair"],"price":[0,2.5],"qty":[0,3]} | SQL stores value in JSON but it's converted into PHP array on load/save. |
 | reactive_diff          | {"id":1,"invoice_id":"1","item":"Chair","price":2.5, "qty":3,"total":7.5} | All values being stored, including calculated. |
-| initiator_audit_log_id | NULL                                     | Also a manually created record           |
 | descr                  | create #1: item=Chair, price=2.5, qty=3  | Human-readable field                     |
 
 The next entry is reactive and was caused beacuse of the call to `adjustTotal` with a subsequential `save()`
 
-| Field                  | Value                 | Description                              |
-| ---------------------- | --------------------- | ---------------------------------------- |
-| id                     | 3                     |                                          |
-| model                  | Invoice               |                                          |
-| model_id               | 1                     |                                          |
-| ts                     | 1789549702262         |                                          |
-| time_taken             | 42                    |                                          |
-| action                 | update                | Updates invoice model                    |
-| request_diff           | {"total":[0,7.5]}     | Total was the only field changed         |
-| reactive_diff          | NULL                  |                                          |
-| initiator_audit_log_id | 2                     | Reactive change, caused by previous record. |
-| descr                  | update #1: total=7.5  |                                          |
+| Field                  | Value                   | Description                              |
+| ---------------------- | ----------------------- | ---------------------------------------- |
+| id                     | 3                       |                                          |
+| initiator_audit_log_id | 2                       | Reactive change, caused by previous record. |
+| action                 | update                  | Updates invoice model                    |
+| model                  | Invoice                 |                                          |
+| model_id               | 1                       |                                          |
+| start_time_ms          | 1789549702262           |                                          |
+| start_time             | 2026-09-16 09:08:22.238 | Date time                                |
+| duration_ms            | 42                      |                                          |
+| request_diff           | {"total":[0,7.5]}       | Total was the only field changed         |
+| reactive_diff          | NULL                    |                                          |
+| descr                  | update #1: total=7.5    |                                          |
 
 Next line is similar to the above:
 
@@ -203,28 +206,30 @@ $m->ref('Lines')->insert(['item'=>'Desk', 'price'=>10.20, 'qty'=>1]);
 | Field                  | Value                                    | Description                              |
 | ---------------------- | ---------------------------------------- | ---------------------------------------- |
 | id                     | 4                                        |                                          |
+| initiator_audit_log_id | NULL                                     |                                          |
+| action                 | create                                   |                                          |
 | model                  | Line                                     |                                          |
 | model_id               | 1                                        |                                          |
 | start_time_ms          | 1789549702270                            |                                          |
+| start_time             | 2026-09-16 09:08:22.238                  | Date time                                |
 | duration_ms            | 47                                       |                                          |
-| action                 | create                                   |                                          |
 | request_diff           | {"item":[null,"Desk"],"price":[0,10.2],"qty":[0,1]} |                               |
 | reactive_diff          | {"id":2,"invoice_id":"1","item":"Desk","price":10.2, "qty":1,"total":10.2} |        |
-| initiator_audit_log_id | NULL                                     |                                          |
 | descr                  | create #2: item=Desk, price=10.2, qty=1  |                                          |
 
-| Field                  | Value                 | Description                              |
-| ---------------------- | --------------------- | ---------------------------------------- |
-| id                     | 5                     |                                          |
-| model                  | Invoice               |                                          |
-| model_id               | 1                     |                                          |
-| ts                     | 1789549702292         |                                          |
-| time_taken             | 28                    |                                          |
-| action                 | update                |                                          |
-| request_diff           | {"total":[7.5,10.2]}  |                                          |
-| reactive_diff          | NULL                  |                                          |
-| initiator_audit_log_id | 4                     |                                          |
-| descr                  | update #1: total=10.2 |                                          |
+| Field                  | Value                   | Description                              |
+| ---------------------- | ----------------------- | ---------------------------------------- |
+| id                     | 5                       |                                          |
+| initiator_audit_log_id | 4                       |                                          |
+| action                 | update                  |                                          |
+| model                  | Invoice                 |                                          |
+| model_id               | 1                       |                                          |
+| start_time_ms          | 1789549702292           |                                          |
+| start_time             | 2026-09-16 09:08:22.238 | Date time                                |
+| duration_ms            | 28                      |                                          |
+| request_diff           | {"total":[7.5,10.2]}    |                                          |
+| reactive_diff          | NULL                    |                                          |
+| descr                  | update #1: total=10.2   |                                          |
 
 ## Final run-through
 

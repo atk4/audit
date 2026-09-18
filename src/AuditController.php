@@ -39,8 +39,11 @@ class AuditController
 
     protected AuditPolicy $defaultPolicy;
 
-    /** @var ?string Namespace of models - will be removed from class names */
+    /** @var ?string Root namespace of all models - will be removed from class names */
     protected $rootNamespace;
+
+    /** @var ?int Optional user ID */
+    protected $userId;
 
     /** @var array<string,AuditPolicy> */
     private array $policies = [];
@@ -108,6 +111,16 @@ class AuditController
     public function setRootNamespace(string $namespace)
     {
         $this->rootNamespace = $namespace;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setUserId(int $userId)
+    {
+        $this->userId = $userId;
 
         return $this;
     }
@@ -280,10 +293,11 @@ class AuditController
         return $this->auditModel->createEntity()->save([
             'model' => $this->normalizeNamespace(get_class($m)),
             'model_id' => $m->isLoaded() ? $m->getId() : null,
-            'start_time_ms' => self::getMs(),
             'action' => self::ACTION_LOG,
+            'start_time_ms' => self::getMs(),
             'request_diff' => $data,
-            'user_info' => $this->getUserInfo(),
+            'user_id' => $this->userId,
+            'session_info' => $this->getSessionInfo(),
             'descr' => $message,
         ]);
     }
@@ -307,11 +321,12 @@ class AuditController
         $a->setMulti([
             'model' => $this->normalizeNamespace(get_class($m)),
             'model_id' => $m->isLoaded() ? $m->getId() : null,
-            'start_time_ms' => self::getMs(),
             'action' => $action,
+            'start_time_ms' => self::getMs(),
             'request_diff' => $request_diff,
             'reactive_diff' => [],
-            'user_info' => $this->getUserInfo(),
+            'user_id' => $this->userId,
+            'session_info' => $this->getSessionInfo(),
         ]);
 
         if (!$this->stack->isEmpty()) {
@@ -374,11 +389,11 @@ class AuditController
     }
 
     /**
-     * Returns array of user info.
+     * Returns array of session info.
      *
      * @return array<string,string>
      */
-    protected function getUserInfo(): array
+    protected function getSessionInfo(): array
     {
         $info = [];
 

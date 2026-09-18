@@ -8,7 +8,7 @@ use Atk4\Ui\Layout;
 
 class App extends \Atk4\Ui\App
 {
-    public $title = 'Atk4\Audit Demo App';
+    public $title = 'Atk4 Audit Demo App';
 
     /** @var Layout\Admin */
     public $layout; // @phpstan-ignore-line

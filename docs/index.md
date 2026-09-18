@@ -32,11 +32,13 @@ The following new record will be stored inside `audit_log` table:
 ``` json
 {
    "id":1,
+   "initiator_audit_log_id":null,
+   "action":"update",
    "model":"Atk4\\Audit\\Tests\\User",
    "model_id":"1",
    "start_time_ms":1789549702238,
+   "start_time":"2026-09-16 09:08:22.238",
    "duration_ms":35,
-   "action":"update",
    "request_diff":{
       "name":[
          "Vinny",
@@ -44,8 +46,7 @@ The following new record will be stored inside `audit_log` table:
       ]
    },
    "reactive_diff":{},
-   "user_info":{"ip":"::1"},
-   "initiator_audit_log_id":null,
+   "session_info":{"ip":"::1"},
    "descr":"update #1 (Vinny): name=Vinny"
 }
 ```
