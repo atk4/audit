@@ -482,6 +482,7 @@ class AuditController
 
             // if change was requested and value matches the one requested, then skip
             if ($mode === AuditPolicy::FIELD_AUDIT) {
+                /* you can comment this block if you don't want fields from request_diff to also show up in reactive_diff */
                 if (array_key_exists($fieldName, $requestDiff)) {
                     $requested = $this->decodeAuditValue($m, $fieldName, $requestDiff[$fieldName][1]);
                     $reactive = $this->decodeAuditValue($m, $fieldName, $newValue);
@@ -490,6 +491,7 @@ class AuditController
                         continue;
                     }
                 }
+                /* */
 
                 $diff[$fieldName] = $newValue;
             }
