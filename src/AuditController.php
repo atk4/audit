@@ -291,11 +291,11 @@ class AuditController
     protected function customLog(Model $m, string $message, ?array $data = null): AuditLog
     {
         return $this->auditModel->createEntity()->save([
+            'action' => self::ACTION_LOG,
             'model' => $this->normalizeNamespace(get_class($m)),
             'model_id' => $m->isLoaded() ? $m->getId() : null,
-            'action' => self::ACTION_LOG,
             'start_time_ms' => self::getMs(),
-            'request_diff' => $data,
+            'reactive_diff' => $data,
             'user_id' => $this->userId,
             'session_info' => $this->getSessionInfo(),
             'descr' => $message,
@@ -305,10 +305,11 @@ class AuditController
     /**
      * Create new audit log record and push change into audit log table (and audit log stack).
      *
-     * @param self::ACTION_*      $action
-     * @param array<string,mixed> $request_diff
+     * @param self::ACTION_*                 $action
+     * @param array<string,array<0|1,mixed>> $request_diff
+     * @param array<string,mixed>            $reactive_diff
      */
-    private function push(Model $m, string $action, array $request_diff = []): AuditLog
+    private function push(Model $m, string $action, array $request_diff = [], array $reactive_diff = []): AuditLog
     {
         $m->assertIsEntity();
 
@@ -319,12 +320,12 @@ class AuditController
 
         // set audit record values
         $a->setMulti([
+            'action' => $action,
             'model' => $this->normalizeNamespace(get_class($m)),
             'model_id' => $m->isLoaded() ? $m->getId() : null,
-            'action' => $action,
             'start_time_ms' => self::getMs(),
             'request_diff' => $request_diff,
-            'reactive_diff' => [],
+            'reactive_diff' => $reactive_diff,
             'user_id' => $this->userId,
             'session_info' => $this->getSessionInfo(),
         ]);
@@ -407,7 +408,7 @@ class AuditController
     /**
      * Calculates and returns array of all changed fields and their values.
      *
-     * @return array<string,list<mixed>>
+     * @return array<string,array<0|1,mixed>>
      */
     private function getDirtyDiff(Model $m): array
     {
@@ -528,7 +529,7 @@ class AuditController
     {
         $action = $is_update ? self::ACTION_UPDATE : self::ACTION_CREATE;
         $requestDiff = $this->getDirtyDiff($m);
-        $a = $this->push($m, $action, $requestDiff);
+        $this->push($m, $action, $requestDiff);
     }
 
     /**
@@ -604,7 +605,7 @@ class AuditController
 
             $policy = $this->getModelAuditPolicy($m);
 
-            $requestDiff = [];
+            $reactiveDiff = [];
             foreach ($m->getDataRef() as $fieldName => $value) {
                 $f = $m->getField($fieldName);
 
@@ -627,10 +628,10 @@ class AuditController
                 }
 
                 // key = [old value, new value]
-                $requestDiff[$fieldName] = [$value, null];
+                $reactiveDiff[$fieldName] = $value;
             }
 
-            $this->push($m, self::ACTION_DELETE, $requestDiff);
+            $this->push($m, self::ACTION_DELETE, [], $reactiveDiff);
         } finally {
             // restore onlyFields
             $m->getModel()->setOnlyFields($onlyFields);

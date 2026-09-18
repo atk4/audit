@@ -168,14 +168,14 @@ class CrudTest extends TestCase
                 'model' => 'User',
                 'model_id' => 1,
                 'action' => AuditController::ACTION_DELETE,
-                'request_diff' => [
-                    'id' => [1, null],
-                    'name' => ['John', null],
-                    'surname' => ['Shira', null],
-                    'fullname' => ['John Shira', null],
-                    'password' => ['vinny123', null],
+                'request_diff' => [],
+                'reactive_diff' => [
+                    'id' => 1,
+                    'name' => 'John',
+                    'surname' => 'Shira',
+                    'fullname' => 'John Shira',
+                    'password' => 'vinny123',
                 ],
-                'reactive_diff' => [],
                 'descr' => 'delete #1 (John)',
             ],
             // update name of #1 record
@@ -312,11 +312,11 @@ class CrudTest extends TestCase
                 'id' => 5,
                 'model_id' => 1,
                 'action' => AuditController::ACTION_LOG,
-                'request_diff' => [
+                'request_diff' => null,
+                'reactive_diff' => [
                     'foo' => 'bar',
                     'salary' => 999.53,
                 ],
-                'reactive_diff' => null,
                 'descr' => 'Custom message for John with data',
             ],
         ], $data);

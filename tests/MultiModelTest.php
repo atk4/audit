@@ -254,15 +254,15 @@ class MultiModelTest extends TestCase
                 'model' => 'Line',
                 'model_id' => 2,
                 'action' => AuditController::ACTION_DELETE,
-                'request_diff' => [
-                    'id' => [2, null],
-                    'invoice_id' => [1, null],
-                    'item' => ['Monitor', null],
-                    'price' => [120.0, null],
-                    'qty' => [2.0, null],
-                    'total' => [240.0, null],
+                'request_diff' => [],
+                'reactive_diff' => [
+                    'id' => 2,
+                    'invoice_id' => 1,
+                    'item' => 'Monitor',
+                    'price' => 120.0,
+                    'qty' => 2.0,
+                    'total' => 240.0,
                 ],
-                'reactive_diff' => [],
                 'descr' => 'delete #2',
             ],
             // automatically updates invoice, linked to previous audit record
