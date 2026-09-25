@@ -1,0 +1,496 @@
+/* Audit detail modal */
+.ui.modal.atk4-audit-modal {
+    width: 780px;
+    max-width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+}
+
+.ui.modal.atk4-audit-modal > .scrolling.content {
+    max-height: calc(100vh - 105px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 !important;
+}
+
+@media (max-width: 600px) {
+    .ui.modal.atk4-audit-modal {
+        width: calc(100vw - 10px);
+        max-width: calc(100vw - 10px);
+        max-height: calc(100vh - 10px);
+    }
+
+    .ui.modal.atk4-audit-modal > .scrolling.content {
+        max-height: calc(100vh - 90px) !important;
+    }
+}
+
+.atk4-audit-detail {
+    padding: 13px 17px 16px;
+    color: #33383d;
+}
+
+.atk4-audit-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 11px;
+}
+
+.atk4-audit-identity-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+.atk4-audit-record-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 5px;
+    background: #f1f4f7;
+    color: #707b85;
+    font-size: 1rem;
+}
+
+.atk4-audit-record-title {
+    color: #292e32;
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.atk4-audit-record-id {
+    margin-left: 3px;
+    color: #858e96;
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 1.22rem;
+}
+
+.atk4-audit-record-subtitle {
+    margin-top: 3px;
+    color: #858e96;
+    font-size: .73rem;
+}
+
+
+/* Metadata */
+
+.atk4-audit-meta {
+    margin: 0 0 13px !important;
+    padding: 11px 13px !important;
+    border: 1px solid rgba(34, 36, 38, .11) !important;
+    box-shadow: none !important;
+}
+
+.atk4-audit-meta-row {
+    display: grid;
+    grid-template-columns: .78fr 1.05fr .72fr 1.75fr .65fr;
+    align-items: start;
+    gap: 18px;
+}
+
+.atk4-audit-meta-item {
+    min-width: 0;
+}
+
+.atk4-audit-label {
+    margin-bottom: 4px;
+    color: #7d858d;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .055em;
+}
+
+.atk4-audit-value {
+    color: #30363b;
+    font-size: .94rem;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+.atk4-audit-important {
+    color: #202529;
+    font-size: .97rem;
+    font-weight: 700;
+}
+
+.atk4-audit-mono {
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: .87rem;
+}
+
+
+/* Description */
+
+.atk4-audit-description {
+    margin-bottom: 13px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e3e7eb;
+    border-radius: 5px;
+}
+
+.atk4-audit-description-value {
+    color: #3b4247;
+    font-size: .86rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+
+/* Section */
+
+.atk4-audit-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    color: #42494f;
+    font-size: .92rem;
+    font-weight: 700;
+}
+
+.atk4-audit-section-title .icon {
+    color: #7a848d;
+}
+
+
+/* Changes */
+
+.atk4-audit-changes-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+}
+
+.atk4-audit-changes-left,
+.atk4-audit-changes-right {
+    min-width: 0;
+}
+
+.atk4-audit-changes-left .atk4-audit-json-card + .atk4-audit-json-card {
+    margin-top: 9px !important;
+}
+
+
+/* JSON cards */
+
+.atk4-audit-json-card {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(34, 36, 38, .12) !important;
+    border-radius: 5px !important;
+    box-shadow: none !important;
+    overflow: hidden;
+}
+
+.atk4-audit-json-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #fafbfc;
+    border-bottom: 1px solid rgba(34, 36, 38, .09);
+}
+
+.atk4-audit-json-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: #505960;
+    font-size: .82rem;
+    font-weight: 700;
+}
+
+.atk4-audit-json-title .icon {
+    color: #7d878f;
+}
+
+.atk4-audit-raw-toggle {
+    flex: 0 0 auto;
+    margin: 0 !important;
+    padding: 5px 7px !important;
+    font-size: .68rem !important;
+}
+
+.atk4-audit-json-body {
+    padding: 8px 10px 9px;
+}
+
+
+/* Diff */
+
+.atk4-audit-diff-row {
+    display: grid;
+    grid-template-columns:
+        minmax(80px, .85fr)
+        minmax(60px, 1fr)
+        18px
+        minmax(60px, 1fr);
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+    border-bottom: 1px solid #edf0f2;
+}
+
+.atk4-audit-diff-row:last-child {
+    border-bottom: 0;
+}
+
+.atk4-audit-diff-field {
+    min-width: 0;
+    color: #5b646c;
+    font-size: .75rem;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.atk4-audit-diff-old,
+.atk4-audit-diff-new {
+    min-width: 0;
+    padding: 4px 6px;
+    border-radius: 3px;
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: .71rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.atk4-audit-diff-old {
+    color: #a72c25;
+    background: #fff1f1;
+}
+
+.atk4-audit-diff-new {
+    color: #28753c;
+    background: #effaf2;
+}
+
+.atk4-audit-diff-arrow {
+    color: #9ba2a8;
+    font-size: .78rem;
+    text-align: center;
+}
+
+.atk4-audit-null {
+    opacity: .72;
+}
+
+
+/* Raw JSON */
+
+.atk4-audit-raw-json {
+    display: none;
+    margin-top: 8px;
+}
+
+.atk4-audit-json-card.atk4-audit-raw-visible .atk4-audit-raw-json {
+    display: block;
+}
+
+.atk4-audit-json-card.atk4-audit-raw-visible .atk4-audit-diff-list {
+    display: none;
+}
+
+.atk4-audit-raw-container {
+    position: relative;
+    min-width: 0;
+}
+
+.atk4-audit-raw-container pre {
+    margin: 0;
+    max-height: 260px;
+    overflow: auto;
+    padding: 10px 11px;
+    background: #f6f7f9;
+    border: 1px solid #e0e4e8;
+    border-radius: 4px;
+    color: #363b40;
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: .72rem;
+    line-height: 1.55;
+    white-space: pre;
+}
+
+
+/* Copy */
+
+.atk4-audit-copy {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 2;
+    margin: 0 !important;
+    padding: 5px 7px !important;
+    background: rgba(255, 255, 255, .96) !important;
+    border: 1px solid #d7dce1 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+    font-size: .66rem !important;
+}
+
+
+/* Secondary information */
+
+.atk4-audit-secondary-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.atk4-audit-secondary-card {
+    height: 100%;
+    margin: 0 !important;
+    padding: 10px 11px !important;
+    border: 1px solid rgba(34, 36, 38, .11) !important;
+    box-shadow: none !important;
+}
+
+.atk4-audit-secondary-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #5d666e;
+    font-size: .79rem;
+    font-weight: 700;
+}
+
+.atk4-audit-secondary-title .icon {
+    color: #858e96;
+}
+
+.atk4-audit-secondary-body {
+    margin-top: 7px;
+}
+
+
+/* Related records */
+
+.atk4-audit-context-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 0;
+}
+
+.atk4-audit-context-row + .atk4-audit-context-row {
+    border-top: 1px solid #edf0f2;
+}
+
+.atk4-audit-context-row > span {
+    color: #858d95;
+    font-size: .72rem;
+}
+
+.atk4-audit-context-row > strong {
+    min-width: 0;
+    color: #34393d;
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: .70rem;
+    font-weight: 500;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.atk4-audit-record-link {
+    color: #2185d0;
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: .72rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.atk4-audit-record-link:hover {
+    text-decoration: underline;
+}
+
+.atk4-audit-causes {
+    display: inline;
+}
+
+.atk4-audit-causes-separator {
+    color: #9ba2a8;
+    font-size: .72rem;
+}
+
+.atk4-audit-muted {
+    color: #a0a6ac;
+}
+
+
+/* Session */
+
+.atk4-audit-small-json {
+    max-height: 110px !important;
+    font-size: .69rem !important;
+}
+
+
+/* Empty */
+
+.atk4-audit-empty {
+    padding: 9px 0;
+    color: #9ca3aa;
+    font-size: .72rem;
+    text-align: center;
+}
+
+
+/* Mobile */
+
+@media (max-width: 700px) {
+    .atk4-audit-detail {
+        padding: 11px 12px 14px;
+    }
+
+    .atk4-audit-meta-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .atk4-audit-changes-grid,
+    .atk4-audit-secondary-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .atk4-audit-diff-row {
+        grid-template-columns: 1fr;
+        gap: 3px;
+        padding: 7px 0;
+    }
+
+    .atk4-audit-diff-arrow {
+        display: none;
+    }
+
+    .atk4-audit-diff-old::before {
+        content: "Old: ";
+        opacity: .65;
+    }
+
+    .atk4-audit-diff-new::before {
+        content: "New: ";
+        opacity: .65;
+    }
+}
+
+@media (max-width: 450px) {
+    .atk4-audit-meta-row {
+        grid-template-columns: 1fr;
+    }
+
+    .atk4-audit-json-header {
+        align-items: flex-start;
+    }
+}

@@ -1,0 +1,21 @@
+includes:
+    - phar://phpstan.phar/conf/bleedingEdge.neon
+
+parameters:
+    level: 6
+    # PHP 8.5 requests Override attribute for properties, but older PHP do not support that
+    checkMissingOverrideMethodAttribute: false
+    treatPhpDocTypesAsCertain: false
+    paths:
+        #- .
+        - demos
+        - src
+        - tests
+    excludePaths:
+        - docs
+        - template
+        - vendor
+
+    ignoreErrors:
+        # relax strict rules
+        - '~^Only booleans are allowed in .+, .+ given( on the (left|right) side)?\.$~'
