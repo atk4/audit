@@ -675,7 +675,7 @@ class AuditController
     protected function wrapText(string $text, int $length = 30): string
     {
         return strlen($text) > $length
-            ? substr($text, 0, strrpos(substr($text, 0, $length), ' ')) . '...'
+            ? substr($text, 0, strrpos(substr(trim($text), 0, $length), ' ') ?: $length) . '...'
             : $text;
     }
 
