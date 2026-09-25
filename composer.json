@@ -11,7 +11,6 @@
         "event sourcing",
         "crud"
     ],
-    "version": "dev-develop",
     "authors": [
         {
             "name": "Romans Malinovskis",
@@ -25,11 +24,6 @@
     ],
     "homepage": "https://github.com/atk4/audit",
     "require": {
-        "php": ">=7.4 <8.4",
-        "ext-json": "*",
-        "atk4/data": "dev-develop"
-    },
-    "require-release": {
         "php": ">=7.4 <8.4",
         "atk4/data": "~6.0.0",
         "ext-json": "*"
