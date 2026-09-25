@@ -1,0 +1,166 @@
+<div {$attributes} class="atk4-audit-detail">
+
+    <!-- ============================================================
+         IDENTITY
+         ============================================================ -->
+    <div class="atk4-audit-identity">
+        <div class="atk4-audit-identity-left">
+            <div class="atk4-audit-record-icon">
+                <i class="history icon"></i>
+            </div>
+
+            <div>
+                <div class="atk4-audit-record-title">
+                    AuditLog Entry
+                    <span class="atk4-audit-record-id">
+                        #{$audit_id}
+                    </span>
+                </div>
+                <div class="atk4-audit-record-subtitle">
+                    Audit record details
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         METADATA
+         ============================================================ -->
+    <div class="ui segment atk4-audit-meta">
+        <div class="atk4-audit-meta-row">
+            <div class="atk4-audit-meta-item">
+                <div class="atk4-audit-label">
+                    Action
+                </div>
+                <div class="atk4-audit-value">
+                    {$action}
+                </div>
+            </div>
+
+            <div class="atk4-audit-meta-item">
+                <div class="atk4-audit-label">
+                    Model
+                </div>
+                <div class="atk4-audit-value atk4-audit-important">
+                    {$model}
+                </div>
+            </div>
+
+            <div class="atk4-audit-meta-item" style="border-right: 1px solid rgba(34, 36, 38, .11) !important;">
+                <div class="atk4-audit-label">
+                    Model ID
+                </div>
+                <div class="atk4-audit-value atk4-audit-important atk4-audit-mono">
+                    {$model_id}
+                </div>
+            </div>
+
+            <div class="atk4-audit-meta-item">
+                <div class="atk4-audit-label">
+                    Start Time
+                </div>
+                <div class="atk4-audit-value atk4-audit-mono">
+                    {$start_time}
+                </div>
+            </div>
+
+            <div class="atk4-audit-meta-item">
+                <div class="atk4-audit-label">
+                    Duration
+                </div>
+                <div class="atk4-audit-value atk4-audit-important atk4-audit-mono">
+                    {$duration}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         DESCRIPTION
+         ============================================================ -->
+    <div class="atk4-audit-description">
+        <div class="atk4-audit-label">
+            Description
+        </div>
+
+        <div class="atk4-audit-description-value">
+            {$description}
+        </div>
+    </div>
+
+    <!-- ============================================================
+         CHANGES
+         ============================================================ -->
+    <div class="atk4-audit-section-title">
+        <i class="exchange icon"></i>
+        Changes
+    </div>
+
+    <div class="atk4-audit-changes-grid">
+        <div class="atk4-audit-changes-left">
+            {$request_diff}
+            {$reactive_diff}
+        </div>
+
+        <div class="atk4-audit-changes-right">
+            {$summary_diff}
+        </div>
+    </div>
+
+    <!-- ============================================================
+         CONTEXT
+         ============================================================ -->
+    <div class="atk4-audit-secondary-grid">
+        <div>
+            <div class="ui segment atk4-audit-secondary-card">
+                <div class="atk4-audit-secondary-title">
+                    <i class="user outline icon"></i>
+                    User & Context
+                </div>
+
+                <div class="atk4-audit-secondary-body">
+                    <div class="atk4-audit-context-row">
+                        <span>
+                            User ID
+                        </span>
+                        <strong>
+                            {$user_id}
+                        </strong>
+                    </div>
+
+                    <div class="atk4-audit-context-row">
+                        <span>
+                            Caused By
+                        </span>
+                        <strong>
+                            {$caused_by}
+                        </strong>
+                    </div>
+
+                    <div class="atk4-audit-context-row">
+                        <span>
+                            Causes
+                        </span>
+                        <strong class="atk4-audit-causes">
+                            {$causes}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="ui segment atk4-audit-secondary-card">
+                <div class="atk4-audit-secondary-title">
+                    <i class="server icon"></i>
+                    Session Info
+                </div>
+
+                <div class="atk4-audit-secondary-body">
+                    {$session_info}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

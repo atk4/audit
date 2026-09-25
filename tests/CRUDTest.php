@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Atk4\Audit\Tests;
 
-use Atk4\Audit\Controller;
+use Atk4\Audit\AuditController;
+use Atk4\Audit\AuditPolicy;
 use Atk4\Data\Model;
-use Atk4\Schema\PhpunitTestCase;
 
-class AuditableUser extends Model
+class User extends Model
 {
     public $table = 'user';
 
@@ -18,155 +18,305 @@ class AuditableUser extends Model
 
         $this->addField('name');
         $this->addField('surname');
+        $this->addField('fullname');
+        $this->addField('password');
 
-        $this->add(new Controller());
+        $this->onHook(Model::HOOK_BEFORE_SAVE, static function ($m) {
+            $m->set('fullname', trim($m->get('name') . ' ' . $m->get('surname')));
+        }, [], -100);
     }
 }
 
 /**
  * Tests basic create, update and delete operations.
  */
-class CRUDTest extends PhpunitTestCase
+class CrudTest extends TestCase
 {
-    protected $audit_db = ['_' => [
-        'initiator_audit_log_id' => 1,
-        'ts' => '',
-        'model' => '',
-        'model_id' => 1,
-        'action' => '',
-        'user_info' => '',
-        'time_taken' => 1.1,
-        'request_diff' => '',
-        'reactive_diff' => '',
-        'descr' => '',
-        'is_reverted' => '',
-        'revert_audit_log_id' => 1,
-    ]];
-
-    /*
-    public function testUpdate()
+    #[\Override]
+    protected function setUp(): void
     {
-        $q = [
-            'user' => [
-                ['name' => 'Vinny', 'surname' => 'Shira'],
-                ['name' => 'Zoe', 'surname' => 'Shatwell'],
-            ],
-            'audit_log' => $this->audit_db,
-        ];
-        $this->setDb($q);
+        parent::setUp();
 
-        $m = new AuditableUser($this->db);
-
-        $m->load(1); // load Vinny
-        $m['name'] = 'Ken';
-        $m->save();
-
-        // more audit record for Vinny
-        $l = $m->ref('AuditLog')->loadLast();
-        $this->assertSame(1, $m->ref('AuditLog')->action('count')->getOne());
-        $this->assertSame('update Ken: name=Ken', $l['descr']);
-        $this->assertSame(['name' => ['Vinny', 'Ken']], $l['request_diff']);
-
-        $m->load(2); // Zoe
-        $m['name'] = 'Brett';
-        $m->save();
-        $m['name'] = 'Doug';
-        $m->save();
-
-        // two audit records for Zoe
-        $this->assertSame(2, $m->ref('AuditLog')->action('count')->getOne());
-
-        // three audit records in total (ref when model is not loaded)
-        $m->unload();
-        $this->assertSame(3, $m->ref('AuditLog')->action('count')->getOne());
+        // test models
+        $this->createMigrator(new User($this->db))->create();
     }
 
-    public function testUndo()
+    public function testCRUD(): void
     {
-        $q = [
-            'user' => [
-                ['name' => 'Jawshua', 'surname' => 'Lo'],
-                ['name' => 'Jessica', 'surname' => 'Fish'],
+        // auditable User model
+        $users = new User($this->db);
+        $this->audit->addModel($users);
+
+        // create 2 records
+        $import_data = [
+            [
+                'id' => 1, // manually set (request_diff)
+                'name' => 'Vinny',
+                'surname' => 'Shira',
+                'fullname' => 'Vinny Shira', // manually set (request_diff)
+                'password' => 'vinny123',
             ],
-            'audit_log' => $this->audit_db,
+            [
+                // 'id' => 2, // autoincrement (reactive_diff)
+                'name' => 'Zoe',
+                'surname' => 'Shatwell',
+                // 'fullname' => 'Zoe Shatwell', // will be calculated (reactive_diff)
+                'password' => 'qwerty123',
+            ],
+            [
+                'name' => 'Peter',
+                'surname' => 'Pen',
+            ],
         ];
-        $this->setDb($q);
-        $zz = $this->getDb('user');
+        $users->import($import_data);
 
-        $m = new AuditableUser($this->db);
+        // update name of 1 record
+        $user = $users->load(1); // load Vinny
+        $user->set('name', 'John');
+        $user->save();
 
-        $m->tryLoadAny();
-        $m['name'] = 'Donald';
-        $m->save();
+        // change nothing and save
+        $user->save();
 
-        $l = $m->ref('AuditLog')->loadLast();
-        $l->undo();
+        // delete user #1
+        $user->delete();
 
+        // update user #3
+        $users->load(3)->save(['surname' => 'Pencil']);
 
-        $m->reload();
-        $this->assertSame('Jawshua', $m['name']);
-        $this->assertSame(2, $m->ref('AuditLog')->action('count')->getOne());
+        // test audit log
+        $data = $this->audit->auditModel->export(['id', 'model', 'model_id', 'action', 'request_diff', 'reactive_diff', 'descr']);
+        // print_r($data);
 
-        $l = $m->ref('AuditLog')->loadLast();
+        self::assertEquals([
+            // 3 import records
+            [
+                'id' => 1,
+                'model' => 'User',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'id' => [null, 1],
+                    'name' => [null, 'Vinny'],
+                    'surname' => [null, 'Shira'],
+                    'fullname' => [null, 'Vinny Shira'],
+                    'password' => [null, 'vinny123'],
+                ],
+                'reactive_diff' => [],
+                'descr' => 'create #1 (Vinny): id=1, name=Vinny, surname=Shira, fullname=Vinny Shira, password=vinny123',
+            ],
+            [
+                'id' => 2,
+                'model' => 'User',
+                'model_id' => 2,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'name' => [null, 'Zoe'],
+                    'surname' => [null, 'Shatwell'],
+                    'password' => [null, 'qwerty123'],
+                ],
+                'reactive_diff' => [
+                    'id' => [null, 2],
+                    'fullname' => [null, 'Zoe Shatwell'],
+                ],
+                'descr' => 'create #2 (Zoe): name=Zoe, surname=Shatwell, password=qwerty123',
+            ],
+            [
+                'id' => 3,
+                'model' => 'User',
+                'model_id' => 3,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'name' => [null, 'Peter'],
+                    'surname' => [null, 'Pen'],
+                ],
+                'reactive_diff' => [
+                    'id' => [null, 3],
+                    'fullname' => [null, 'Peter Pen'],
+                    'password' => [null, null],
+                ],
+                'descr' => 'create #3 (Peter): name=Peter, surname=Pen',
+            ],
+            // update name of #1 record
+            [
+                'id' => 4,
+                'model' => 'User',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'name' => ['Vinny', 'John'],
+                ],
+                'reactive_diff' => [
+                    'fullname' => ['Vinny Shira', 'John Shira'],
+                ],
+                'descr' => 'update #1 (John): name=John',
+            ],
+            // update nothing - such records are created and then removed from audit as they are almost useless, but we can't know that in advance
+            /*
+            [
+                'id' => 5,
+                'model' => 'User',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [],
+                'reactive_diff' => [],
+            ],
+            */
+            // delete user #1
+            [
+                'id' => 6,
+                'model' => 'User',
+                'model_id' => 1,
+                'action' => AuditController::ACTION_DELETE,
+                'request_diff' => [],
+                'reactive_diff' => [
+                    'id' => [1, null],
+                    'name' => ['John', null],
+                    'surname' => ['Shira', null],
+                    'fullname' => ['John Shira', null],
+                    'password' => ['vinny123', null],
+                ],
+                'descr' => 'delete #1 (John)',
+            ],
+            // update name of #1 record
+            [
+                'id' => 7,
+                'model' => 'User',
+                'model_id' => 3,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'surname' => ['Pen', 'Pencil'],
+                ],
+                'reactive_diff' => [
+                    'fullname' => ['Peter Pen', 'Peter Pencil'],
+                ],
+                'descr' => 'update #3 (Peter): surname=Pencil',
+            ],
+        ], $data);
 
-        $this->assertSame(1, $l['revert_audit_log_id']);
-        $this->assertSame(false, $l['is_reverted']);
+        // test reference traversal
+        $users = new User($this->db);
+        $this->audit->addModel($users);
 
-        // table is back to how it was
-        $this->assertSame($zz, $this->getDb('user'));
+        // all audit records except user #1 records because such user is already deleted
+        // audit records are still in database, but can't be accessed by traversing from user model
+        self::assertSame([
+            2, 3, 7,
+        ], array_keys($users->ref('AuditLog')->export(['id'], 'id')));
+
+        // only user #2 records
+        $user = $users->load(2);
+        self::assertSame([
+            2,
+        ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
+
+        // only user #3 records
+        $user = $users->load(3);
+        self::assertSame([
+            3, 7,
+        ], array_keys($user->ref('AuditLog')->export(['id'], 'id')));
     }
 
-    public function testAddDelete()
+    public function testPolicyAndCustomAuditLogMessage(): void
     {
-        $q = [
-            'user' => [
-                ['name' => 'Jason', 'surname' => 'Dyck'],
-                ['name' => 'James', 'surname' => 'Knight'],
+        // auditable User model
+        $users = new User($this->db);
+        $policy = (new AuditPolicy())
+            ->ignoreField('id')
+            ->ignoreField('fullname')
+            ->redactField('password')
+        ;
+        $this->audit->addModel($users, $policy);
+
+        // create 2 records
+        $import_data = [
+            [
+                'name' => 'John',
+                'surname' => 'Doe',
+                'password' => 'john123',
             ],
-            'audit_log' => $this->audit_db,
-        ];
-        $this->setDb($q);
-        $zz = $this->getDb('user');
-
-        $m = new AuditableUser($this->db);
-
-        $m->getElement('surname')->default = 'Pen';
-
-        $m->save(['name'=>'Robert']);
-
-        $m->loadBy('name', 'Jason')->delete();
-
-        $log = $m->ref('AuditLog');
-
-        $log->each('undo');
-
-        // table is back to how it was
-        $this->assertSame($zz, $this->getDb('user'));
-    }
-    */
-
-    public function testEmptyUpdate()
-    {
-        $q = [
-            'user' => [
-                ['name' => 'Vinny', 'surname' => 'Shira'],
-                ['name' => 'Zoe', 'surname' => 'Shatwell'],
+            [
+                'name' => 'Peter',
+                'surname' => 'Pen',
+                'fullname' => 'Peter Pen',
             ],
-            'audit_log' => $this->audit_db,
         ];
-        $this->setDb($q);
+        $users->import($import_data);
 
-        $m = new AuditableUser($this->db);
+        // change password of user #1
+        $users->load(1)->save(['password' => 'newpass']);
 
-        $m->load(1); // load Vinny
-        $m->set('name', 'Vinny'); // false change
-        $m->save();
+        // add custom audit message to user #2
+        $users->load(2)->auditLog('Custom message for Peter'); // @phpstan-ignore method.notFound
 
-        // should be no audit records for Vinny because there were no actual changes
-        //$this->assertSame(0, $m->ref('AuditLog')->action('count')->getOne());
+        // add custom audit message to user #1
+        $users->load(1)->auditLog('Custom message for John with data', ['foo' => 'bar', 'salary' => 999.53]); // @phpstan-ignore method.notFound
 
-        // but in reality because of https://github.com/atk4/audit/issues/17#issuecomment-453544884
-        // it's one empty audit record:
-        $this->assertSame('1', $m->ref('AuditLog')->action('count')->getOne());
+        // test audit log
+        $data = $this->audit->auditModel->export(['id', 'model_id', 'action', 'request_diff', 'reactive_diff', 'descr']);
+        // print_r($data);
+
+        self::assertEquals([
+            // 2 import records
+            [
+                'id' => 1,
+                'model_id' => 1,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'name' => [null, 'John'],
+                    'surname' => [null, 'Doe'],
+                    'password' => [null, AuditController::VALUE_REDACTED],
+                ],
+                'reactive_diff' => [
+                    // 'id' => [null, 1], // ignored
+                    // 'fullname' => [null, 'John Doe'], // ignored
+                    // 'password' => [null, 'john123'], // redacted and not changed
+                ],
+                'descr' => 'create #1 (John): name=John, surname=Doe, password=' . AuditController::VALUE_REDACTED,
+            ],
+            [
+                'id' => 2,
+                'model_id' => 2,
+                'action' => AuditController::ACTION_CREATE,
+                'request_diff' => [
+                    'name' => [null, 'Peter'],
+                    'surname' => [null, 'Pen'],
+                    // 'fullname' => [null, 'Peter Pen'], // ignored
+                ],
+                'reactive_diff' => [
+                    // 'id' => [null, 2], // ignored
+                    // 'fullname' => [null, 'Peter Pen'], // ignored
+                    // 'password' => [null, null], // redacted fields can't be reactive
+                    'password' => [null, null],
+                ],
+                'descr' => 'create #2 (Peter): name=Peter, surname=Pen',
+            ],
+            [
+                'id' => 3,
+                'model_id' => 1,
+                'action' => AuditController::ACTION_UPDATE,
+                'request_diff' => [
+                    'password' => [AuditController::VALUE_REDACTED, AuditController::VALUE_REDACTED],
+                ],
+                'reactive_diff' => [],
+                'descr' => 'update #1 (John): password=' . AuditController::VALUE_REDACTED,
+            ],
+            [
+                'id' => 4,
+                'model_id' => 2,
+                'action' => AuditController::ACTION_LOG,
+                'request_diff' => null,
+                'reactive_diff' => null,
+                'descr' => 'Custom message for Peter',
+            ],
+            [
+                'id' => 5,
+                'model_id' => 1,
+                'action' => AuditController::ACTION_LOG,
+                'request_diff' => ['foo' => 'bar', 'salary' => 999.53],
+                'reactive_diff' => null,
+                'descr' => 'Custom message for John with data',
+            ],
+        ], $data);
     }
 }

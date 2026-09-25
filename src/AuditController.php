@@ -1,0 +1,737 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Atk4\Audit;
+
+use Atk4\Audit\Model\AuditLog;
+use Atk4\Core\DiContainerTrait;
+use Atk4\Core\Exception;
+use Atk4\Core\Factory;
+use Atk4\Core\InitializerTrait;
+use Atk4\Core\TrackableTrait;
+use Atk4\Data\Model;
+use Atk4\Data\Persistence;
+
+class AuditController
+{
+    use DiContainerTrait;
+    use InitializerTrait {
+        init as _init;
+    }
+    use TrackableTrait;
+
+    public const ACTION_CREATE = 'create';
+    public const ACTION_UPDATE = 'update';
+    public const ACTION_DELETE = 'delete';
+    public const ACTION_LOG = 'log';
+
+    public const VALUE_REDACTED = '[REDACTED]';
+    // public const VALUE_UNSUPPORTED = '[UNSUPPORTED]';
+
+    /**
+     * Audit data model.
+     * Pass this property in constructor seed to change it.
+     *
+     * @var array<mixed,mixed>|AuditLog
+     */
+    public $auditModel = [AuditLog::class];
+
+    protected AuditPolicy $defaultPolicy;
+
+    /** @var ?string Root namespace of all models - will be removed from class names */
+    protected $rootNamespace;
+
+    /** @var ?int Optional user ID */
+    protected $userId;
+
+    /** @var array<string,AuditPolicy> */
+    private array $policies = [];
+
+    /** @var array<int,AuditPolicy> */
+    private array $models = [];
+
+    /** @var Stack audit log stack */
+    private Stack $stack;
+
+    /** @var Persistence Persistence to observe */
+    private ?Persistence $persistence = null;
+
+    /** @var int Observed persistence hook index */
+    private ?int $persistenceHookIndex = null;
+
+    /**
+     * Creates audit controller object.
+     *
+     * @param array<string, mixed> $defaults
+     */
+    public function __construct(?Persistence $persistence = null, array $defaults = [])
+    {
+        $this->defaultPolicy = new AuditPolicy();
+
+        $this->setDefaults($defaults);
+
+        // create audit model object if it's not already there
+        $this->auditModel = Factory::factory($this->auditModel);
+        if (!$this->auditModel->issetPersistence() && $persistence !== null) {
+            $this->auditModel->setPersistence($persistence);
+        }
+
+        $this->stack = new Stack();
+    }
+
+    protected function init(): void
+    {
+        $this->_init();
+    }
+
+    /**
+     * @return $this
+     */
+    public function setDefaultPolicy(AuditPolicy $policy)
+    {
+        $this->defaultPolicy = $policy;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setModelPolicy(string $modelClass, AuditPolicy $policy)
+    {
+        $this->policies[$modelClass] = $policy;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setRootNamespace(string $namespace)
+    {
+        $this->rootNamespace = $namespace;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setUserId(int $userId)
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
+    protected function getPolicyForModel(Model $model): AuditPolicy
+    {
+        $model = $this->getBaseModel($model);
+
+        return $this->policies[get_class($model)] ?? $this->defaultPolicy;
+    }
+
+    /**
+     * Monitor persistence, so models added later are automatically monitored.
+     */
+    public function observePersistence(Persistence $persistence): void
+    {
+        if ($this->persistence !== null) {
+            throw new Exception('Audit controller already observes persistence');
+        }
+
+        $this->persistence = $persistence;
+
+        $this->persistenceHookIndex = $persistence->onHook(
+            Persistence::HOOK_AFTER_ADD,
+            function (Persistence $p, Model $m) {
+                $this->addModel($m);
+            }
+        );
+    }
+
+    /**
+     * Stop monitoring persistence.
+     *
+     * Note: Models which were already added to persistence will still be monitored.
+     */
+    public function stopObservingPersistence(): void
+    {
+        if ($this->persistence === null) {
+            throw new Exception('Audit controller does not observe persistence');
+        }
+
+        $this->persistence->removeHook(Persistence::HOOK_AFTER_ADD, $this->persistenceHookIndex, true);
+        $this->persistenceHookIndex = null;
+        $this->persistence = null;
+    }
+
+    /**
+     * Add multiple models to observe.
+     *
+     * Note: You can not set policies when using this method, so use setModelPolicy() to set up policies in advance.
+     *
+     * @param Model[] $models
+     *
+     * @return $this
+     */
+    public function addModels(array $models)
+    {
+        foreach ($models as $model) {
+            $this->addModel($model);
+        }
+
+        return $this;
+    }
+
+    private function getBaseModel(Model $model): Model
+    {
+        return $model->getModel(true);
+    }
+
+    /**
+     * Add model to observe.
+     *
+     * @return $this
+     */
+    public function addModel(Model $model, ?AuditPolicy $policy = null)
+    {
+        $model = $this->getBaseModel($model);
+
+        // if already added, then just ignore and do nothing
+        $obj_id = spl_object_id($model);
+        if (isset($this->models[$obj_id])) {
+            return $this;
+        }
+
+        // avoid auditing audit model itself
+        if ($this->auditModel instanceof AuditLog && $model instanceof $this->auditModel) {
+            return $this;
+        }
+
+        // store model and policy
+        $policy ??= $this->getPolicyForModel($model);
+
+        if ($policy->getModelMode($model) === AuditPolicy::MODEL_IGNORE) {
+            return $this;
+        }
+
+        // var_dump('Store policy: '.get_class($model).' '.$obj_id);
+        $this->models[$obj_id] = $policy;
+
+        // add model hooks
+        $model->onHook(
+            Model::HOOK_BEFORE_SAVE,
+            \Closure::fromCallable([$this, 'beforeSave']),
+            [],
+            \PHP_INT_MIN // as soon as possible
+        );
+        $model->onHook(
+            Model::HOOK_BEFORE_DELETE,
+            \Closure::fromCallable([$this, 'beforeDelete']),
+            [],
+            \PHP_INT_MIN // as soon as possible
+        );
+        $model->onHook(
+            Model::HOOK_AFTER_INSERT,
+            \Closure::fromCallable([$this, 'afterInsert']),
+            [],
+            \PHP_INT_MAX // as late as possible
+        );
+        $model->onHook(
+            Model::HOOK_AFTER_UPDATE,
+            \Closure::fromCallable([$this, 'afterUpdate']),
+            [],
+            \PHP_INT_MAX // as late as possible
+        );
+        $model->onHook(
+            Model::HOOK_AFTER_SAVE,
+            \Closure::fromCallable([$this, 'afterSave']),
+            [],
+            \PHP_INT_MAX // as late as possible
+        );
+        $model->onHook(
+            Model::HOOK_AFTER_DELETE,
+            \Closure::fromCallable([$this, 'afterDelete']),
+            [],
+            \PHP_INT_MAX // as late as possible
+        );
+
+        // adds hasMany reference to audit records
+        $self = $this;
+        $model->hasMany('AuditLog', [
+            'model' => static function (Persistence $p) use ($model, $self) {
+                return (clone $self->auditModel)->addCondition('model', $self->normalizeNamespace(get_class($model)));
+            },
+            'ourField' => $model->idField,
+            'theirField' => 'model_id',
+        ]);
+
+        // adds ability to access audit controller from model
+        if (!$model->hasMethod('getAuditController')) {
+            $model->addMethod('getAuditController', function () {return $this; });
+        }
+
+        // adds custom log method in model
+        if (!$model->hasMethod('auditLog')) {
+            $model->addMethod('auditLog', \Closure::fromCallable([$this, 'customLog']));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Create custom audit log message.
+     *
+     * Call this by using $model->auditLog($message,$data) dynamic method.
+     *
+     * @param array<mixed,mixed> $data
+     */
+    protected function customLog(Model $m, string $message, ?array $data = null): AuditLog
+    {
+        return $this->auditModel->createEntity()->save([
+            'action' => self::ACTION_LOG,
+            'model' => $this->normalizeNamespace(get_class($m)),
+            'model_id' => $m->isLoaded() ? $m->getId() : null,
+            'start_time_ms' => self::getMs(),
+            'user_id' => $this->userId,
+            'session_info' => $this->getSessionInfo(),
+            // 'descr' => $message . ($data ? ': ' . $this->getDescrValues($data, $m) : ''),
+            'request_diff' => $data, // stored as [key=>value] not as diff
+            'descr' => $message,
+        ]);
+    }
+
+    /**
+     * Create new audit log record and push change into audit log table (and audit log stack).
+     *
+     * @param self::ACTION_*                 $action
+     * @param array<string,array<0|1,mixed>> $request_diff
+     * @param array<string,mixed>            $reactive_diff
+     */
+    private function push(Model $m, string $action, array $request_diff = [], array $reactive_diff = []): AuditLog
+    {
+        $m->assertIsEntity();
+
+        // var_dump(['push'=>get_class($m)]);
+
+        /** @var AuditLog $a */
+        $a = $this->auditModel->createEntity();
+
+        // set audit record values
+        $a->setMulti([
+            'action' => $action,
+            'model' => $this->normalizeNamespace(get_class($m)),
+            'model_id' => $m->isLoaded() ? $m->getId() : null,
+            'start_time_ms' => self::getMs(),
+            'request_diff' => $request_diff,
+            'reactive_diff' => $reactive_diff,
+            'user_id' => $this->userId,
+            'session_info' => $this->getSessionInfo(),
+        ]);
+
+        if (!$this->stack->isEmpty()) {
+            // link to previous audit record
+            $a->set('initiator_audit_log_id', $this->stack->top()->getId());
+        }
+
+        // save the initial action
+        $a->save();
+
+        // save audit record in stack
+        $this->stack->push($a);
+
+        return $a;
+    }
+
+    /**
+     * Pull most recent AuditLog entity from audit log stack.
+     */
+    private function pull(Model $m): AuditLog
+    {
+        $a = $this->stack->pop();
+        // var_dump(['pull'=>$a->get('model')]);
+
+        // save time taken
+        $a->set('duration', (self::getMs() - $a->get('start_time_ms')) / 1000);
+
+        // generate description
+        $a->set('descr', $this->getDescr($a, $m, $a->get('action')));
+
+        return $a;
+    }
+
+    private static function getMs(): int
+    {
+        return (int) round(microtime(true) * 1_000);
+    }
+
+    private function normalizeNamespace(string $s): string
+    {
+        return ltrim(str_replace($this->rootNamespace ?? '', '', $s), '\\');
+    }
+
+    private function getModelAuditPolicy(Model $model): AuditPolicy
+    {
+        $model = $this->getBaseModel($model);
+
+        $obj_id = spl_object_id($model);
+        // var_dump('Request policy: ' . get_class($model) . ' ' . $obj_id);
+
+        if (!isset($this->models[$obj_id])) {
+            throw new Exception(
+                'Model is not registered for auditing: ' . get_class($model)
+            );
+        }
+
+        return $this->models[$obj_id];
+    }
+
+    /**
+     * Returns array of session info.
+     *
+     * @return array<string,string>
+     */
+    protected function getSessionInfo(): array
+    {
+        $info = [];
+
+        if (isset($_SERVER['REMOTE_ADDR'])) {
+            $info['ip'] = $_SERVER['REMOTE_ADDR'];
+        }
+        if (session_status() === \PHP_SESSION_ACTIVE) {
+            $info['session'] = session_id();
+        }
+        if (isset($_SERVER['REQUEST_METHOD'])) {
+            $info['request_method'] = $_SERVER['REQUEST_METHOD'];
+        }
+        if (isset($_SERVER['REQUEST_URI'])) {
+            $info['request_uri'] = $_SERVER['REQUEST_URI'];
+        }
+        if (isset($_SERVER['HTTP_USER_AGENT'])) {
+            $info['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+        }
+
+        return $info;
+    }
+
+    /**
+     * Calculates and returns array of all changed fields and their values.
+     *
+     * @return array<string,array<0|1,mixed>> Returns encoded values
+     */
+    private function getDirtyDiff(Model $m): array
+    {
+        $policy = $this->getModelAuditPolicy($m);
+
+        $diff = [];
+        foreach ($m->getDirtyRef() as $fieldName => $oldValue) {
+            $f = $m->getField($fieldName);
+            $newValue = $m->get($fieldName);
+
+            $mode = $policy->getFieldMode($f);
+            switch ($mode) {
+                case AuditPolicy::FIELD_IGNORE:
+                    continue 2;
+                case AuditPolicy::FIELD_REDACT:
+                    // use redacted representation
+                    $oldValue = ($oldValue === null ? null : self::VALUE_REDACTED);
+                    $newValue = ($newValue === null ? null : self::VALUE_REDACTED);
+
+                    break;
+                case AuditPolicy::FIELD_AUDIT:
+                    // actual value
+                    $oldValue = $this->encodeAuditValue($m, $fieldName, $oldValue);
+                    $newValue = $this->encodeAuditValue($m, $fieldName, $newValue);
+
+                    break;
+                default:
+                    throw new Exception('Unknown audit field mode: ' . $mode);
+            }
+
+            // fieldName = [old value, new value]
+            $diff[$fieldName] = [$oldValue, $newValue];
+        }
+
+        return $diff;
+    }
+
+    /**
+     * Remove records from reactive diff if they are already found in request diff.
+     *
+     * @param array<string,array<0|1,mixed>> $reactiveDiff Expects encoded values
+     * @param array<string,array<0|1,mixed>> $requestDiff  Expects encoded values
+     *
+     * @return array<string,array<0|1,mixed>> Returns encoded values
+     */
+    private function cleanupReactiveDiff(Model $m, array $reactiveDiff, array $requestDiff): array
+    {
+        $policy = $this->getModelAuditPolicy($m);
+
+        $diff = [];
+        foreach ($reactiveDiff as $fieldName => [$oldValue, $newValue]) {
+            $f = $m->getField($fieldName);
+
+            $mode = $policy->getFieldMode($f);
+            switch ($mode) {
+                case AuditPolicy::FIELD_IGNORE:
+                    continue 2;
+                case AuditPolicy::FIELD_REDACT:
+                    // use redacted representation - already encoded
+                    // $oldValue = ($oldValue === null ? null : self::VALUE_REDACTED);
+                    // $newValue = ($newValue === null ? null : self::VALUE_REDACTED);
+
+                    break;
+                case AuditPolicy::FIELD_AUDIT:
+                    // actual value - already encoded
+                    // $oldValue = $this->encodeAuditValue($m, $fieldName, $oldValue);
+                    // $newValue = $this->encodeAuditValue($m, $fieldName, $newValue);
+
+                    break;
+                default:
+                    throw new Exception('Unknown audit field mode: ' . $mode);
+            }
+
+            // if change was requested and value matches the one requested, then skip
+            if (array_key_exists($fieldName, $requestDiff)) {
+                if ($mode === AuditPolicy::FIELD_AUDIT) {
+                    $requested = $this->decodeAuditValue($m, $fieldName, $requestDiff[$fieldName][1]);
+                    $reactive = $this->decodeAuditValue($m, $fieldName, $newValue);
+
+                    if ($m->getField($fieldName)->compare($requested, $reactive)) {
+                        continue;
+                    }
+
+                    $diff[$fieldName] = [$oldValue, $newValue];
+                }
+            } else {
+                $diff[$fieldName] = [$oldValue, $newValue];
+            }
+        }
+
+        return $diff;
+    }
+
+    /**
+     * Encode value for saving.
+     *
+     * @param mixed $value
+     *
+     * @return mixed
+     */
+    protected function encodeAuditValue(Model $m, string $fieldName, $value)
+    {
+        return $value === null ? null : $m->getModel()->getPersistence()->typecastSaveField($m->getField($fieldName), $value);
+    }
+
+    /**
+     * Decode value when loading.
+     *
+     * @param mixed $value
+     *
+     * @return mixed
+     */
+    protected function decodeAuditValue(Model $m, string $fieldName, $value)
+    {
+        return $value === null ? null : $m->getModel()->getPersistence()->typecastLoadField($m->getField($fieldName), $value);
+    }
+
+    /**
+     * Executes before model record is saved as soon as possible.
+     */
+    protected function beforeSave(Model $m, bool $is_update): void
+    {
+        $action = $is_update ? self::ACTION_UPDATE : self::ACTION_CREATE;
+        $requestDiff = $this->getDirtyDiff($m);
+        $this->push($m, $action, $requestDiff);
+    }
+
+    /**
+     * Executes after model record is inserted as late as possible.
+     */
+    protected function afterInsert(Model $m): void
+    {
+        // get (but don't pull) from audit stack
+        $a = $this->stack->top();
+
+        $requestDiff = $a->get('request_diff') ?? [];
+
+        $d = $m->get();
+        $reactiveDiff = $this->cleanupReactiveDiff(
+            $m,
+            // use current data and clean it up as for insert dirty works strange and all data is always new (reactive = all minus requested)
+            array_combine(
+                array_keys($d),
+                array_map(fn ($fieldName, $value) => [null, $this->encodeAuditValue($m, $fieldName, $value)], array_keys($d), $d)
+            ),
+            $requestDiff
+        );
+
+        // new record created
+        $a->setMulti([
+            'model_id' => $m->getId(),
+            'reactive_diff' => $reactiveDiff,
+        ]);
+
+        $a->save();
+    }
+
+    /**
+     * Executes after model record is updated as late as possible.
+     * Note - keep in mind that after update hook is not called at all if data has not changed.
+     *        So in such case it'll generate "empty" audit record which is kind of useless, but still correct behaviour.
+     *
+     * @param array<string,mixed> $changed_data
+     */
+    protected function afterUpdate(Model $m, array $changed_data): void
+    {
+        // get (but don't pull) from audit stack
+        $a = $this->stack->top();
+
+        $requestDiff = $a->get('request_diff') ?? [];
+        $reactiveDiff = $this->cleanupReactiveDiff($m, $this->getDirtyDiff($m), $requestDiff);
+
+        $a->set('reactive_diff', $reactiveDiff);
+
+        $a->save();
+    }
+
+    /**
+     * Executes after model record is saved as late as possible.
+     *
+     * If there were no data changes, then delete useless audit record
+     */
+    public function afterSave(Model $m, bool $is_update, bool $noChanges): void
+    {
+        $a = $this->pull($m);
+
+        if ($is_update && $noChanges) {
+            $a->delete();
+        } else {
+            $a->save();
+        }
+    }
+
+    /**
+     * Executes before model record is deleted as soon as possible.
+     */
+    public function beforeDelete(Model $m): void
+    {
+        // we need access to all fields
+        $onlyFields = $m->getModel()->onlyFields;
+
+        try {
+            if ($onlyFields) {
+                $m = $m->getModel()->setOnlyFields(null)->load($m->getId());
+            }
+
+            $policy = $this->getModelAuditPolicy($m);
+
+            $reactiveDiff = [];
+            foreach ($m->getDataRef() as $fieldName => $value) {
+                $f = $m->getField($fieldName);
+
+                $mode = $policy->getFieldMode($f);
+                switch ($mode) {
+                    case AuditPolicy::FIELD_IGNORE:
+                        continue 2;
+                    case AuditPolicy::FIELD_REDACT:
+                        // use redacted representation
+                        $value = ($value === null ? null : self::VALUE_REDACTED);
+
+                        break;
+                    case AuditPolicy::FIELD_AUDIT:
+                        // actual value
+                        $value = $this->encodeAuditValue($m, $fieldName, $value);
+
+                        break;
+                    default:
+                        throw new Exception('Unknown audit field mode: ' . $mode);
+                }
+
+                // key = [old value, new value]
+                $reactiveDiff[$fieldName] = [$value, null];
+            }
+
+            $this->push($m, self::ACTION_DELETE, [], $reactiveDiff);
+        } finally {
+            // restore onlyFields
+            $m->getModel()->setOnlyFields($onlyFields);
+        }
+    }
+
+    /**
+     * Executes after model record is deleted as late as possible.
+     */
+    public function afterDelete(Model $m): void
+    {
+        $this->pull($m)->save();
+    }
+
+    /**
+     * Simple text wrapper.
+     */
+    protected function wrapText(string $text, int $length = 30): string
+    {
+        return strlen($text) > $length
+            ? substr($text, 0, strrpos(substr($text, 0, $length), ' ')) . '...'
+            : $text;
+    }
+
+    /**
+     * Create CSV of values from array.
+     *
+     * @param array<string,mixed> $values
+     */
+    private function getDescrValues(array $values, Model $m): string
+    {
+        $t = [];
+        foreach ($values as $k => $v) {
+            $t[] = $k . '=' . $this->wrapText((string) $v);
+        }
+
+        return implode(', ', $t);
+    }
+
+    /**
+     * Generate description for AuditLog entry.
+     *
+     * You can overwrite this method by adding getDescr() method in your AuditLog model class.
+     *
+     * @param self::ACTION_* $action
+     */
+    protected function getDescr(AuditLog $a, Model $m, string $action): ?string
+    {
+        if ($a->hasMethod('getDescr')) {
+            return $a->getDescr($m, $action); // @phpstan-ignore method.notFound
+        }
+
+        // " #id (title)"
+        // could use $m->getTitle() here, but we don't want to see IDs in log descriptions
+        $title
+            = ' #' . $m->getId()
+            . (
+                $m->titleField && $m->hasField($m->titleField)
+                ? ' (' . $this->wrapText($m->getTitle()) . ')'
+                : ''
+            );
+
+        // generate description
+        switch ($action) {
+            case self::ACTION_DELETE:
+                return self::ACTION_DELETE . $title;
+            case self::ACTION_CREATE:
+            case self::ACTION_UPDATE:
+                return
+                    $action . $title
+                    . (
+                        $a->get('request_diff')
+                        ? ': ' . $this->getDescrValues(array_map(static fn ($row) => $row[1], $a->get('request_diff')), $m)
+                        : ''
+                    );
+        }
+
+        return null;
+    }
+}

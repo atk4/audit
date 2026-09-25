@@ -1,228 +1,204 @@
-
 # Agile Audit Extension
 
-Audit Extension provides a mechanism to store all changes that happen during persistance of your model. This extension is designed to be extensive and flexible. Use Audit if you need to track changes performed by your users in great detail.
+Agile Audit records changes made through ATK Data models in a dedicated audit log. It records creates, updates and deletes, together with the fields that were requested to change and changes that happened reactively through model hooks.
 
-Audit supports a wide varietty of additional features such as ability to **undo** actions, record actions that have **failed** to execute (due to validation) along with the error, **retry** failed actions, retrieve **historical** records without modifying database, log **custom** actions and even **replay** all actions. Audit also records which **field values** were changed inside a model before executing `save()` and which fields were changed **reactively** (through other hooks) and will track and link reactive modifications to **multiple models**.
+Audit is managed by `AuditController`. Audit records are stored by `Model\AuditLog`.
 
-Huge focus on extensibility allow you to **customise** name of log table, change field names, database **engine** (e.g. store in CSV file, API or Cloud Database), **switch off** certain features, customise **human-readable** log entries and add additional information about **user**, **session** or **environment**.
+## Installation
 
-(See also - [Full Example](full-example.md))
+Install the package with Composer:
 
-## Enabling Audit Log
-
-To enable extension for your model, add the following line into Model's method `init`:
-
-``` php
-$this->add(new \Atk4\Audit\Controller());
+```bash
+composer require atk4/audit
 ```
 
-For a basic usage you will also need to create `audit_log` table by importing `audit_log.sql` file. The audit-log is automatically populated when you perform an operation with the model next time:
+Create the `audit_log` table using the `audit_log.sql` schema included with the package.
 
-``` php
-$m->load(1);
-$m['name'] = 'Ken'; // was Vinny before
-$m->save();
+For applications that also use the Audit UI, make sure ATK UI is available as well.
+
+## Basic usage
+
+Create one `AuditController` for the persistence and add the models you want to audit:
+
+```php
+$audit = new \Atk4\Audit\AuditController($db);
+
+$users = new \App\Model\User($db);
+
+$audit->addModel($users);
 ```
 
-The following new record will be stored inside `audit_log` table:
+Now normal model operations are audited:
 
-``` json
+```php
+$user = $users->load(1);
+$user->set('name', 'Ken');
+$user->save();
+```
+
+An audit record is created in `audit_log`.
+
+The important fields are the action, model, record ID, user information, and the requested/reactive differences.
+
+For example, an update may contain:
+
+```json
 {
-   "id":1,
-   "initiator_audit_log_id":null,
-   "ts":{
-      "date":"2016-10-03 21:44:14.000000",
-      "timezone_type":3,
-      "timezone":"UTC"
-   },
-   "model":"Atk4\\Ui\\Tests\\AuditableUser",
-   "model_id":"1",
-   "action":"update",
-   "time_taken":0.00174,
-   "descr":"update name=Ken",
-   "user_info":null,
-   "request_diff":{
-      "name":[
-         "Vinny",
-         "Ken"
-      ]
-   },
-   "reactive_diff":null,
-   "is_reverted":null,
-   "revert_audit_log_id":null
+    "request_diff": {
+        "name": ["Vinny", "Ken"]
+    },
+    "reactive_diff": {}
 }
 ```
 
-Here are some more advanced topics:
+## Auditing all models
 
--   [Enable AuditLog for all your Models](system-wide.md)
--   [Configure which fields are logged](field-config.md)
--   [Custom event logging and customizing](custom.md)
--   [Various storage options](storage.md)
-
-## Working With the Log Entries
-
-Your model contains reference to AuditLog model. Let's see how many times the above record have been modified in the past:
-
-``` php
-echo $m->load(1)->ref('AuditLog')->action('count')->getOne();  // 1
-```
-
-You can also use it to access records individually or just access last record:
-
-``` php
-$m->load(1)->ref('AuditLog')->loadLast()->undo(); // revert last action
-```
-
-If you wish to undo all the actions for specific record, run:
+For most applications it is more convenient to use one controller for the whole persistence:
 
 ```php
-$yesterday = new DateTime();
-$yesterday->sub(new DateInterval('P1D'));
-
-$m->load(1)->ref('AuditLog')
-    ->addCondition('date', '>=', $yesterday)
-    ->addCondition('is_reverted')
-    ->each('undo');
-    // revert all actions, that have happened today
-    // but exclude those that have been reverted already
+$audit = new \Atk4\Audit\AuditController($db);
+$audit->observePersistence($db);
 ```
 
+Call `observePersistence()` while setting up the persistence, before models that should be audited are added to it.
 
+Models added afterwards are registered automatically.
 
-More in depth:
+Using one controller is also important when one model changes another model reactively. Those changes can then be linked together in the audit log.
 
--   [How does undo() and redo() work](undo.md)
--   [Recording sequences for your unit-tests](unit-tests.md)
--   [Fetching historical records](historical.md)
+For a small application that only needs to audit selected models, `addModel()` is sufficient.
 
-## Requested and Reactive field changes
+## Working with audit entries
 
-AuditLog extension records fields that were `dirty` before execution of save() operation. Sometimes you would have a logic inside your model hooks that can change more records or even change other models. For example if you change `InvoiceLine` amount it might want to update amount of `Inovice` too.
-
-
-
-## Requested vs Reactive actions
-
-Agile Data incorporates rich volume of logic that allow you to make a lot of decision across the system when even a smallest change is requested. For example assuming you have the following structure:
-
--   Invoice
-    -   `addFields(['total_net', 'total_vat', 'total_gross'], ['type' => 'money']);`
-    -   `hasMany('Line')`
-        -   `addField('qty', ['type => 'int'])`
-        -   `addField('vat_rate', ['type' => 'float'])`
-        -   `addFields(['price', 'vat', 'net', 'gross'], ['type' => 'money']);`
-
-Your `afterSave` hooks will automatically recalculate and update `Invoice` whenever you change the `Line`. Additionally, changing `qty` will trigger change in `vat`, `net` and `gross`.
-
-Looking at he following code:
-
-``` php
-$m = new Invoice($db);
-$m->load(1);
-$m['qty']++;
-$m->save();
-```
-
-Only a single field falls into "requested" change, which is `qty`. The original value and a new value will be stored in JSON:
-
-``` json
-{"qty": [5, 6]}
-```
-
-However due to hooks, many other values have also been updated. For the Line the "reactive" changes are:
-
-``` json
-{"net": [50, 60], "vat": [11.5, 13.8], "gross": [51.5, 63.8]}
-```
-
-Then you have some "reactive" changes for the `Invoice` model too:
-
-``` php
-{"total_net": [100, 110], "total_vat": [23.0, 25.3], "total_gross": [123.0, 135.3]}
-```
-
-The default way for Audit Log is to store only "reactive" changes, however you can enable storing of both "requested" and "reactivte":
-
-``` php
-$audit = new \Atk4\Audit\Controller([
-    new Audit(),
-    ['requested_log' => true, 'reactive_log' => true, 'link' => true]
-);
-```
-
-The option for `nested` will also associate changes inside `Invoice` with the requested changes of `Line`. If you need to customise settings on per-model basis, you should create individual controllers.
-
-## How values are stored?
-
-Audit Extension uses array persistence to prepare values for storage inside JSON. If you need to tweak how values are stored exactly, you shourd refer to documentation on [typecasting](http://agile-data.readthedocs.io/en/develop/persistence.html?highlight=typecasting#type-converting).
-
-System is storing using business-domain field names. If "net" has an actual field of "sql_net", then audit will store "net". Additionally
-
-## Undo and Replay features
-
-Agile Audit Extension perform a strict type auditing which can be quite useful for automation. Certain actions can be "undone" or "replayed" (Redo).
-
-Those action can be performed on the `Audit` model after you load the record:
-
-``` php
-$audit->load(20);
-$audit->replay();
-```
-
-Assuming that audit log with ID=20 corresponds to the `qty` modifications as I was explaining above, the replay will perform the following:
-
--   start transaction
--   load model for `Line`
--   perform modification of `qty`
--   save value of `qty`
--   track changed fields in `Line` and `Invoice`
--   assert to make sure all the same reactive changes happened
--   commit
-
-Similarly you can also call `undo()`, which will:
-
--   Reverse all `new` / `old` values for original Audit event and all related ones
--   Attempts to apply the replay()
-
-Both `Undo` and `Replay` functionality can bypass the verification steps or can actually enforce `Reactive` changes to be used. Those modes are less safe but if that's what you want you can try it.
-
-Finally, Replay feature can also override `id` of the original model. In this scenario changes will be re-applied to a different record.
-
-### When Undo and Replay are useful?
-
-Undo can be offered to a user as an option. Because implementation of `Undo` especially in transaction-supporting database is pretty safe, you can execute multiple `Undo` actions effectively allowing you to walk between revisions of your persistence.
-
-``` php
-$audit = new Audit($db);
-$audit->addCondition('user_id', $this->app->user->id);
-$audit->addCondition('date', '>', $unroll_to_date);
-$audit->setOrder('id desc');
-$audit->each('undo');
-```
-
-Applying `Replay` on the range of entries makes a pretty effective multi-record update technique.
+Audited models receive an `AuditLog` reference:
 
 ```php
-$invoices = $client->ref('Invoice'); // references multiple invoices
-$invoices->add($audit);
+$user = $users->load(1);
 
-// record action
-$invoices->loadAny();
-$invoices->save( $new_data );
-
-$audit->last_action->applyOnOthers($invoices);
+$history = $user->ref('AuditLog');
 ```
 
-Finally, replay can be used in creating unit tests. If you have enabled Audit Log for your application and have already performed some actions, you can generate  `PHPUnit`-compatible code through Admin Audit Page.
+Count the history:
 
-## Admin Page
+```php
+$count = $user->ref('AuditLog')
+    ->action('count')
+    ->getOne();
+```
 
-Audit Extension comes with [Agile UI](https://github.com/atk4/ui) based page that contains a handy management console where you can browse all the recent events, convert them into unit-tests, undo or re-apply some of those. Additionally selecting an event will also show you all the "Reactive" actions that have been done.
+Load the most recent entry:
 
-![data-audit-1-console](images/data-audit-1-console.png)
+```php
+$lastAudit = $user->ref('AuditLog')->loadLast();
+```
 
-## Download and Install
+The same reference can be used as the data source for an Audit UI grid.
 
-Audit Extension is currently in Beta. You need to contact us if you wish to get early access.
+## Requested and reactive changes
+
+Audit separates changes requested by the original operation from changes caused by hooks or other model logic.
+
+For example, changing a line quantity can recalculate the line total and then update the parent invoice:
+
+```text
+Line.qty
+    |
+    v
+Line.total
+    |
+    v
+Invoice.total
+```
+
+The line operation can therefore contain:
+
+```json
+{
+    "request_diff": {
+        "qty": [5, 6]
+    },
+    "reactive_diff": {
+        "total": [50, 60]
+    }
+}
+```
+
+The reactive update to `Invoice` is stored as another audit record linked to the original action.
+
+See [full-example.md](full-example.md) for a complete example.
+
+## Policies
+
+Use `AuditPolicy` when some models or fields should not be stored normally.
+
+For example:
+
+```php
+$policy = new \Atk4\Audit\AuditPolicy();
+
+$policy->ignoreField('internal_note');
+$policy->redactField('email');
+
+$audit = new \Atk4\Audit\AuditController($db);
+$audit->setDefaultPolicy($policy);
+$audit->observePersistence($db);
+```
+
+See [policies.md](policies.md).
+
+## Audit UI
+
+The package provides:
+
+* `AuditGrid` for browsing audit entries
+* `AuditDetail` for inspecting one audit entry
+
+See [ui.md](ui.md).
+
+## Custom audit log entries
+
+A model registered with Audit gets an `auditLog()` method that can be used to create a custom audit entry:
+
+```php
+$user->auditLog('Imported from CRM', [
+    'source' => 'crm',
+]);
+```
+
+The custom data is stored with the audit entry.
+
+## Customisation
+
+The controller can associate audit records with the current application user:
+
+```php
+$audit->setUserId($currentUserId);
+```
+
+You can also shorten stored model names:
+
+```php
+$audit->setRootNamespace('App\\Model\\');
+```
+
+This turns:
+
+```text
+App\Model\Invoice
+```
+
+into:
+
+```text
+Invoice
+```
+
+## Important limitation
+
+Audit hooks are attached to ATK Data models.
+
+Changes made directly with SQL or through another database connection do not pass through those model hooks and are therefore not automatically audited.
+
+## Example
+
+A complete Invoice/Line example showing policies, requested changes and reactive changes is available in [full-example.md](full-example.md).

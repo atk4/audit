@@ -1,26 +1,22 @@
 # Agile Data - Audit Add-on
 
-This extension for [Agile Data](https://github.com/atk4/data) implements advanced logging capabilities as well as some elements of
-Event Sourcing.
+Audit is an extension for [Agile Data](https://github.com/atk4/data) that records changes made through your models.
 
-## Installation and Usage
+It tracks creates, updates and deletes, including requested changes and reactive changes caused by model hooks.
 
-This package have been re-released under MIT license, so you are welcome to use it!
+## Installation
 
-``` bash
+```bash
 composer require atk4/audit
 ```
 
-You may need to adjust your `minimum-stability` setting.
-
 ## Documentation
 
-https://github.com/atk4/audit/blob/develop/docs/index.md
+* [Documentation](docs/index.md)
+* [Full Example](docs/full-example.md)
+* [Audit Policies](docs/policies.md)
+* [Audit UI](docs/ui.md)
 
-## Real Usage Example
+## License
 
-https://github.com/atk4/audit/blob/develop/docs/full-example.md
-
-## Current Status
-
-Audit add-on is implemented and used in some projects. Some clean-ups may be needed.
+[MIT License](LICENSE)
