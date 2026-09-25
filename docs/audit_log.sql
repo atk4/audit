@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
     `model_id` BIGINT NULL,
     `start_time_ms` BIGINT NOT NULL,
     `start_time` DATETIME NOT NULL,
-    `duration_ms` INT NULL,
+    `duration` INT NULL,
     `request_diff` JSON NULL,
     `reactive_diff` JSON NULL,
     `user_id` INT NULL,
