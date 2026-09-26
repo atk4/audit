@@ -674,9 +674,13 @@ class AuditController
      */
     protected function wrapText(string $text, int $length = 30): string
     {
-        return strlen($text) > $length
-            ? substr($text, 0, strrpos(substr(trim($text), 0, $length), ' ') ?: $length) . '...'
-            : $text;
+        if (strlen($text) <= $length) {
+            return $text;
+        }
+
+        $pos = strrpos(substr(trim($text), 0, $length), ' ');
+
+        return substr($text, 0, $pos === false ? $length : $pos) . '...';
     }
 
     /**
