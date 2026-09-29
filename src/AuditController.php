@@ -121,7 +121,7 @@ class AuditController
     /**
      * @return $this
      */
-    public function setUser(int $userId, string $userName = null)
+    public function setUser(int $userId, ?string $userName = null)
     {
         $this->userId = $userId;
         $this->userName = $userName;
