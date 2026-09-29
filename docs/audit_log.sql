@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
     `request_diff` JSON NULL,
     `reactive_diff` JSON NULL,
     `user_id` INT NULL,
+    `user_name` VARCHAR(128) NULL,
     `session_info` JSON NULL,
     `descr` TEXT NULL,
 

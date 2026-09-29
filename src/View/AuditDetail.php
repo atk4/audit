@@ -50,6 +50,7 @@ class AuditDetail extends View
         $summaryDiff = $entity->get('summary_diff');
 
         $userId = $entity->get('user_id');
+        $userName = $entity->get('user_name');
         $sessionInfo = $entity->get('session_info');
         $requestDiff = is_array($requestDiff) ? $requestDiff : [];
         $reactiveDiff = is_array($reactiveDiff) ? $reactiveDiff : [];
@@ -89,6 +90,7 @@ class AuditDetail extends View
          */
         $this->template->dangerouslySetHtml('action', $this->renderAction($action));
         $this->template->dangerouslySetHtml('user_id', $this->formatScalar($userId));
+        $this->template->dangerouslySetHtml('user_name', $this->formatScalar($userName));
         $this->template->dangerouslySetHtml('caused_by', $this->renderAuditLink($causedBy));
         $this->template->dangerouslySetHtml('causes', $this->renderCauses($causes));
         /*

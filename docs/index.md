@@ -172,7 +172,7 @@ The custom data is stored with the audit entry.
 The controller can associate audit records with the current application user:
 
 ```php
-$audit->setUserId($currentUserId);
+$audit->setUser($currentUserId, $currentUserName);
 ```
 
 You can also shorten stored model names:

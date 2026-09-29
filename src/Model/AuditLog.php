@@ -83,6 +83,7 @@ class AuditLog extends Model
 
         // optional user_id
         $this->addField('user_id', ['type' => 'integer']);
+        $this->addField('user_name');
 
         // additional session info, for example, browser config, ip address etc.
         $this->addField('session_info', ['type' => 'json']);

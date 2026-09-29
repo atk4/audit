@@ -45,6 +45,9 @@ class AuditController
     /** @var ?int Optional user ID */
     protected $userId;
 
+    /** @var ?string Optional user name */
+    protected $userName;
+
     /** @var array<string,AuditPolicy> */
     private array $policies = [];
 
@@ -118,9 +121,10 @@ class AuditController
     /**
      * @return $this
      */
-    public function setUserId(int $userId)
+    public function setUser(int $userId, string $userName = null)
     {
         $this->userId = $userId;
+        $this->userName = $userName;
 
         return $this;
     }
@@ -296,6 +300,7 @@ class AuditController
             'model_id' => $m->isLoaded() ? $m->getId() : null,
             'start_time_ms' => self::getMs(),
             'user_id' => $this->userId,
+            'user_name' => $this->userName,
             'session_info' => $this->getSessionInfo(),
             // 'descr' => $message . ($data ? ': ' . $this->getDescrValues($data, $m) : ''),
             'request_diff' => $data, // stored as [key=>value] not as diff
@@ -328,6 +333,7 @@ class AuditController
             'request_diff' => $request_diff,
             'reactive_diff' => $reactive_diff,
             'user_id' => $this->userId,
+            'user_name' => $this->userName,
             'session_info' => $this->getSessionInfo(),
         ]);
 
