@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Atk4\Audit\Tests;
 
 use Atk4\Audit\AuditController;
-use Atk4\Audit\AuditPolicy;
 use Atk4\Data\Model;
 use Atk4\Data\Persistence;
 
@@ -55,7 +54,7 @@ class DataTypeTest extends TestCase
             [
                 'name' => 'John',
                 'event_time' => $now,
-            ]
+            ],
         ];
         $events->import($import_data);
 
@@ -102,11 +101,10 @@ class DataTypeTest extends TestCase
                     'name' => ['John', 'Peter'],
                     'event_time' => [
                         $data[1]['request_diff']['event_time'][0], // datetime value we can't predict
-                        AuditController::VALUE_EXPRESSION
+                        AuditController::VALUE_EXPRESSION,
                     ],
                 ],
-                'reactive_diff' => [
-                ],
+                'reactive_diff' => [],
                 'descr' => 'update #1 (Peter): name=Peter, event_time=' . AuditController::VALUE_EXPRESSION,
             ],
             $data[1]
@@ -123,11 +121,11 @@ class DataTypeTest extends TestCase
                     'name' => ['Peter', null],
                     'created_time' => [
                         $data[2]['reactive_diff']['created_time'][0], // datetime value we can't predict
-                        null
+                        null,
                     ],
                     'event_time' => [
                         $data[2]['reactive_diff']['event_time'][0], // datetime value we can't predict
-                        null
+                        null,
                     ],
                 ],
                 'descr' => 'delete #1 (Peter)',
