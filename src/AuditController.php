@@ -27,7 +27,7 @@ class AuditController
     public const ACTION_LOG = 'log';
 
     public const VALUE_REDACTED = '[REDACTED]';
-    // public const VALUE_UNSUPPORTED = '[UNSUPPORTED]';
+    public const VALUE_EXPRESSION = '[EXPRESSION]';
 
     /**
      * Audit data model.
@@ -528,7 +528,15 @@ class AuditController
      */
     protected function encodeAuditValue(Model $m, string $fieldName, $value)
     {
-        return $value === null ? null : $m->getModel()->getPersistence()->typecastSaveField($m->getField($fieldName), $value);
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof Persistence\Sql\Expressionable) {
+            return self::VALUE_EXPRESSION;
+        }
+
+        return $m->getModel()->getPersistence()->typecastSaveField($m->getField($fieldName), $value);
     }
 
     /**
@@ -540,7 +548,15 @@ class AuditController
      */
     protected function decodeAuditValue(Model $m, string $fieldName, $value)
     {
-        return $value === null ? null : $m->getModel()->getPersistence()->typecastLoadField($m->getField($fieldName), $value);
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value === self::VALUE_EXPRESSION) {
+            return self::VALUE_EXPRESSION;
+        }
+
+        return $m->getModel()->getPersistence()->typecastLoadField($m->getField($fieldName), $value);
     }
 
     /**
@@ -694,7 +710,7 @@ class AuditController
      *
      * @param array<string,mixed> $values
      */
-    private function getDescrValues(array $values, Model $m): string
+    private function getDescrValues(array $values, Model $m): string // @phpstan-ignore method.unusedParameter
     {
         $t = [];
         foreach ($values as $k => $v) {
